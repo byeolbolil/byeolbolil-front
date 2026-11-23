@@ -144,3 +144,18 @@ export function moonUpRange(hours: readonly NightHour[]): [number, number] | nul
   })
   return first < 0 ? null : [first, last]
 }
+
+/**
+ * 선호 시각(`preferBefore`, HH:mm)이 놓이는 칸 번호. 그 칸부터는 선호 시각 뒤다.
+ * 서버와 같은 규칙으로 읽는다: 정오 전 시각은 밤이 시작한 다음 날의 시각이다. 밤 안에 놓이지 않으면 `null`이다.
+ */
+export function preferBeforeIndex(hours: readonly NightHour[], nightDate: string, preferBefore: string): number | null {
+  if (hours.length === 0) return null
+  const [h, m] = preferBefore.split(":").map(Number)
+  const [y, mo, d] = nightDate.split("-").map(Number)
+  const dayOffset = h < 12 ? 1 : 0
+  // 한국 시간(+09:00)으로 적힌 시각을 순간으로 바꾼다
+  const cutoff = Date.UTC(y, mo - 1, d + dayOffset, h - 9, m)
+  const index = hours.findIndex((hour) => Date.parse(hour.time) >= cutoff)
+  return index <= 0 ? null : index
+}

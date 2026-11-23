@@ -9,6 +9,7 @@ import {
   initialTimelineTime,
   moonSummary,
   moonUpRange,
+  preferBeforeIndex,
   windowHours,
   windowIndexRange,
 } from "./hours"
@@ -177,5 +178,25 @@ describe("달", () => {
   it("달이 떠 있는 칸의 범위", () => {
     expect(moonUpRange(makeHours([{}, { moonUp: true }, { moonUp: true }, {}]))).toEqual([1, 2])
     expect(moonUpRange(makeHours([{}, {}]))).toBeNull()
+  })
+})
+
+describe("선호 시각의 위치", () => {
+  // 18시부터 13칸: 18, 19, ..., 23, 0, 1, ..., 6
+  const hours = makeHours(Array.from({ length: 13 }, () => ({})))
+
+  it("새벽 시각은 다음 날로 읽는다", () => {
+    expect(preferBeforeIndex(hours, "2026-11-24", "02:00")).toBe(8)
+    expect(preferBeforeIndex(hours, "2026-11-24", "00:00")).toBe(6)
+  })
+
+  it("저녁 시각은 그날로 읽는다", () => {
+    expect(preferBeforeIndex(hours, "2026-11-24", "22:00")).toBe(4)
+  })
+
+  it("밤 밖에 놓이면 선을 긋지 않는다", () => {
+    expect(preferBeforeIndex(hours, "2026-11-24", "11:59")).toBeNull()
+    expect(preferBeforeIndex(hours, "2026-11-24", "18:00")).toBeNull()
+    expect(preferBeforeIndex([], "2026-11-24", "02:00")).toBeNull()
   })
 })

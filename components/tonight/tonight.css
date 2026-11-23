@@ -454,6 +454,10 @@
   .btn.ghost[aria-expanded="true"] svg {
     transform: rotate(180deg);
   }
+  .btn.back {
+    align-self: flex-start;
+    padding-left: 0;
+  }
   .btn:disabled {
     opacity: 0.6;
     cursor: default;
