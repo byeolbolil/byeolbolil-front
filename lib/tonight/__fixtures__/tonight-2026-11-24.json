@@ -1,0 +1,752 @@
+{
+ "success": true,
+ "status": 200,
+ "message": "요청이 성공적으로 처리되었습니다.",
+ "data": {
+  "date": "2026-11-24",
+  "criteria": {
+   "minClearHours": 3,
+   "preferBefore": "02:00",
+   "maxTravelMinutes": null
+  },
+  "candidateCount": 64,
+  "evaluatedCount": 64,
+  "excludedByTravelCount": 0,
+  "places": [
+   {
+    "type": "SPOT",
+    "id": 7,
+    "spotId": 7,
+    "name": "양구 국토정중앙천문대",
+    "address": "강원도 양구군 남면 국토정중앙로 127",
+    "latitude": 38.0163,
+    "longitude": 128.0536,
+    "level": "GOOD",
+    "pattern": "CLEAR_ALL_NIGHT",
+    "notes": [
+     "BRIGHT_MOON"
+    ],
+    "bestWindow": {
+     "start": "2026-11-24T19:00:00+09:00",
+     "end": "2026-11-25T06:00:00+09:00",
+     "hours": 11
+    },
+    "travel": {
+     "distanceKm": 113.1,
+     "minutes": 147
+    },
+    "bortleClass": 2,
+    "moonBrightness": 0.87,
+    "forecastSource": "OPEN_METEO",
+    "forecastIssuedAt": "2026-11-23T21:00:00+09:00",
+    "hours": [
+     {
+      "time": "2026-11-24T18:00:00+09:00",
+      "dark": false,
+      "clear": false,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 42,
+      "moonUp": true,
+      "score": 0
+     },
+     {
+      "time": "2026-11-24T19:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 48,
+      "moonUp": true,
+      "score": 69
+     },
+     {
+      "time": "2026-11-24T20:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 51,
+      "moonUp": true,
+      "score": 69
+     },
+     {
+      "time": "2026-11-24T21:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 53,
+      "moonUp": true,
+      "score": 69
+     },
+     {
+      "time": "2026-11-24T22:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 53,
+      "moonUp": true,
+      "score": 69
+     },
+     {
+      "time": "2026-11-24T23:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 53,
+      "moonUp": true,
+      "score": 69
+     },
+     {
+      "time": "2026-11-25T00:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 54,
+      "moonUp": true,
+      "score": 69
+     },
+     {
+      "time": "2026-11-25T01:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 56,
+      "moonUp": true,
+      "score": 69
+     },
+     {
+      "time": "2026-11-25T02:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 57,
+      "moonUp": true,
+      "score": 69
+     },
+     {
+      "time": "2026-11-25T03:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 58,
+      "moonUp": true,
+      "score": 69
+     },
+     {
+      "time": "2026-11-25T04:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 60,
+      "moonUp": true,
+      "score": 69
+     },
+     {
+      "time": "2026-11-25T05:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 66,
+      "moonUp": true,
+      "score": 63
+     },
+     {
+      "time": "2026-11-25T06:00:00+09:00",
+      "dark": false,
+      "clear": false,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 69,
+      "moonUp": true,
+      "score": 0
+     }
+    ]
+   },
+   {
+    "type": "SPOT",
+    "id": 50,
+    "spotId": 50,
+    "name": "보은 펀파크",
+    "address": "충청북도 보은군 보은읍 보은미원로 10",
+    "latitude": 36.5052,
+    "longitude": 127.7381,
+    "level": "GOOD",
+    "pattern": "CLEARS_AGAIN",
+    "notes": [
+     "BRIGHT_MOON"
+    ],
+    "bestWindow": {
+     "start": "2026-11-24T19:00:00+09:00",
+     "end": "2026-11-25T01:00:00+09:00",
+     "hours": 6
+    },
+    "travel": {
+     "distanceKm": 137.5,
+     "minutes": 179
+    },
+    "bortleClass": 4,
+    "moonBrightness": 0.87,
+    "forecastSource": "OPEN_METEO",
+    "forecastIssuedAt": "2026-11-23T21:00:00+09:00",
+    "hours": [
+     {
+      "time": "2026-11-24T18:00:00+09:00",
+      "dark": false,
+      "clear": false,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 48,
+      "moonUp": true,
+      "score": 0
+     },
+     {
+      "time": "2026-11-24T19:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 49,
+      "moonUp": true,
+      "score": 60
+     },
+     {
+      "time": "2026-11-24T20:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 51,
+      "moonUp": true,
+      "score": 60
+     },
+     {
+      "time": "2026-11-24T21:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 51,
+      "moonUp": true,
+      "score": 60
+     },
+     {
+      "time": "2026-11-24T22:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 1,
+      "cloudCoverLow": 1,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 53,
+      "moonUp": true,
+      "score": 59
+     },
+     {
+      "time": "2026-11-24T23:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 3,
+      "cloudCoverLow": 3,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 56,
+      "moonUp": true,
+      "score": 58
+     },
+     {
+      "time": "2026-11-25T00:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 16,
+      "cloudCoverLow": 16,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 59,
+      "moonUp": true,
+      "score": 50
+     },
+     {
+      "time": "2026-11-25T01:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 54,
+      "cloudCoverLow": 54,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 61,
+      "moonUp": true,
+      "score": 27
+     },
+     {
+      "time": "2026-11-25T02:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 31,
+      "cloudCoverLow": 31,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 62,
+      "moonUp": true,
+      "score": 41
+     },
+     {
+      "time": "2026-11-25T03:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 23,
+      "cloudCoverLow": 23,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 64,
+      "moonUp": true,
+      "score": 46
+     },
+     {
+      "time": "2026-11-25T04:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 55,
+      "cloudCoverLow": 55,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 64,
+      "moonUp": true,
+      "score": 27
+     },
+     {
+      "time": "2026-11-25T05:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 57,
+      "cloudCoverLow": 57,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 64,
+      "moonUp": true,
+      "score": 23
+     },
+     {
+      "time": "2026-11-25T06:00:00+09:00",
+      "dark": false,
+      "clear": false,
+      "cloudCover": 91,
+      "cloudCoverLow": 91,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 65,
+      "moonUp": true,
+      "score": 0
+     }
+    ]
+   },
+   {
+    "type": "SPOT",
+    "id": 35,
+    "spotId": 35,
+    "name": "안성맞춤천문과학관",
+    "address": "경기도 안성시 보개면 남사당로 198-54",
+    "latitude": 37.0142,
+    "longitude": 127.2917,
+    "level": "MAYBE",
+    "pattern": "CLEAR_EARLY",
+    "notes": [
+     "BRIGHT_MOON",
+     "CITY_LIGHTS"
+    ],
+    "bestWindow": {
+     "start": "2026-11-24T19:00:00+09:00",
+     "end": "2026-11-25T02:00:00+09:00",
+     "hours": 7
+    },
+    "travel": {
+     "distanceKm": 68.5,
+     "minutes": 89
+    },
+    "bortleClass": 7,
+    "moonBrightness": 0.87,
+    "forecastSource": "OPEN_METEO",
+    "forecastIssuedAt": "2026-11-23T21:00:00+09:00",
+    "hours": [
+     {
+      "time": "2026-11-24T18:00:00+09:00",
+      "dark": false,
+      "clear": false,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 45,
+      "moonUp": true,
+      "score": 0
+     },
+     {
+      "time": "2026-11-24T19:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 49,
+      "moonUp": true,
+      "score": 46
+     },
+     {
+      "time": "2026-11-24T20:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 51,
+      "moonUp": true,
+      "score": 46
+     },
+     {
+      "time": "2026-11-24T21:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 0,
+      "cloudCoverLow": 0,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 57,
+      "moonUp": true,
+      "score": 46
+     },
+     {
+      "time": "2026-11-24T22:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 1,
+      "cloudCoverLow": 1,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 61,
+      "moonUp": true,
+      "score": 45
+     },
+     {
+      "time": "2026-11-24T23:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 5,
+      "cloudCoverLow": 5,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 66,
+      "moonUp": true,
+      "score": 44
+     },
+     {
+      "time": "2026-11-25T00:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 16,
+      "cloudCoverLow": 16,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 66,
+      "moonUp": true,
+      "score": 39
+     },
+     {
+      "time": "2026-11-25T01:00:00+09:00",
+      "dark": true,
+      "clear": true,
+      "cloudCover": 20,
+      "cloudCoverLow": 20,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 64,
+      "moonUp": true,
+      "score": 37
+     },
+     {
+      "time": "2026-11-25T02:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 43,
+      "cloudCoverLow": 43,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 67,
+      "moonUp": true,
+      "score": 26
+     },
+     {
+      "time": "2026-11-25T03:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 61,
+      "cloudCoverLow": 61,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 67,
+      "moonUp": true,
+      "score": 18
+     },
+     {
+      "time": "2026-11-25T04:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 81,
+      "cloudCoverLow": 81,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 71,
+      "moonUp": true,
+      "score": 9
+     },
+     {
+      "time": "2026-11-25T05:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 84,
+      "cloudCoverLow": 84,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 66,
+      "moonUp": true,
+      "score": 7
+     },
+     {
+      "time": "2026-11-25T06:00:00+09:00",
+      "dark": false,
+      "clear": false,
+      "cloudCover": 89,
+      "cloudCoverLow": 89,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 63,
+      "moonUp": true,
+      "score": 0
+     }
+    ]
+   },
+   {
+    "type": "SPOT",
+    "id": 14,
+    "spotId": 14,
+    "name": "태안 운여해변",
+    "address": "충청남도 태안군 고남면 장곡리 633",
+    "latitude": 36.4172,
+    "longitude": 126.3776,
+    "level": "NO",
+    "pattern": "CLOUDY_ALL_NIGHT",
+    "notes": [],
+    "travel": {
+     "distanceKm": 134.5,
+     "minutes": 175
+    },
+    "bortleClass": 4,
+    "moonBrightness": 0.87,
+    "forecastSource": "OPEN_METEO",
+    "forecastIssuedAt": "2026-11-23T21:00:00+09:00",
+    "hours": [
+     {
+      "time": "2026-11-24T18:00:00+09:00",
+      "dark": false,
+      "clear": false,
+      "cloudCover": 10,
+      "cloudCoverLow": 8,
+      "cloudCoverMid": 2,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 51,
+      "moonUp": true,
+      "score": 0
+     },
+     {
+      "time": "2026-11-24T19:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 45,
+      "cloudCoverLow": 44,
+      "cloudCoverMid": 1,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 54,
+      "moonUp": true,
+      "score": 33
+     },
+     {
+      "time": "2026-11-24T20:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 57,
+      "cloudCoverLow": 57,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 55,
+      "moonUp": true,
+      "score": 26
+     },
+     {
+      "time": "2026-11-24T21:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 77,
+      "cloudCoverLow": 77,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 57,
+      "moonUp": true,
+      "score": 14
+     },
+     {
+      "time": "2026-11-24T22:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 91,
+      "cloudCoverLow": 91,
+      "cloudCoverMid": 12,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 58,
+      "moonUp": true,
+      "score": 5
+     },
+     {
+      "time": "2026-11-24T23:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 100,
+      "cloudCoverLow": 100,
+      "cloudCoverMid": 37,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 59,
+      "moonUp": true,
+      "score": 0
+     },
+     {
+      "time": "2026-11-25T00:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 100,
+      "cloudCoverLow": 100,
+      "cloudCoverMid": 60,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 59,
+      "moonUp": true,
+      "score": 0
+     },
+     {
+      "time": "2026-11-25T01:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 100,
+      "cloudCoverLow": 100,
+      "cloudCoverMid": 56,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 58,
+      "moonUp": true,
+      "score": 0
+     },
+     {
+      "time": "2026-11-25T02:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 99,
+      "cloudCoverLow": 99,
+      "cloudCoverMid": 12,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 60,
+      "moonUp": true,
+      "score": 1
+     },
+     {
+      "time": "2026-11-25T03:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 100,
+      "cloudCoverLow": 100,
+      "cloudCoverMid": 18,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 67,
+      "moonUp": true,
+      "score": 0
+     },
+     {
+      "time": "2026-11-25T04:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 100,
+      "cloudCoverLow": 100,
+      "cloudCoverMid": 2,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 72,
+      "moonUp": true,
+      "score": 0
+     },
+     {
+      "time": "2026-11-25T05:00:00+09:00",
+      "dark": true,
+      "clear": false,
+      "cloudCover": 100,
+      "cloudCoverLow": 100,
+      "cloudCoverMid": 7,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 72,
+      "moonUp": true,
+      "score": 0
+     },
+     {
+      "time": "2026-11-25T06:00:00+09:00",
+      "dark": false,
+      "clear": false,
+      "cloudCover": 99,
+      "cloudCoverLow": 99,
+      "cloudCoverMid": 0,
+      "cloudCoverHigh": 0,
+      "relativeHumidity": 65,
+      "moonUp": true,
+      "score": 0
+     }
+    ]
+   }
+  ]
+ }
+}
