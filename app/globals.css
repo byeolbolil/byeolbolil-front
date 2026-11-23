@@ -1,83 +1,69 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
+/* 밤하늘 서비스라 다크 단일 테마다. 색은 목업(백엔드 저장소 docs/mockup)의 값을 그대로 쓴다. */
 :root {
-  /* Deep Space Dark Theme */
-  --background: oklch(0.11 0.02 264); /* Very dark navy/black */
-  --foreground: oklch(0.98 0 0); /* Pure white */
-  --card: oklch(0.14 0.03 264); /* Slightly lighter than background */
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.13 0.03 264);
-  --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.65 0.25 285); /* Neon purple */
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.18 0.03 264);
-  --secondary-foreground: oklch(0.95 0 0);
-  --muted: oklch(0.22 0.02 264);
-  --muted-foreground: oklch(0.65 0.01 264);
-  --accent: oklch(0.75 0.18 95); /* Starlight yellow */
-  --accent-foreground: oklch(0.11 0.02 264);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.25 0.03 264);
-  --input: oklch(0.18 0.03 264);
-  --ring: oklch(0.65 0.25 285);
-  --chart-1: oklch(0.65 0.25 285);
-  --chart-2: oklch(0.75 0.18 95);
-  --chart-3: oklch(0.55 0.22 320);
-  --chart-4: oklch(0.6 0.2 200);
-  --chart-5: oklch(0.7 0.15 160);
+  color-scheme: dark;
+  --night-0: oklch(0.12 0.03 268);
+  --night-1: oklch(0.155 0.04 268);
+  --night-2: oklch(0.2 0.045 270);
+  --night-3: oklch(0.25 0.05 272);
+  --hair: oklch(0.34 0.04 270 / 0.55);
+  --ink: oklch(0.96 0.012 90);
+  --ink-2: oklch(0.8 0.02 265);
+  --ink-3: oklch(0.62 0.03 265);
+  --star: oklch(0.88 0.12 86);
+  --star-dim: oklch(0.88 0.12 86 / 0.22);
+  --dusk: oklch(0.42 0.11 305);
+  --sky-clear: oklch(0.8 0.09 210);
+  --cloud: oklch(0.74 0.02 262);
+  --warn: oklch(0.8 0.11 62);
+  --scrim: oklch(0.1 0.03 268 / 0.85);
+
+  /* shadcn/ui 컴포넌트(로그인, 가이드 화면)가 같은 색을 쓰도록 이어 준다 */
+  --background: var(--night-0);
+  --foreground: var(--ink);
+  --card: var(--night-1);
+  --card-foreground: var(--ink);
+  --popover: var(--night-1);
+  --popover-foreground: var(--ink);
+  --primary: var(--star);
+  --primary-foreground: var(--night-0);
+  --secondary: var(--night-2);
+  --secondary-foreground: var(--ink);
+  --muted: var(--night-2);
+  --muted-foreground: var(--ink-3);
+  --accent: var(--night-3);
+  --accent-foreground: var(--ink);
+  --destructive: oklch(0.62 0.21 27);
+  --destructive-foreground: var(--ink);
+  --border: var(--hair);
+  --input: var(--night-2);
+  --ring: var(--star);
   --radius: 0.75rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+/* 적색 화면: 현장에서 어둠에 익은 눈을 지키기 위한 설정 */
+:root[data-red="1"] {
+  --night-0: oklch(0.08 0.02 28);
+  --night-1: oklch(0.1 0.03 28);
+  --night-2: oklch(0.13 0.04 28);
+  --night-3: oklch(0.16 0.05 28);
+  --hair: oklch(0.28 0.07 28 / 0.6);
+  --ink: oklch(0.66 0.19 28);
+  --ink-2: oklch(0.54 0.16 28);
+  --ink-3: oklch(0.44 0.12 28);
+  --star: oklch(0.64 0.21 28);
+  --star-dim: oklch(0.64 0.21 28 / 0.25);
+  --dusk: oklch(0.3 0.1 28);
+  --sky-clear: oklch(0.58 0.18 28);
+  --cloud: oklch(0.42 0.1 28);
+  --warn: oklch(0.6 0.2 28);
+  --scrim: oklch(0.07 0.02 28 / 0.85);
 }
 
 @theme inline {
-  --font-sans: "Geist", "Geist Fallback";
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --font-sans: var(--font-noto-sans-kr), "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -97,122 +83,24 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html,
   body {
-    @apply bg-background text-foreground;
+    background: var(--night-0);
+    color: var(--ink);
   }
-}
-
-/* Star field background animation */
-@keyframes twinkle {
-  0%,
-  100% {
-    opacity: 0.3;
+  body {
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
   }
-  50% {
-    opacity: 1;
-  }
-}
-
-.star-field {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.star {
-  position: absolute;
-  width: 2px;
-  height: 2px;
-  background: white;
-  border-radius: 50%;
-  animation: twinkle 3s ease-in-out infinite;
-}
-
-/* Custom scrollbar for forecast horizontal scroll */
-.forecast-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: oklch(0.65 0.25 285 / 0.5) transparent;
-}
-
-.forecast-scroll::-webkit-scrollbar {
-  height: 8px;
-}
-
-.forecast-scroll::-webkit-scrollbar-track {
-  background: transparent;
-  border-radius: 4px;
-}
-
-.forecast-scroll::-webkit-scrollbar-thumb {
-  background: oklch(0.65 0.25 285 / 0.5);
-  border-radius: 4px;
-  transition: background 0.2s ease;
-}
-
-.forecast-scroll::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.65 0.25 285 / 0.7);
-}
-
-/* Custom scrollbar for popover content */
-.popover-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: oklch(0.25 0.03 264 / 0.5) transparent;
-}
-
-.popover-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-
-.popover-scroll::-webkit-scrollbar-track {
-  background: transparent;
-  border-radius: 3px;
-}
-
-.popover-scroll::-webkit-scrollbar-thumb {
-  background: oklch(0.25 0.03 264 / 0.5);
-  border-radius: 3px;
-  transition: background 0.2s ease;
-}
-
-.popover-scroll::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.25 0.03 264 / 0.8);
-}
-
-.dark .popover-scroll {
-  scrollbar-color: oklch(0.269 0 0 / 0.5) transparent;
-}
-
-.dark .popover-scroll::-webkit-scrollbar-thumb {
-  background: oklch(0.269 0 0 / 0.5);
-}
-
-.dark .popover-scroll::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.269 0 0 / 0.8);
 }

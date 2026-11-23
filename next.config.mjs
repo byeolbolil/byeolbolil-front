@@ -7,6 +7,7 @@ const nextConfig = {
     unoptimized: true,
   },
   allowedDevOrigins: ['39.119.82.172'],
+  devIndicators: false,
   async rewrites() {
     // 환경 변수에서 API URL 가져오기 (기본값: localhost)
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'

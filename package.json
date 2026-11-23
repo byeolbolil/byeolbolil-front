@@ -73,6 +73,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "openapi-typescript": "^7.10.1",
+    "playwright": "^1.65.1",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
     "tw-animate-css": "1.3.3",

@@ -4,7 +4,7 @@
  */
 import { average, moonSummary, windowHours } from "./hours"
 import { hourOf, koreanHour } from "./time"
-import type { NightPlace, NightRecommendation } from "./types"
+import type { ForecastSource, NightPlace, NightRecommendation } from "./types"
 import { bortleName, cloudHeadline, isWorthGoing, patternText } from "./wording"
 
 export interface QuickFact {
@@ -111,4 +111,29 @@ export function emptyMessage(kind: EmptyKind, maxTravelHours: number | null): { 
     case "NO_FORECAST":
       return { title: "예보를 받지 못했어요", detail: "잠시 뒤에 다시 시도해 주세요" }
   }
+}
+
+export interface ForecastCredit {
+  source: ForecastSource
+  /** 그 출처에서 받은 예보 가운데 가장 최근에 만들어진 것의 시각. 모르면 빠진다 */
+  issuedAt?: string
+}
+
+/**
+ * 화면에 적을 예보 출처. 장소마다 출처가 다를 수 있어서(주 소스 장애 시 보조 소스) 쓰인 출처를 모두 모은다.
+ * 많이 쓰인 출처가 앞에 온다.
+ */
+export function forecastCredits(places: readonly Pick<NightPlace, "forecastSource" | "forecastIssuedAt">[]): ForecastCredit[] {
+  const bySource = new Map<ForecastSource, { count: number; issuedAt?: string }>()
+  for (const place of places) {
+    const entry = bySource.get(place.forecastSource) ?? { count: 0 }
+    entry.count += 1
+    if (place.forecastIssuedAt && (!entry.issuedAt || Date.parse(place.forecastIssuedAt) > Date.parse(entry.issuedAt))) {
+      entry.issuedAt = place.forecastIssuedAt
+    }
+    bySource.set(place.forecastSource, entry)
+  }
+  return [...bySource.entries()]
+    .sort((a, b) => b[1].count - a[1].count)
+    .map(([source, entry]) => (entry.issuedAt ? { source, issuedAt: entry.issuedAt } : { source }))
 }

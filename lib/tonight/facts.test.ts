@@ -4,6 +4,7 @@ import {
   buildNightView,
   cloudFact,
   emptyMessage,
+  forecastCredits,
   moonFact,
   skyFact,
   skyPhotoKind,
@@ -133,5 +134,29 @@ describe("하늘 사진 고르기", () => {
     expect(skyPhotoKind(makePlace({ level: "NO" }))).toBe("cloudy")
     expect(skyPhotoKind(makePlace({ level: "GOOD", notes: ["BRIGHT_MOON"] }))).toBe("moon")
     expect(skyPhotoKind(makePlace({ level: "STRONG" }))).toBe("clear")
+  })
+})
+
+describe("예보 출처", () => {
+  it("기록 응답: 모두 Open-Meteo이고 생성 시각이 같다", () => {
+    expect(forecastCredits(recordedNight().places)).toEqual([
+      { source: "OPEN_METEO", issuedAt: "2026-11-23T21:00:00+09:00" },
+    ])
+  })
+
+  it("출처가 섞이면 많이 쓰인 것부터, 출처마다 가장 최근 시각을 적는다", () => {
+    const credits = forecastCredits([
+      { forecastSource: "MET_NORWAY" },
+      { forecastSource: "OPEN_METEO", forecastIssuedAt: "2026-11-23T21:00:00+09:00" },
+      { forecastSource: "OPEN_METEO", forecastIssuedAt: "2026-11-24T03:00:00+09:00" },
+    ])
+    expect(credits).toEqual([
+      { source: "OPEN_METEO", issuedAt: "2026-11-24T03:00:00+09:00" },
+      { source: "MET_NORWAY" },
+    ])
+  })
+
+  it("장소가 없으면 출처도 없다", () => {
+    expect(forecastCredits([])).toEqual([])
   })
 })
