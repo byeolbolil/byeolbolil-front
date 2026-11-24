@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { useAuthInit } from "@/components/auth/AuthProvider"
 import { useToast } from "@/hooks/use-toast"
 import { bookmarksApi } from "@/lib/api/bookmarks"
@@ -120,23 +120,76 @@ export function TonightApp() {
   const topKey = topPlace ? placeKey(topPlace) : null
   const shownNightName = data && tonightDate ? nightName(data.date, tonightDate) : "오늘 밤"
 
-  const selectDate = (date: string) => {
-    setSelectedDate(date === tonightDate ? null : date)
-    setDetailKey(null)
+  /** 자세히 보기로 들어갈 때 목록이 스크롤돼 있던 위치. 돌아오면 그 자리를 다시 보여준다 */
+  const listScroll = useRef<number | null>(null)
+  const scrollToRestore = useRef<number | null>(null)
+  const detailOpen = useRef(false)
+  detailOpen.current = detailKey !== null
+
+  /**
+   * 자세히 보기를 연다. 처음 열 때 브라우저 기록을 하나 쌓아서, 휴대폰의 뒤로 가기가 사이트를 떠나지 않고
+   * 목록으로 돌아오게 한다. 자세히 보기 안에서 다른 후보로 옮길 때는 기록을 더 쌓지 않는다.
+   */
+  const showDetail = (key: string) => {
+    if (!detailOpen.current) {
+      listScroll.current = window.scrollY
+      window.history.pushState({ ...window.history.state, bbDetail: true }, "")
+    }
+    setDetailKey(key)
     setMoreOpen(false)
   }
-  const openPlace = (place: NightPlace) => {
-    setDetailKey(placeKey(place))
-    setPeekKey(null)
+  /** 자세히 보기에서 나온다. `restore`면 목록에서 보던 자리로 돌아간다 */
+  const leaveDetail = useCallback((restore: boolean) => {
+    scrollToRestore.current = restore ? listScroll.current : null
+    listScroll.current = null
+    setDetailKey(null)
     setMoreOpen(false)
+  }, [])
+  /** 탭이나 날짜를 바꾸면서 자세히 보기를 닫을 때. 쌓아 둔 기록도 함께 되돌린다 */
+  const skipRestore = useRef(false)
+  function closeDetail() {
+    if (detailOpen.current && window.history.state?.bbDetail) {
+      skipRestore.current = true
+      window.history.back()
+    }
+    leaveDetail(false)
+  }
+  /** "돌아가기". 브라우저의 뒤로 가기와 같은 길을 탄다 */
+  const backFromDetail = () => {
+    if (window.history.state?.bbDetail) window.history.back()
+    else leaveDetail(true)
+  }
+  useEffect(() => {
+    const onPopState = () => {
+      const restore = !skipRestore.current
+      skipRestore.current = false
+      if (detailOpen.current) leaveDetail(restore)
+    }
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [leaveDetail])
+  // 목록이 다시 그려진 직후, 화면에 보이기 전에 보던 자리로 옮긴다
+  useLayoutEffect(() => {
+    if (detailKey !== null || scrollToRestore.current === null) return
+    const top = scrollToRestore.current
+    scrollToRestore.current = null
+    window.scrollTo({ top })
+  }, [detailKey])
+
+  const selectDate = (date: string) => {
+    setSelectedDate(date === tonightDate ? null : date)
+    closeDetail()
+  }
+  const openPlace = (place: NightPlace) => {
+    showDetail(placeKey(place))
+    setPeekKey(null)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
   /** 넓은 화면의 지도에서 표식을 누르면 오른쪽 패널에 그 장소를 연다 */
   const openFromMap = (key: string) => {
     setChosenTab("tonight")
-    setDetailKey(key)
+    showDetail(key)
     setPick(null)
-    setMoreOpen(false)
   }
   const peekOnMap = (key: string) => {
     setPeekKey(key)
@@ -203,10 +256,6 @@ export function TonightApp() {
     } else {
       selectTab("map")
     }
-  }
-  function closeDetail() {
-    setDetailKey(null)
-    setMoreOpen(false)
   }
   const openSettings = useCallback(() => setSheet("settings"), [])
   const openSources = useCallback(() => setSheet("sources"), [])
@@ -291,86 +340,95 @@ export function TonightApp() {
             place={detailPlace}
             nightName={shownNightName}
             detailed={detailed}
-            onBack={closeDetail}
+            others={places.filter((place) => placeKey(place) !== detailKey)}
+            onOpenPlace={openPlace}
+            onBack={backFromDetail}
             actions={extras.actions}
           >
             {extras.children}
           </DetailView>
-        ) : tab === "map" ? (
-          <>
-            <div className="sec-title">
-              <h2>지도에서 고르기</h2>
-              <p>이름으로 찾거나 빈 곳을 눌러요</p>
-            </div>
-            <MapPanel
-              places={places}
-              selectedKey={peekKey}
-              topKey={topKey}
-              nightName={shownNightName}
-              nightDate={data?.date ?? null}
-              onSelect={peekOnMap}
-              pick={pick}
-              onPick={pickOnMap}
-              origin={origin}
-            >
-              {pickCard}
-              {peekPlace ? (
-                <div className="peek">
-                  <div className="nm">
-                    {peekPlace.name} <Rating level={peekPlace.level} compact />
-                  </div>
-                  <div className="sb">
-                    {joinParts([
-                      peekPlace.bestWindow ? windowText(peekPlace.bestWindow) : patternText(peekPlace.pattern),
-                      travelText(peekPlace.travel),
-                    ])}
-                  </div>
-                  <button type="button" className="btn primary" onClick={() => openPlace(peekPlace)}>
-                    자세히
-                  </button>
-                </div>
-              ) : null}
-            </MapPanel>
-            <section className="sec">
+        ) : null}
+        {tab === "map" ? (
+          detailPlace ? null : (
+            <>
               <div className="sec-title">
-                <h2>지도 속 장소</h2>
-                <p>{shownNightName} 기준</p>
+                <h2>지도에서 고르기</h2>
+                <p>이름으로 찾거나 빈 곳을 눌러요</p>
               </div>
-              <div className="rows">
-                {places.map((place) => (
-                  <PlaceRow
-                    key={placeKey(place)}
-                    place={place}
-                    detailed={detailed}
-                    selected={placeKey(place) === peekKey}
-                    onOpen={openPlace}
-                  />
-                ))}
-              </div>
-            </section>
-          </>
+              <MapPanel
+                places={places}
+                selectedKey={peekKey}
+                topKey={topKey}
+                nightName={shownNightName}
+                nightDate={data?.date ?? null}
+                onSelect={peekOnMap}
+                pick={pick}
+                onPick={pickOnMap}
+                origin={origin}
+              >
+                {pickCard}
+                {peekPlace ? (
+                  <div className="peek">
+                    <div className="nm">
+                      {peekPlace.name} <Rating level={peekPlace.level} compact />
+                    </div>
+                    <div className="sb">
+                      {joinParts([
+                        peekPlace.bestWindow ? windowText(peekPlace.bestWindow) : patternText(peekPlace.pattern),
+                        travelText(peekPlace.travel),
+                      ])}
+                    </div>
+                    <button type="button" className="btn primary" onClick={() => openPlace(peekPlace)}>
+                      자세히
+                    </button>
+                  </div>
+                ) : null}
+              </MapPanel>
+              <section className="sec">
+                <div className="sec-title">
+                  <h2>지도 속 장소</h2>
+                  <p>{shownNightName} 기준</p>
+                </div>
+                <div className="rows">
+                  {places.map((place) => (
+                    <PlaceRow
+                      key={placeKey(place)}
+                      place={place}
+                      detailed={detailed}
+                      selected={placeKey(place) === peekKey}
+                      onOpen={openPlace}
+                    />
+                  ))}
+                </div>
+              </section>
+            </>
+          )
         ) : (
-          <TonightView
-            night={data}
-            tonightDate={tonightDate}
-            laterDates={laterDates}
-            query={query}
-            detailed={detailed}
-            isAuthenticated={isAuthenticated}
-            hasOrigin={origin !== null}
-            onOpenPlace={openPlace}
-            onSelectDate={selectDate}
-            onOpenSettings={openSettings}
-            heroExtras={heroExtras}
-            footer={
-              <p className="credit-line links">
-                <button type="button" className="linkish" onClick={openSources}>
-                  추천 기준과 출처
-                </button>
-                <Link href="/guide">별 사진 촬영 가이드</Link>
-              </p>
-            }
-          />
+          // 자세히 보는 동안에도 목록을 지우지 않고 숨겨만 둔다. 펼쳐 둔 "더 보기"와 스크롤 자리가 돌아왔을 때 그대로다
+          <div className="keep" hidden={detailPlace !== null}>
+            <TonightView
+              night={data}
+              tonightDate={tonightDate}
+              laterDates={laterDates}
+              query={query}
+              detailed={detailed}
+              isAuthenticated={isAuthenticated}
+              hasOrigin={origin !== null}
+              onOpenPlace={openPlace}
+              onSelectDate={selectDate}
+              onOpenSettings={openSettings}
+              // 숨겨 둔 동안에는 펼침 내용을 그리지 않는다. 자세히 보기의 것과 같은 그림이 두 벌 생긴다
+              heroExtras={detailPlace ? undefined : heroExtras}
+              footer={
+                <p className="credit-line links">
+                  <button type="button" className="linkish" onClick={openSources}>
+                    추천 기준과 출처
+                  </button>
+                  <Link href="/guide">별 사진 촬영 가이드</Link>
+                </p>
+              }
+            />
+          </div>
         )}
       </div>
     )
