@@ -77,6 +77,31 @@ export function CloseIcon() {
   )
 }
 
+export function ClockIcon() {
+  return (
+    <svg {...STROKE} strokeLinecap="round">
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </svg>
+  )
+}
+
+export function CityIcon() {
+  return (
+    <svg {...STROKE} strokeLinejoin="round">
+      <path d="M4 20V10l5-3v13M9 20V5l6 3v12M15 20v-8l5 2v6M3 20h18" />
+    </svg>
+  )
+}
+
+export function CarIcon() {
+  return (
+    <svg {...STROKE} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 16V12l2-5h10l2 5v4M3.5 16h17M7 16v2M17 16v2M7.5 12.5h.01M16.5 12.5h.01" />
+    </svg>
+  )
+}
+
 export function SearchIcon() {
   return (
     <svg {...STROKE} strokeWidth={2} strokeLinecap="round">

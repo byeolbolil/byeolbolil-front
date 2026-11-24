@@ -126,7 +126,7 @@ async function walk(browser, kind) {
   await page.waitForSelector(".bb .more")
   await page.locator(".bb .more").scrollIntoViewIfNeeded()
   await page.waitForTimeout(400)
-  console.log(`  자세히: ${flat(await page.locator(".bb .facts").innerText())}`)
+  console.log(`  자세히: ${flat(await page.locator(".bb .glance").innerText())}`)
   await shot("detail")
   await shot("detail-full", { fullPage: true })
 
