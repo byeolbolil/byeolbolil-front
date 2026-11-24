@@ -1,8 +1,16 @@
 "use client"
 
-import { AttributionControl, Map as MapLibreMap, Marker, setWorkerUrl } from "maplibre-gl"
+import { AttributionControl, type CanvasSource, Map as MapLibreMap, Marker, setWorkerUrl } from "maplibre-gl"
 import "maplibre-gl/dist/maplibre-gl.css"
 import { useEffect, useRef, type ReactNode } from "react"
+import {
+  blendFields,
+  buildSampler,
+  gridCorners,
+  paintField,
+  type CloudGrid,
+  type FieldSampler,
+} from "@/lib/tonight/cloud-field"
 import { hourAt } from "@/lib/tonight/hours"
 import { KOREA_BOUNDS, MAP_STYLES, NIGHT_OVERLAY, NIGHT_OVERLAY_CORNERS, type MapLayer } from "@/lib/tonight/night-overlay"
 import { placeKey } from "@/lib/tonight/place"
@@ -13,6 +21,11 @@ import { STAR_PATH } from "../icons"
 
 const SVG_NS = "http://www.w3.org/2000/svg"
 const OVERLAY_ID = "night-lights"
+const CLOUD_ID = "cloud-field"
+/** 구름 그림의 가로 화소 수. 격자가 40km 간격이라 이보다 촘촘해도 더 보이는 것이 없다 */
+const CLOUD_WIDTH = 288
+/** 시각이 바뀔 때 앞 시각의 구름에서 다음 시각의 구름으로 넘어가는 시간 */
+const CLOUD_TWEEN_MS = 650
 /** 이 줌부터는 모든 표식에 이름을 붙인다. 그보다 멀면 고른 곳과 가장 좋은 곳만 붙인다. */
 const LABEL_ZOOM = 8.5
 /** 검색으로 고른 곳으로 옮길 때 적어도 이만큼은 당긴다. 군 하나가 화면에 들어오는 정도다 */
@@ -31,6 +44,9 @@ interface NightMapProps {
   layer: MapLayer
   /** 구름 레이어에서 고른 시각 */
   cloudTime: string | null
+  /** 구름장을 그릴 격자와 고른 시각의 값. 없으면 구름장 없이 표식만 칠한다 */
+  cloudGrid?: CloudGrid | null
+  cloudCover?: readonly number[] | null
   onSelect: (key: string) => void
   /** 지도의 빈 곳을 눌러 고른 위치 */
   pick?: Coordinates | null
@@ -102,6 +118,75 @@ function decorateDark(map: MapLibreMap, layer: MapLayer) {
     )
   }
   tuneOverlay(map, layer)
+}
+
+/** 구름장을 그리는 캔버스와, 지금 지도에 보이는 값 */
+interface CloudPainter {
+  canvas: HTMLCanvasElement
+  context: CanvasRenderingContext2D
+  image: ImageData
+  sampler: FieldSampler
+  grid: CloudGrid
+  /** 지금 그려져 있는 값. 아직 아무것도 그리지 않았으면 null */
+  shown: Float32Array | null
+  frame: number | null
+}
+
+function isSameGrid(a: CloudGrid, b: CloudGrid): boolean {
+  return a.south === b.south && a.west === b.west && a.step === b.step && a.rows === b.rows && a.columns === b.columns
+}
+
+function createCloudPainter(grid: CloudGrid): CloudPainter | null {
+  const sampler = buildSampler(grid, CLOUD_WIDTH)
+  const canvas = document.createElement("canvas")
+  canvas.width = sampler.width
+  canvas.height = sampler.height
+  const context = canvas.getContext("2d")
+  if (!context) return null
+  const image = context.createImageData(sampler.width, sampler.height)
+  return { canvas, context, image, sampler, grid, shown: null, frame: null }
+}
+
+/** 지도 스타일에 구름 그림을 얹는다. 밤 불빛 위, 지명 아래에 둔다. 스타일을 갈아 끼우면 다시 불러야 한다 */
+function attachCloudLayer(map: MapLibreMap, painter: CloudPainter) {
+  if (!map.getSource(CLOUD_ID)) {
+    map.addSource(CLOUD_ID, {
+      type: "canvas",
+      canvas: painter.canvas,
+      coordinates: gridCorners(painter.grid),
+      animate: false,
+    })
+  }
+  if (!map.getLayer(CLOUD_ID)) {
+    const layers = map.getStyle().layers
+    const overlayIndex = layers.findIndex((styleLayer) => styleLayer.id === OVERLAY_ID)
+    const firstLabel = layers.find((styleLayer, index) => index > overlayIndex && styleLayer.type === "symbol")
+    map.addLayer(
+      {
+        id: CLOUD_ID,
+        type: "raster",
+        source: CLOUD_ID,
+        paint: { "raster-fade-duration": 0, "raster-resampling": "linear" },
+      },
+      firstLabel?.id,
+    )
+  }
+}
+
+function detachCloudLayer(map: MapLibreMap) {
+  if (map.getLayer(CLOUD_ID)) map.removeLayer(CLOUD_ID)
+  if (map.getSource(CLOUD_ID)) map.removeSource(CLOUD_ID)
+}
+
+/** 캔버스에 값을 칠하고 지도가 그것을 다시 읽게 한다 */
+function drawCloud(map: MapLibreMap, painter: CloudPainter, field: Float32Array) {
+  paintField(painter.image.data, painter.sampler, field)
+  painter.context.putImageData(painter.image, 0, 0)
+  const source = map.getSource(CLOUD_ID) as CanvasSource | undefined
+  // 움직이지 않는 캔버스 소스는 play와 pause를 이어 불러야 그림을 다시 읽는다
+  source?.play()
+  source?.pause()
+  map.triggerRepaint()
 }
 
 /** 구름 레이어에서는 표식이 잘 보이도록 불빛을 흐리게 둔다. */
@@ -197,6 +282,8 @@ export default function NightMap({
   topKey,
   layer,
   cloudTime,
+  cloudGrid = null,
+  cloudCover = null,
   onSelect,
   pick = null,
   onPick,
@@ -216,6 +303,11 @@ export default function NightMap({
   onPickRef.current = onPick
   const pickMarkerRef = useRef<Marker | null>(null)
   const originMarkerRef = useRef<Marker | null>(null)
+  const cloudPainterRef = useRef<CloudPainter | null>(null)
+  /** 스타일을 갈아 끼운 뒤 구름 그림을 다시 얹는 함수. 그릴 것이 없으면 아무것도 하지 않는다 */
+  const restoreCloudRef = useRef<() => void>(() => {})
+  /** 지도 스타일을 다 읽어서 레이어를 얹을 수 있는지. 스타일을 갈아 끼우는 동안은 false다 */
+  const styleReadyRef = useRef(false)
   layerRef.current = layer
 
   useEffect(() => {
@@ -240,6 +332,8 @@ export default function NightMap({
     map.on("style.load", () => {
       localizeLabels(map)
       if (layerRef.current !== "base") decorateDark(map, layerRef.current)
+      styleReadyRef.current = true
+      restoreCloudRef.current()
     })
     map.on("click", (event) => onPickRef.current?.({ lat: event.lngLat.lat, lon: event.lngLat.lng }))
     const onZoom = () => container.classList.toggle("near", map.getZoom() >= LABEL_ZOOM)
@@ -252,6 +346,9 @@ export default function NightMap({
       markers.clear()
       pickMarkerRef.current = null
       originMarkerRef.current = null
+      if (cloudPainterRef.current?.frame != null) cancelAnimationFrame(cloudPainterRef.current.frame)
+      cloudPainterRef.current = null
+      styleReadyRef.current = false
       map.remove()
       mapRef.current = null
     }
@@ -264,11 +361,74 @@ export default function NightMap({
     const wanted = styleUrl(layer)
     if (styleRef.current !== wanted) {
       styleRef.current = wanted
+      styleReadyRef.current = false
       map.setStyle(wanted)
     } else {
       tuneOverlay(map, layer)
     }
   }, [layer])
+
+  // 구름장. 고른 시각이 바뀌면 앞 시각의 구름에서 새 시각의 구름으로 천천히 넘어간다
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    const hide = () => {
+      const painter = cloudPainterRef.current
+      if (painter?.frame != null) cancelAnimationFrame(painter.frame)
+      if (painter) {
+        painter.frame = null
+        painter.shown = null
+      }
+      restoreCloudRef.current = () => {}
+      if (styleReadyRef.current) detachCloudLayer(map)
+    }
+    if (layer !== "cloud" || !cloudGrid || !cloudCover) {
+      hide()
+      return
+    }
+
+    let painter = cloudPainterRef.current
+    if (!painter || !isSameGrid(painter.grid, cloudGrid)) {
+      hide()
+      painter = createCloudPainter(cloudGrid)
+      cloudPainterRef.current = painter
+    }
+    if (!painter) return
+    const active = painter
+    const target = Float32Array.from(cloudCover)
+
+    const show = () => {
+      attachCloudLayer(map, active)
+      if (active.frame != null) cancelAnimationFrame(active.frame)
+      // 넘어가는 도중에 다음 시각이 오면 지금 보이는 값에서 이어 간다
+      const from = active.shown ? Float32Array.from(active.shown) : null
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      if (!from || reduceMotion) {
+        active.shown = target
+        active.frame = null
+        drawCloud(map, active, target)
+        return
+      }
+      const start = performance.now()
+      const mixed = new Float32Array(target.length)
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / CLOUD_TWEEN_MS)
+        drawCloud(map, active, blendFields(from, target, t, mixed))
+        if (t < 1) {
+          active.shown = mixed
+          active.frame = requestAnimationFrame(step)
+        } else {
+          active.shown = target
+          active.frame = null
+        }
+      }
+      active.frame = requestAnimationFrame(step)
+    }
+
+    // 스타일이 아직 바뀌는 중이면 다 바뀐 뒤에 얹는다
+    restoreCloudRef.current = show
+    if (styleReadyRef.current) show()
+  }, [layer, cloudGrid, cloudCover])
 
   // 표식 맞추기
   useEffect(() => {

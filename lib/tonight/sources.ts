@@ -178,6 +178,14 @@ export const SOURCES: readonly SourceEntry[] = [
     ],
   },
   {
+    title: "지도의 구름",
+    body: "구름 레이어는 한국과 주변 바다를 약 40km 간격으로 나눈 격자의 구름 예보를 이어 그린 그림이에요. 구름의 실제 모양이 아니라 어느 쪽이 흐리고 밤사이 구름대가 어디로 가는지를 보여줘요. 장소가 맑은지는 이 그림이 아니라 장소마다 따로 받은 예보로 판단해서, 둘이 조금 어긋날 수 있어요. 구름량 20% 아래는 그리지 않아요.",
+    links: [
+      { label: "Open-Meteo (ECMWF IFS), CC BY 4.0", url: "https://open-meteo.com/" },
+      { label: "7Timer! 문서", url: "https://www.7timer.info/doc.php?lang=en" },
+    ],
+  },
+  {
     title: "지명 검색",
     body: "장소 이름과 행정구역은 OpenStreetMap에 올라온 것을 Photon으로 찾아요. OpenStreetMap에 없는 이름은 나오지 않아요. 그럴 때는 지도에서 직접 위치를 눌러 골라 주세요.",
     links: [
