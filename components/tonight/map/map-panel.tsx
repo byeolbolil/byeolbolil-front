@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { hourTimeline, initialTimelineTime } from "@/lib/tonight/hours"
 import { MAP_LAYERS, type MapLayer } from "@/lib/tonight/night-overlay"
 import { placeKey } from "@/lib/tonight/place"
+import type { Coordinates } from "@/lib/tonight/settings"
 import { hourOf, koreanHour } from "@/lib/tonight/time"
 import type { NightPlace } from "@/lib/tonight/types"
 
@@ -24,6 +25,9 @@ interface MapPanelProps {
   /** "오늘 밤" 같은 밤의 이름. 지도 위 안내에 적는다 */
   nightName: string
   onSelect: (key: string) => void
+  /** 지도의 빈 곳을 눌러 고른 위치 */
+  pick?: Coordinates | null
+  onPick?: (position: Coordinates) => void
   /** 지도 위에 얹는 카드(모바일의 장소 미리보기) */
   children?: ReactNode
 }
@@ -32,7 +36,7 @@ interface MapPanelProps {
  * 지도와 그 조작부. 레이어는 밤 불빛, 구름, 일반 지도 셋이다.
  * 구름 레이어는 구름장을 그리지 않는다. 고른 시각에 각 장소의 예보 구름량으로 표식을 칠할 뿐이다.
  */
-export function MapPanel({ places, selectedKey, topKey, nightName, onSelect, children }: MapPanelProps) {
+export function MapPanel({ places, selectedKey, topKey, nightName, onSelect, pick, onPick, children }: MapPanelProps) {
   const [layer, setLayer] = useState<MapLayer>("night")
   const [cloudTime, setCloudTime] = useState<string | null>(null)
   const [playing, setPlaying] = useState(false)
@@ -100,6 +104,8 @@ export function MapPanel({ places, selectedKey, topKey, nightName, onSelect, chi
         layer={layer}
         cloudTime={layer === "cloud" ? shownTime : null}
         onSelect={onSelect}
+        pick={pick}
+        onPick={onPick}
         controls={
           <div className="seg" role="group" aria-label="지도 레이어">
             {MAP_LAYERS.map((option) => (

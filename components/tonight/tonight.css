@@ -1442,3 +1442,76 @@
     opacity: 0;
   }
 }
+
+/* 내 장소, 지도에서 고른 위치 */
+.bb {
+  .saved {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .saved li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 2px;
+    border-bottom: 1px solid var(--hair);
+    font-size: 14.5px;
+  }
+  .saved b {
+    font-weight: 600;
+    display: block;
+  }
+  .saved span {
+    font-size: 12.5px;
+    color: var(--ink-3);
+  }
+  .text-input {
+    border: 1px solid var(--hair);
+    background: var(--night-2);
+    color: var(--ink);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font: inherit;
+    font-size: 15px;
+  }
+  .text-input::placeholder {
+    color: var(--ink-3);
+  }
+  .pick {
+    display: block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--sky-clear);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px oklch(0.1 0.03 268 / 0.5);
+    pointer-events: none;
+  }
+  .pickcard {
+    padding-right: 52px;
+  }
+  .pickcard .x-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+  .pickcard .btn {
+    grid-row: auto;
+    grid-column: 1;
+    justify-self: start;
+    margin-top: 6px;
+  }
+}
+@media (min-width: 1080px) {
+  .bb .mapcol .peek {
+    left: 50%;
+    right: auto;
+    bottom: 96px;
+    width: min(420px, calc(100% - 28px));
+    transform: translateX(-50%);
+    animation: none;
+  }
+}

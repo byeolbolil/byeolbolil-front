@@ -6,6 +6,7 @@ import { useEffect, useRef, type ReactNode } from "react"
 import { hourAt } from "@/lib/tonight/hours"
 import { KOREA_BOUNDS, MAP_STYLES, NIGHT_OVERLAY, NIGHT_OVERLAY_CORNERS, type MapLayer } from "@/lib/tonight/night-overlay"
 import { placeKey } from "@/lib/tonight/place"
+import type { Coordinates } from "@/lib/tonight/settings"
 import type { NightPlace } from "@/lib/tonight/types"
 import { levelStars, levelText } from "@/lib/tonight/wording"
 import { STAR_PATH } from "../icons"
@@ -29,6 +30,9 @@ interface NightMapProps {
   /** 구름 레이어에서 고른 시각 */
   cloudTime: string | null
   onSelect: (key: string) => void
+  /** 지도의 빈 곳을 눌러 고른 위치 */
+  pick?: Coordinates | null
+  onPick?: (position: Coordinates) => void
   /** 지도 위 오른쪽에 놓는 조작부(레이어 전환) */
   controls?: ReactNode
   /** 지도 위에 얹는 카드들 */
@@ -181,7 +185,18 @@ function paintMarker(
  * MapLibre 지도. 추천 장소를 표식으로 올리고 레이어에 따라 모양을 바꾼다.
  * 밤 불빛은 VIIRS 값으로 직접 그린 이미지, 구름은 장소별 시간 예보로 칠한 표식, 일반 지도는 기본 지도만이다.
  */
-export default function NightMap({ places, selectedKey, topKey, layer, cloudTime, onSelect, controls, children }: NightMapProps) {
+export default function NightMap({
+  places,
+  selectedKey,
+  topKey,
+  layer,
+  cloudTime,
+  onSelect,
+  pick = null,
+  onPick,
+  controls,
+  children,
+}: NightMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const markersRef = useRef(new Map<string, MarkerEntry>())
@@ -189,6 +204,9 @@ export default function NightMap({ places, selectedKey, topKey, layer, cloudTime
   const styleRef = useRef(styleUrl(layer))
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
+  const onPickRef = useRef(onPick)
+  onPickRef.current = onPick
+  const pickMarkerRef = useRef<Marker | null>(null)
   layerRef.current = layer
 
   useEffect(() => {
@@ -214,6 +232,7 @@ export default function NightMap({ places, selectedKey, topKey, layer, cloudTime
       localizeLabels(map)
       if (layerRef.current !== "base") decorateDark(map, layerRef.current)
     })
+    map.on("click", (event) => onPickRef.current?.({ lat: event.lngLat.lat, lon: event.lngLat.lng }))
     const onZoom = () => container.classList.toggle("near", map.getZoom() >= LABEL_ZOOM)
     map.on("zoom", onZoom)
     mapRef.current = map
@@ -222,6 +241,7 @@ export default function NightMap({ places, selectedKey, topKey, layer, cloudTime
     return () => {
       for (const entry of markers.values()) entry.marker.remove()
       markers.clear()
+      pickMarkerRef.current = null
       map.remove()
       mapRef.current = null
     }
@@ -272,6 +292,20 @@ export default function NightMap({ places, selectedKey, topKey, layer, cloudTime
       }
     }
   }, [places, selectedKey, topKey, layer, cloudTime])
+
+  // 고른 위치 표시
+  const pickLat = pick?.lat ?? null
+  const pickLon = pick?.lon ?? null
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    pickMarkerRef.current?.remove()
+    pickMarkerRef.current = null
+    if (pickLat === null || pickLon === null) return
+    const element = document.createElement("i")
+    element.className = "pick"
+    pickMarkerRef.current = new Marker({ element, anchor: "center" }).setLngLat([pickLon, pickLat]).addTo(map)
+  }, [pickLat, pickLon])
 
   // 고른 장소가 화면 밖에 있으면 그쪽으로 옮긴다
   useEffect(() => {
