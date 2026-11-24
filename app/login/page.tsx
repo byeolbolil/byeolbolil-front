@@ -244,9 +244,9 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-lg">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">별보기일기</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">별볼일</CardTitle>
             <CardDescription className="text-center">
-              로그인하여 별 관측 정보를 저장하고 관리하세요
+              로그인하면 내 장소를 저장하고 그곳의 밤도 함께 볼 수 있어요
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -334,7 +334,6 @@ export default function LoginPage() {
                     onClick={() => handleSocialLogin('kakao')}
                     className="w-full bg-[#FEE500] hover:bg-[#FEE500]/90 text-[#000000] font-semibold"
                     size="lg"
-                    variant="outline"
                   >
                     <svg
                       className="w-5 h-5 mr-2"
@@ -350,7 +349,6 @@ export default function LoginPage() {
                     onClick={() => handleSocialLogin('naver')}
                     className="w-full bg-[#03C75A] hover:bg-[#03C75A]/90 text-white font-semibold"
                     size="lg"
-                    variant="outline"
                   >
                     <svg
                       className="w-5 h-5 mr-2"
@@ -366,7 +364,6 @@ export default function LoginPage() {
                     onClick={() => handleSocialLogin('google')}
                     className="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold border border-gray-300"
                     size="lg"
-                    variant="outline"
                   >
                     <svg
                       className="w-5 h-5 mr-2"
@@ -454,7 +451,7 @@ export default function LoginPage() {
                         id="register-nickname"
                         type="text"
                         autoComplete="nickname"
-                        placeholder="별보기일기"
+                        placeholder="별지기"
                         className="pl-9"
                         {...registerForm.register('nickname')}
                       />
@@ -497,7 +494,6 @@ export default function LoginPage() {
                     onClick={() => handleSocialLogin('kakao')}
                     className="w-full bg-[#FEE500] hover:bg-[#FEE500]/90 text-[#000000] font-semibold"
                     size="lg"
-                    variant="outline"
                   >
                     <svg
                       className="w-5 h-5 mr-2"
@@ -513,7 +509,6 @@ export default function LoginPage() {
                     onClick={() => handleSocialLogin('naver')}
                     className="w-full bg-[#03C75A] hover:bg-[#03C75A]/90 text-white font-semibold"
                     size="lg"
-                    variant="outline"
                   >
                     <svg
                       className="w-5 h-5 mr-2"
@@ -529,7 +524,6 @@ export default function LoginPage() {
                     onClick={() => handleSocialLogin('google')}
                     className="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold border border-gray-300"
                     size="lg"
-                    variant="outline"
                   >
                     <svg
                       className="w-5 h-5 mr-2"
