@@ -1,7 +1,6 @@
 "use client"
 
 import { Header } from "@/components/header"
-import { StarField } from "@/components/star-field"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -24,7 +23,6 @@ import Link from "next/link"
 export default function GuidePage() {
   return (
     <div className="relative min-h-screen">
-      <StarField />
       <div className="relative z-10">
         <Header />
         <main className="container mx-auto px-4 py-8 max-w-4xl">

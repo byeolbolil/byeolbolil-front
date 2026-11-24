@@ -677,6 +677,16 @@
     color: var(--ink-2);
     text-underline-offset: 3px;
   }
+  .credit-line.links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    font-size: 13px;
+  }
+  .credit-line.links a {
+    color: var(--star);
+    text-decoration: underline;
+  }
 
   /* 불러오는 중 */
   .skeleton {

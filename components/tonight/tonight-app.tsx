@@ -331,9 +331,12 @@ export function TonightApp() {
             onOpenSettings={openSettings}
             heroExtras={heroExtras}
             footer={
-              <button type="button" className="linkish" style={{ alignSelf: "flex-start" }} onClick={openSources}>
-                추천 기준과 출처
-              </button>
+              <p className="credit-line links">
+                <button type="button" className="linkish" onClick={openSources}>
+                  추천 기준과 출처
+                </button>
+                <Link href="/guide">별 사진 촬영 가이드</Link>
+              </p>
             }
           />
         )}
