@@ -3,6 +3,7 @@ import { Noto_Sans_KR } from "next/font/google"
 import type { ReactNode } from "react"
 import { Analytics } from "@vercel/analytics/next"
 import { AuthProvider } from "@/components/auth/AuthProvider"
+import { RegisterServiceWorker } from "@/components/pwa/register-service-worker"
 import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
 
@@ -18,7 +19,14 @@ export const metadata: Metadata = {
   title: "별볼일",
   description: "오늘 밤 별 보기 좋은 곳과 시간을 알려드려요",
   applicationName: "별볼일",
-  icons: { icon: "/icon.svg", apple: "/apple-icon.png" },
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    apple: "/icons/apple-touch-icon.png",
+  },
+  appleWebApp: { capable: true, title: "별볼일", statusBarStyle: "black-translucent" },
 }
 
 export const viewport: Viewport = {
@@ -35,6 +43,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       <body className="font-sans antialiased">
         <AuthProvider>{children}</AuthProvider>
         <Toaster />
+        <RegisterServiceWorker />
         <Analytics />
       </body>
     </html>
