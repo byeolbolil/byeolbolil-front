@@ -184,44 +184,29 @@ export default function LoginPage() {
         const axiosError = error as AxiosError
         const errorData = axiosError.response?.data as any
         
-        if (axiosError.response?.status === 400) {
-          // 서버에서 반환하는 에러 메시지 확인
-          const serverMessage = errorData?.message || errorData?.error?.message || ''
-          
-          // 비밀번호 패턴 에러 감지
-          if (
-            serverMessage.includes('비밀번호') ||
-            serverMessage.includes('password') ||
-            serverMessage.includes('패턴') ||
-            serverMessage.includes('pattern') ||
-            serverMessage.includes('문자/숫자/특수문자')
-          ) {
+        const status = axiosError.response?.status
+
+        if (status === 409) {
+          // 이미 가입된 이메일 (백엔드 docs/API.md 10장)
+          errorMessage = '이미 사용 중인 이메일입니다.'
+          shouldSetFieldError = true
+          fieldName = 'email'
+        } else if (status === 400) {
+          // 검증 실패는 data에 필드별 사유가 담겨 온다. message는 늘 같은 문구라 분기에 쓰지 않는다.
+          const reasons = (errorData?.data ?? {}) as Record<string, string>
+
+          if (reasons.password) {
             errorMessage = '비밀번호는 8자 이상, 영문자/숫자/특수문자(!@#$%^&*)를 각각 최소 1개 이상 포함해야 합니다.'
             shouldSetFieldError = true
             fieldName = 'password'
-          }
-          // 이메일 관련 에러
-          else if (
-            serverMessage.includes('이메일') ||
-            serverMessage.includes('email') ||
-            serverMessage.includes('중복')
-          ) {
-            errorMessage = serverMessage || '이메일을 확인해주세요.'
+          } else if (reasons.email) {
+            errorMessage = '이메일 형식을 확인해주세요.'
             shouldSetFieldError = true
             fieldName = 'email'
-          }
-          // 닉네임 관련 에러
-          else if (
-            serverMessage.includes('닉네임') ||
-            serverMessage.includes('nickname')
-          ) {
-            errorMessage = serverMessage || '닉네임을 확인해주세요.'
+          } else if (reasons.nickname) {
+            errorMessage = '닉네임을 입력해주세요.'
             shouldSetFieldError = true
             fieldName = 'nickname'
-          }
-          // 기타 에러
-          else if (serverMessage) {
-            errorMessage = serverMessage
           } else {
             errorMessage = '입력한 정보를 확인해주세요.'
           }

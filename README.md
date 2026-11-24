@@ -1,193 +1,156 @@
-# 별볼일 🌟
+# 별볼일
 
 > 오늘 밤 별볼일 있나요?
 
-별볼일은 날씨, 천문, 광해 데이터를 종합 분석하여 최적의 별 관측 시간을 찾아드리는 서비스입니다.
+오늘 밤 어디서 언제 별을 보면 좋은지 알려주는 서비스의 웹 프론트엔드다. 첫 화면에서 가장 좋은 곳 하나와 추천 시간대를
+보여주고, 나머지 후보는 짧은 목록과 지도로 둔다. 백엔드는 별도 저장소(`stargazer`)에 있고, 화면의 기준은 그 저장소의
+`docs/mockup/`이다.
 
-## 📋 서비스 소개
+## 화면
 
-별볼일은 천체 관측을 계획하는 분들을 위해 다음과 같은 정보를 제공합니다:
+| 화면 | 내용 |
+|---|---|
+| 오늘 밤 | 가장 좋은 곳, 추천 시간대, 밤 시간 띠(훑으면 시간별 하늘), 후보 목록. 날짜를 바꿔 7일 뒤의 밤까지 볼 수 있다 |
+| 자세히 보기 | 추천 시간의 점수와 구름, 광해 등급, 달 밝기, 습도, 예보 출처, 시간대별 구름과 점수 그래프 |
+| 지도 | 밤 불빛, 구름, 일반 지도 레이어. 표식을 누르면 그 장소가 열리고, 빈 곳을 누르면 그 위치를 내 장소로 저장할 수 있다 |
+| 내 장소 | 저장한 장소의 오늘 밤 평가. 로그인이 필요하다 |
+| 설정 | 간단히/자세히, 몇 시까지 볼 수 있는지, 얼마나 멀리 갈 수 있는지, 출발 위치, 고급 기준 |
+| 추천 기준과 출처 | 기준값마다 근거와 상태(출처 있음, 정책, 추정, 출처 없음) |
 
-- **주간 예보**: 향후 일주일간의 관측 적합도 예보
-- **실시간 분석**: 특정 날짜와 시간대의 관측 적합도 상세 분석
-- **위치 기반 분석**: 지도에서 위치를 선택하여 해당 지역의 관측 조건 확인
-- **종합 점수**: 날씨, 구름량, 달의 위상, 광해 등 다양한 요소를 종합한 관측 적합도 점수
+1080px 이상에서는 왼쪽에 지도, 오른쪽에 추천 패널이 놓이고, 그보다 좁으면 한 줄 화면과 하단 탭으로 바뀐다.
+`/login`, `/oauth/callback`, `/guide`(별 사진 촬영 가이드)는 이전 그대로다.
 
-## 🛠️ 기술 스택
+## 기술 스택
 
-- **프레임워크**: Next.js 16
-- **언어**: TypeScript
-- **UI 라이브러리**: 
-  - React 19
-  - Radix UI
-  - Tailwind CSS
-- **지도**: Leaflet (OpenStreetMap)
-- **차트**: Recharts
-- **패키지 관리자**: pnpm
+- Next.js 16 (App Router), React 19, TypeScript
+- Tailwind CSS 4, shadcn/ui (로그인과 가이드 화면)
+- MapLibre GL JS, 바탕 지도는 [OpenFreeMap](https://openfreemap.org/)
+- zustand (인증 상태, 설정), axios (인증과 북마크 API)
+- vitest (단위 테스트), Playwright (브라우저 점검)
+- 패키지 관리자는 pnpm
 
-## 📦 설치 방법
+## 시작하기
 
-### 필수 요구사항
+Node.js 20 이상과 pnpm이 필요하다.
 
-- Node.js 18 이상
-- pnpm (권장) 또는 npm, yarn
-
-### 설치 단계
-
-1. 저장소 클론
-```bash
-git clone <repository-url>
-cd stargazer-front
-```
-
-2. 의존성 설치
 ```bash
 pnpm install
 ```
 
-3. 환경 변수 설정
-
-`.env.local` 파일에 다음 환경 변수를 설정하세요:
+`.env.local`에 백엔드 주소를 적는다. 키는 필요 없다.
 
 ```bash
-# 백엔드 API 주소
+# 로컬 백엔드 (기본값)
 NEXT_PUBLIC_API_URL=http://localhost:8080
-# 배포 서버 테스트 시: NEXT_PUBLIC_API_URL=https://api.byeolbolil.xyz
-
-# 카카오 지도 API 키 (필수)
-# 카카오 개발자 콘솔(https://developers.kakao.com/)에서 발급받은 키를 입력하세요
-NEXT_PUBLIC_KAKAO_APP_KEY=your_javascript_key_here
-NEXT_PUBLIC_KAKAO_REST_API_KEY=your_rest_api_key_here
+# 운영 백엔드로 볼 때
+# NEXT_PUBLIC_API_URL=https://api.byeolbolil.xyz
 ```
 
-**카카오 지도 API 키 발급 방법:**
-1. [카카오 개발자 콘솔](https://developers.kakao.com/) 접속
-2. 내 애플리케이션 > 애플리케이션 추가하기
-3. 플랫폼 > Web 플랫폼 등록
-   - 로컬 개발: `http://localhost:3000`
-   - 프로덕션: 실제 도메인 (예: `https://yourdomain.vercel.app`)
-4. 앱 키 > JavaScript 키 및 REST API 키 복사
-5. `.env.local` 파일에 입력
-
-자세한 설정 방법은 [`lib/map/KAKAO_SETUP.md`](lib/map/KAKAO_SETUP.md)를 참고하세요.
-
-4. 개발 서버 실행
 ```bash
-pnpm dev
+pnpm dev          # http://localhost:3000
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 확인하세요.
+Vercel에서는 `vercel.json`이 `NEXT_PUBLIC_API_URL`을 운영 백엔드로 넣어 준다.
 
-## 🚀 실행 방법
+## 명령
 
-### 개발 모드
 ```bash
-pnpm dev
+pnpm dev          # 개발 서버
+pnpm build        # 빌드. 타입 검사를 함께 한다
+pnpm start        # 빌드한 것을 실행. 서비스 워커는 여기서만 등록된다
+pnpm test         # 단위 테스트 (vitest)
+pnpm typecheck    # tsc --noEmit
+pnpm walkthrough  # 브라우저로 화면 흐름을 따라가며 점검 (개발 서버가 떠 있어야 한다)
 ```
 
-### 프로덕션 빌드
-```bash
-pnpm build
-pnpm start
-```
+`pnpm walkthrough`는 Playwright의 Chromium을 쓴다. 처음 한 번 `npx playwright install chromium`으로 받는다.
+모바일(390x844)과 PC(1440x900)에서 오늘 밤 추천, 후보 고르기, 밤 띠 훑기, 자세히 보기, 지도의 세 레이어와 표식,
+설정 바꾸기, 추천 기준과 출처, 내 장소를 차례로 열어 `walkthrough-shots/`에 화면을 찍는다. 설정을 바꾼 뒤 요청 쿼리가
+바뀌었는지, 지도 표식과 목록의 선택이 맞는지, 콘솔 오류가 없는지도 확인한다. 추천은 실제 백엔드에서 받고,
+인증 API 호출은 브라우저 안에서 막는다.
 
-### 린트 실행
-```bash
-pnpm lint
-```
-
-## 🔧 프로젝트 구조
+## 구조
 
 ```
-stargazer-front/
-├── app/                    # Next.js App Router
-│   ├── layout.tsx         # 루트 레이아웃
-│   ├── page.tsx           # 메인 페이지
-│   └── globals.css        # 전역 스타일
-├── components/            # React 컴포넌트
-│   ├── header.tsx        # 헤더 컴포넌트
-│   ├── input-section.tsx # 입력 섹션
-│   ├── result-section.tsx # 결과 섹션
-│   ├── forecast-view.tsx # 예보 뷰
-│   ├── MapSelector.tsx   # 지도 선택기
-│   └── ui/               # UI 컴포넌트 (shadcn/ui)
-├── hooks/                # 커스텀 훅
-├── lib/                  # 유틸리티 함수
-├── types/                # TypeScript 타입 정의
-└── public/               # 정적 파일
+app/
+  layout.tsx, globals.css   글꼴(Noto Sans KR), 다크 단일 테마의 색
+  page.tsx                  메인 화면
+  manifest.ts               웹 앱 매니페스트
+  login/, oauth/callback/   로그인 (이전 그대로)
+  guide/                    별 사진 촬영 가이드
+components/
+  tonight/                  메인 화면
+    tonight-app.tsx         탭, 선택 상태, 설정과 추천을 잇는 곳
+    tonight-view.tsx        오늘 밤 추천 (가장 좋은 곳, 후보 목록, 가볼 만한 곳이 없는 밤)
+    hero-card.tsx           장소 하나의 밤 (사진, 추천 시간대, 짧은 설명)
+    night-band.tsx          밤 시간 띠
+    detail-view.tsx, more-block.tsx, hour-chart.tsx   자세히 보기
+    settings-sheet.tsx, sources-sheet.tsx             설정, 추천 기준과 출처
+    my-places.tsx, save-place-sheet.tsx               내 장소
+    map/                    MapLibre 지도와 레이어
+    tonight.css             화면 스타일
+  auth/, ui/, header.tsx    인증 초기화, shadcn/ui, 로그인과 가이드 화면의 머리
+  pwa/                      서비스 워커 등록
+lib/
+  tonight/                  밤 추천 API와 화면 로직
+    api.ts, types.ts        API 클라이언트와 응답 타입
+    wording.ts              등급, 밤 패턴, 주의 사항의 문구
+    time.ts, hours.ts, place.ts, facts.ts   시각 표기, 시간 칸 고르기, 장소 표기, 카드 문구
+    settings.ts             설정과 API 쿼리 사이의 변환
+    sources.ts              추천 기준과 출처의 내용
+    night-overlay.ts        밤 불빛 이미지의 좌표와 지도 스타일
+    *.test.ts               단위 테스트
+  api/, store/              인증과 북마크 클라이언트, zustand 저장소 (이전 그대로)
+public/
+  sky/                      하늘 사진
+  map/night-lights.webp     밤 불빛 이미지
+  icons/, sw.js, offline.html   설치용 아이콘, 서비스 워커, 연결이 없을 때의 화면
+scripts/
+  render_night_overlay.py   밤 불빛 이미지 만들기
+  render_icons.py           아이콘 만들기
+  walkthrough.mjs           브라우저 점검
 ```
 
-## 🌐 API 연동
+## API
 
-백엔드 API는 환경 변수를 통해 설정됩니다:
+밤 추천은 `GET /api/v1/recommendations/tonight`과 `GET /api/v1/recommendations/nights/{date}`를 쓴다.
+요청과 응답은 백엔드 저장소의 `docs/MOBILE_DEVELOPER_GUIDE.md` 5.10에 있다.
 
-- **로컬 개발 환경**: `NEXT_PUBLIC_API_URL=http://localhost:8080` (기본값)
-- **Vercel 배포 환경**: `NEXT_PUBLIC_API_URL=https://api.byeolbolil.xyz`
+- 이 두 API는 같은 출처의 `/api/...`로 부르고 `next.config.mjs`의 rewrite가 백엔드로 넘긴다. 백엔드 CORS가
+  운영 도메인과 `localhost:3000`만 허용해서, 브라우저가 백엔드를 직접 부르면 Vercel 미리보기 주소에서 막힌다.
+- 로그인, 회원, 북마크는 이전처럼 `lib/api`의 axios 클라이언트가 백엔드를 직접 부른다.
+- 등급, 밤 패턴, 주의 사항은 enum 이름으로 온다. 문구는 `lib/tonight/wording.ts`에서 붙인다.
+- 설정은 쿼리로 옮겨 보낸다. 몇 시까지는 `preferBefore`, 얼마나 멀리는 `maxTravelMinutes`, 맑은 시간 기준은
+  `minClearHours`다. 출발 위치는 소수 둘째 자리(약 1km)로 줄여서 `lat`, `lon`으로 보낸다.
+- API가 주지 않는 값은 화면에 만들어 넣지 않는다. 예보의 출처와 생성 시각은 목록 아래와 자세히 보기에 적는다.
 
-### 환경 변수 설정
+## 지도와 이미지
 
-#### 로컬 개발
-`.env.local` 파일에서 백엔드 주소를 설정할 수 있습니다:
-```bash
-# 로컬 백엔드 서버 사용 (기본값)
-NEXT_PUBLIC_API_URL=http://localhost:8080
+- 바탕 지도는 OpenFreeMap의 공개 스타일(`dark`, `liberty`)이다. 가입이나 키 없이 쓸 수 있고 출처 표기가 필요하다.
+  MapLibre가 지도 오른쪽 아래에 "OpenFreeMap © OpenMapTiles Data from OpenStreetMap"을 적는다.
+- 밤 불빛은 백엔드 저장소의 `light_pollution_korea.csv`(VIIRS Nighttime Lights 2024 기반)를 웹 메르카토르로 그린
+  이미지다. 다시 만들려면 다음을 실행한다. 범위를 바꾸면 `lib/tonight/night-overlay.ts`의 좌표도 함께 바꾼다.
 
-# 또는 배포 서버로 테스트
-NEXT_PUBLIC_API_URL=https://api.byeolbolil.xyz
-```
+  ```bash
+  python scripts/render_night_overlay.py <백엔드 저장소>/src/main/resources/light_pollution_korea.csv public/map/night-lights.webp
+  ```
 
-환경 변수를 변경한 후에는 개발 서버를 재시작해야 합니다.
+- 구름 레이어는 구름의 모양을 그리지 않는다. 고른 시각에 각 장소의 예보 구름량으로 표식을 칠한다.
+- 하늘 사진은 재사용이 허락된 자료만 내려받아 쓴다. 작가와 라이선스는 사진 위와 "추천 기준과 출처"에 적는다.
 
-#### Vercel 배포
-Vercel 프로젝트 설정에서 환경 변수를 추가하세요:
-1. Vercel 대시보드 → 프로젝트 선택 → Settings → Environment Variables
-2. `NEXT_PUBLIC_API_URL` 변수 추가
-3. Value: `https://api.byeolbolil.xyz`
-4. Environment: Production, Preview, Development 모두 선택
+  | 파일 | 출처 | 라이선스 |
+  |---|---|---|
+  | `sky-clear.jpg` | ["밤하늘의 은하수"](https://commons.wikimedia.org/wiki/File:%EB%B0%A4%ED%95%98%EB%8A%98%EC%9D%98_%EC%9D%80%ED%95%98%EC%88%98.jpg), 이원웅(INSOLMAE) | CC BY-SA 3.0 |
+  | `sky-moon.jpg` | ["덕유산의 밤"](https://commons.wikimedia.org/wiki/File:%EB%8D%95%EC%9C%A0%EC%82%B0%EC%9D%98_%EB%B0%A4.jpg), Mg shin | CC BY-SA 3.0 |
+  | `sky-cloudy.jpg` | ["Night Clouds"](https://commons.wikimedia.org/wiki/File:Night_Clouds_(11424694453).jpg), Bureau of Land Management Oregon and Washington | 퍼블릭 도메인 |
 
-또는 `vercel.json` 파일에 이미 설정되어 있습니다.
+## 설치형 웹 앱 (PWA)
 
-### 주요 API 엔드포인트
+매니페스트와 아이콘, 서비스 워커가 있어서 홈 화면에 설치할 수 있다. 서비스 워커(`public/sw.js`)의 캐시 정책은 다음과 같다.
 
-- `GET /api/v1/analyze`: 특정 시간대의 관측 적합도 분석
-- `GET /api/v1/forecast`: 주간 관측 적합도 예보
+- `/api` 응답과 페이지 HTML은 캐시하지 않는다. 예보는 시간이 지나면 틀린 정보가 되기 때문이다.
+- 연결이 끊기면 지난 추천 대신 연결이 없다는 화면(`offline.html`)을 보여준다.
+- 주소에 해시가 들어 있는 빌드 산출물(`/_next/static/`)은 캐시에서 먼저 답한다.
+- 사진, 밤 불빛 이미지, 아이콘은 캐시로 먼저 답하고 뒤에서 새로 받아 둔다.
 
-## 🎨 주요 기능
-
-### 1. 위치 선택
-- 지도에서 클릭하여 위치 선택
-- 장소 검색 기능 (OpenStreetMap Nominatim API 사용)
-
-### 2. 주간 예보
-- 향후 일주일간의 관측 적합도 예보
-- 날짜별 상세 정보 확인
-
-### 3. 실시간 분석
-- 특정 날짜와 시간 선택
-- 종합 점수 및 상세 분석 결과 확인
-- 날씨, 구름량, 달의 위상, 광해 등 세부 정보 제공
-
-## 📝 향후 계획
-
-### 단기 계획
-- [ ] 로고 이미지 추가
-- [ ] 사용법 가이드 페이지 추가
-- [ ] 피드백 기능 구현
-- [ ] 모바일 반응형 UI 개선
-
-### 중기 계획
-- [ ] 사용자 인증 및 관심 위치 저장 기능
-- [ ] 관측 기록 및 일기 기능
-- [ ] 알림 기능 (관측 적합도가 좋은 날 알림)
-- [ ] 커뮤니티 기능 (관측 후기 공유)
-
-### 장기 계획
-- [ ] AI 기반 관측 추천 시스템
-- [ ] 실시간 관측 조건 모니터링
-- [ ] 관측 포인트 지도 (다른 사용자들이 추천한 관측 장소)
-
----
-
-**별볼일**과 함께 가장 아름다운 별을 만나보세요! ✨
-
-
+개발 서버에서는 서비스 워커를 등록하지 않는다.

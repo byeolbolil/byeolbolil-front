@@ -24,7 +24,7 @@ export const membersApi = {
 
       const user: User = {
         memberId: response.memberId,
-        nickname: response.nickname,
+        nickname: response.nickname as string,
         ...response,
       };
 

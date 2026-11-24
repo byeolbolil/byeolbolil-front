@@ -1,0 +1,180 @@
+/**
+ * "추천 기준과 출처" 화면의 내용. 백엔드 저장소의 `docs/SCORING.md`와 `docs/decisions.md`에 적힌 값과 근거를
+ * 사용자가 읽을 말로 옮긴 것이다. 여기서 새 기준을 만들지 않는다. 기준이 바뀌면 그 문서를 먼저 고치고 이 파일을 맞춘다.
+ *
+ * 상태: 표시 없음은 출처가 있는 값, "정책"은 외부 근거 없이 별볼일이 정한 값, "추정"은 어림한 값,
+ * "출처 없음"은 근거를 찾지 못해 바꿀 예정인 값이다.
+ */
+
+export type SourceStatus = "정책" | "추정" | "출처 없음"
+
+export interface SourceLink {
+  label: string
+  url: string
+}
+
+export interface SourceEntry {
+  title: string
+  body: string
+  links: SourceLink[]
+  status?: SourceStatus
+}
+
+export const SOURCES: readonly SourceEntry[] = [
+  {
+    title: "어두운 시간",
+    body: "태양이 지평선 아래 12°보다 낮아지면 대부분의 사람에게 하늘이 어둡게 느껴지고 밝은 별과 별자리가 잘 보여요. 별볼일은 한 시간 내내 태양이 12° 아래에 있는 시간을 어두운 시간으로 세요. 은하수나 성운처럼 희미하게 퍼진 대상은 18° 아래(천문박명이 끝난 뒤)까지 기다려야 해서, 12°와 18° 사이의 시간은 점수를 조금 낮춰요.",
+    links: [
+      { label: "U.S. Naval Observatory, Rise, Set, and Twilight Definitions", url: "https://aa.usno.navy.mil/faq/RST_defs" },
+      { label: "NOAA National Weather Service, Twilight", url: "https://www.weather.gov/fsd/twilight" },
+    ],
+  },
+  {
+    title: "맑다고 볼 구름량: 30% 이하",
+    body: "Clear Sky Chart는 구름이 30% 이하인 시간만 관측 가능한 시간으로 세요. 별볼일도 같은 기준을 써요.",
+    links: [{ label: "Clear Sky Chart, 기후 통계 설명", url: "https://server1.cleardarksky.com/clmt/c/Dallasct.html" }],
+  },
+  {
+    title: '"구름 거의 없음": 20% 미만',
+    body: "7Timer!가 구름 20% 미만을 맑음으로 분류해요. 별볼일은 맑은 시간 안에서 '맑음'과 '구름 조금'을 나눠 부를 때만 이 값을 써요.",
+    links: [{ label: "7Timer! 문서", url: "https://www.7timer.info/doc.php?lang=en" }],
+  },
+  {
+    title: "예보를 얼마나 믿을 수 있나",
+    body: "구름 예보의 오차가 30% 안에 들 확률은 예보 시점이 멀어질수록 73%에서 58%로 떨어지고, 층별(하층, 중층, 상층) 구름은 더 부정확해요. 며칠 뒤의 밤은 참고로만 봐 주세요.",
+    links: [{ label: "Ye & Chen, How Good is the Cloud Cover Forecast?, MNRAS 428, 2013", url: "https://arxiv.org/abs/1104.1700" }],
+  },
+  {
+    title: "달빛의 밝기",
+    body: "달빛은 빛나는 면적에 비례하지 않아요. 반달은 면적이 절반이지만 밝기는 보름달의 약 9%예요. 위상각으로 보름 대비 밝기를 계산해서 써요.",
+    links: [
+      { label: "Krisciunas & Schaefer, A Model of the Brightness of Moonlight, PASP 103, 1991", url: "https://doi.org/10.1086/132921" },
+    ],
+  },
+  {
+    title: '"달이 밝아요"로 한 단계 낮추는 기준',
+    body: "보름 대비 밝기 25% 이상인 달이 추천 시간의 절반 넘게 떠 있으면 등급을 한 단계 내려요. 밝기 계산은 위 논문을 따르지만 25%라는 경계는 별볼일이 정했어요.",
+    links: [],
+    status: "정책",
+  },
+  {
+    title: "하늘 밝기 등급 이름",
+    body: "광해 정도를 1(가장 어두움)부터 9(도심)까지 나눈 Bortle 등급과 등급별 이름을 우리말로 옮겨 써요.",
+    links: [
+      {
+        label: "Bortle, Gauging Light Pollution: The Bortle Dark-Sky Scale, Sky & Telescope, 2001",
+        url: "https://en.wikipedia.org/wiki/Bortle_scale",
+      },
+    ],
+  },
+  {
+    title: "위성 야간광 → 광해 등급",
+    body: "지금의 광해 등급은 위성이 잰 밝기를 등급표로 바꿔서 만든 값인데, 그 등급표의 근거를 찾지 못했어요. 위성 값을 Bortle 등급으로 바로 바꾸는 공인된 표도 없어요. 위성 값은 그 자리에서 위로 나가는 빛이고, 하늘 밝기는 멀리 있는 도시 불빛까지 합친 값이라서 달라요. 인공 밝기 비율로 등급을 나누는 이 논문의 방식으로 바꾸려고 해요.",
+    links: [
+      {
+        label: "Falchi et al., The new world atlas of artificial night sky brightness, Science Advances, 2016",
+        url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4928945/",
+      },
+    ],
+    status: "출처 없음",
+  },
+  {
+    title: "습도와 이슬: 80% 이상이면 주의",
+    body: "7Timer!는 습도 80%, 90%, 95%에서 단계별로 경고해요. 별볼일은 추천 시간의 습도가 80% 이상이면 이슬 주의를 띄워요. 망원경이나 렌즈는 공기보다 차가워져서 이슬점에 닿기 전에도 이슬이 맺힐 수 있어요.",
+    links: [
+      { label: "7Timer! 문서", url: "https://www.7timer.info/doc.php?lang=en" },
+      {
+        label: "Celestron, Dew point and astronomy",
+        url: "https://www.celestron.com/blogs/knowledgebase/what-is-the-dew-point-and-why-does-it-matter-for-astronomy",
+      },
+    ],
+  },
+  {
+    title: "눈이 어둠에 익는 시간",
+    body: "어둠에 들어가면 5~8분 뒤 눈의 감도가 크게 바뀌고, 완전히 적응하는 데 40분쯤 걸려요.",
+    links: [
+      {
+        label: "Kalloniatis & Luu, Light and Dark Adaptation, Webvision",
+        url: "https://www.webvision.pitt.edu/book/part-viii-psychophysics-of-vision/light-and-dark-adaptation/",
+      },
+    ],
+  },
+  {
+    title: '3시간 이상 맑으면 "꼭 가볼 만해요"',
+    body: "맑은 시간 몇 시간 이상을 추천 기준으로 쓰는 서비스나 근거는 찾지 못했어요. 눈이 적응하는 40분쯤을 빼고도 2시간 넘게 볼 수 있도록 별볼일이 정한 값이고, 설정에서 바꿀 수 있어요.",
+    links: [],
+    status: "정책",
+  },
+  {
+    title: '2시간 이상 맑으면 "가볼 만해요"',
+    body: "추천 시간이 2시간보다 짧으면 \"잠깐 볼 수 있어요\"로 낮춰요. 별볼일이 정한 값이에요.",
+    links: [],
+    status: "정책",
+  },
+  {
+    title: "새벽 2시 전 선호",
+    body: "입문자가 무리 없이 다녀올 수 있는 시간대로 정한 값이에요. 이 시각 뒤의 맑은 시간은 절반으로 쳐서 추천 시간을 골라요. 설정에서 바꿀 수 있어요.",
+    links: [],
+    status: "정책",
+  },
+  {
+    title: '도시 하늘은 "잠깐 볼 수 있어요"까지',
+    body: "광해 7등급 이상인 곳은 맑은 밤이어도 \"잠깐 볼 수 있어요\"까지만 줘요. 도심의 맑은 밤을 \"꼭 가볼 만해요\"로 권하지 않으려고 별볼일이 정한 경계예요.",
+    links: [],
+    status: "정책",
+  },
+  {
+    title: "시간별 점수 계산식",
+    body: "어두운 시간마다 100점에서 시작해 구름, 광해, 달, 박명이 남기는 비율을 차례로 곱해요. 곱으로 묶은 것은 광해가 심한 곳에서 달의 영향이 줄어든다는 관측과 맞지만, 광해 0.5, 달 0.3, 박명 0.2라는 가중치에는 근거 자료가 없어서 별볼일이 정했어요. 점수는 등급을 정하지 않고, 맑은 구간이 여럿일 때 어느 쪽을 추천할지와 같은 등급 안의 순서에만 써요.",
+    links: [{ label: "Puschnig, Wallner & Posch, MNRAS, 2020", url: "https://arxiv.org/abs/1912.05673" }],
+    status: "정책",
+  },
+  {
+    title: "이동 시간",
+    body: "직선거리의 1.3배를 시속 60km로 간다고 보고 어림한 값이에요. 산길을 올라가는 명소는 실제로 더 걸려요. 등급이 같은 장소끼리는 이동 1시간마다 4점을 빼서 가까운 곳을 앞에 둬요.",
+    links: [],
+    status: "추정",
+  },
+  {
+    title: '"오늘 밤"이 가리키는 날',
+    body: "새벽 4시 전에는 지난 저녁에 시작한 밤을 오늘 밤으로 봐요. 자정을 넘겨 앱을 열어도 지금 보고 있는 밤이 나오게 하려고 정한 값이에요.",
+    links: [],
+    status: "정책",
+  },
+  {
+    title: "날씨 예보",
+    body: "시간별 구름과 습도는 Open-Meteo에서 ECMWF IFS 모델의 예보를 받아요. Open-Meteo를 쓸 수 없을 때는 노르웨이 기상청(MET Norway)의 예보로 대신하고, 어느 쪽을 썼는지 화면에 적어요. 두 자료 모두 CC BY 4.0으로 공개돼 있어요.",
+    links: [
+      { label: "Open-Meteo", url: "https://open-meteo.com/" },
+      { label: "MET Norway Locationforecast", url: "https://api.met.no/weatherapi/locationforecast/2.0/documentation" },
+    ],
+  },
+  {
+    title: "지도",
+    body: "밤 불빛 지도는 위성이 잰 야간광(VIIRS) 값으로 별볼일이 직접 그렸어요. 어디가 밝은지 보여주는 그림이고 등급을 정하는 데는 쓰지 않아요. 바탕 지도는 OpenStreetMap 자료로 만든 OpenFreeMap의 지도예요. 구름 레이어는 구름의 모양을 그리지 않고, 고른 시각에 각 장소의 예보 구름량만 색으로 보여줘요.",
+    links: [
+      { label: "VIIRS Nighttime Lights 2024, Earth Observation Group, Payne Institute", url: "https://eogdata.mines.edu/products/vnl/" },
+      { label: "OpenFreeMap", url: "https://openfreemap.org/" },
+      { label: "OpenMapTiles", url: "https://www.openmaptiles.org/" },
+      { label: "OpenStreetMap 저작권 안내", url: "https://www.openstreetmap.org/copyright" },
+    ],
+  },
+  {
+    title: "사진",
+    body: "화면에 쓴 사진은 모두 재사용이 허락된 자료예요. 크기만 줄였고 자르거나 보정하지 않았어요.",
+    links: [
+      {
+        label: '"밤하늘의 은하수", 이원웅(INSOLMAE), CC BY-SA 3.0',
+        url: "https://commons.wikimedia.org/wiki/File:%EB%B0%A4%ED%95%98%EB%8A%98%EC%9D%98_%EC%9D%80%ED%95%98%EC%88%98.jpg",
+      },
+      {
+        label: '"덕유산의 밤", Mg shin, CC BY-SA 3.0',
+        url: "https://commons.wikimedia.org/wiki/File:%EB%8D%95%EC%9C%A0%EC%82%B0%EC%9D%98_%EB%B0%A4.jpg",
+      },
+      {
+        label: '"Night Clouds", BLM Oregon and Washington, 퍼블릭 도메인',
+        url: "https://commons.wikimedia.org/wiki/File:Night_Clouds_(11424694453).jpg",
+      },
+    ],
+  },
+]

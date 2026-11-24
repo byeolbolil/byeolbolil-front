@@ -19,12 +19,9 @@ export const bookmarksApi = {
    * 
    * @returns 북마크 목록
    */
-  async getBookmarkList(): Promise<Array<paths["/api/v1/bookmarks"]["get"]["responses"]["200"]["content"]["*/*"]>> {
+  async getBookmarkList(): Promise<paths["/api/v1/bookmarks"]["get"]["responses"]["200"]["content"]["*/*"]> {
     try {
-      const response = await api.get<
-        "/api/v1/bookmarks",
-        paths["/api/v1/bookmarks"]["get"]
-      >('/api/v1/bookmarks');
+      const response = await api.get('/api/v1/bookmarks');
 
       // 응답이 배열인 경우 그대로 반환, 단일 객체인 경우 배열로 감싸기
       return Array.isArray(response) ? response : [response];
@@ -52,10 +49,7 @@ export const bookmarksApi = {
    */
   async addBookmark(data: paths["/api/v1/bookmarks"]["post"]["requestBody"]["content"]["application/json"]): Promise<paths["/api/v1/bookmarks"]["post"]["responses"]["200"]["content"]["*/*"]> {
     try {
-      const response = await api.post<
-        "/api/v1/bookmarks",
-        paths["/api/v1/bookmarks"]["post"]
-      >('/api/v1/bookmarks', data);
+      const response = await api.post('/api/v1/bookmarks', data);
 
       return response;
     } catch (error) {
@@ -87,7 +81,7 @@ export const bookmarksApi = {
   ): Promise<any> {
     try {
       // PATCH 메서드 사용
-      const response = await api.patch(`/api/v1/bookmarks/${bookmarkId}`, data);
+      const response = await api.patch(`/api/v1/bookmarks/${bookmarkId}` as keyof paths, data);
 
       return response;
     } catch (error) {
@@ -113,7 +107,7 @@ export const bookmarksApi = {
    */
   async deleteBookmark(bookmarkId: number): Promise<void> {
     try {
-      await api.delete(`/api/v1/bookmarks/${bookmarkId}`);
+      await api.delete(`/api/v1/bookmarks/${bookmarkId}` as keyof paths);
     } catch (error) {
       if (error instanceof Error) {
         console.error('[deleteBookmark] 에러:', error.message);
