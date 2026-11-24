@@ -13,7 +13,17 @@ export type PreferBefore = "00:00" | "01:00" | "02:00" | "03:00" | "all"
 /** "얼마나 멀리 갈 수 있나요?"의 답(분). `null`은 상관없음이다. */
 export type MaxTravelMinutes = 60 | 120 | 180 | null
 
-export type OriginSetting = { kind: "gps" } | { kind: "city"; name: string } | { kind: "none" }
+/**
+ * 이동 시간을 어디서부터 재는지. `gps`는 기기의 현재 위치, `place`는 검색하거나 지도에서 직접 고른 곳,
+ * `none`은 정하지 않음(이동 시간 없이 추천)이다.
+ */
+export type OriginSetting =
+  | { kind: "gps" }
+  | { kind: "place"; name: string; lat: number; lon: number }
+  | { kind: "none" }
+
+/** 직접 고른 출발 위치의 이름 길이 한도. 헤더의 버튼에 들어가는 글자다 */
+export const ORIGIN_NAME_MAX = 40
 
 export interface Settings {
   viewMode: ViewMode
@@ -70,11 +80,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
 }
 
+function isCoordinate(value: unknown, limit: number): value is number {
+  return typeof value === "number" && Number.isFinite(value) && Math.abs(value) <= limit
+}
+
 function parseOrigin(value: unknown): OriginSetting {
   if (!isRecord(value)) return DEFAULT_SETTINGS.origin
   if (value.kind === "none") return { kind: "none" }
-  if (value.kind === "city" && typeof value.name === "string" && findCity(value.name)) {
-    return { kind: "city", name: value.name }
+  if (value.kind === "place" && typeof value.name === "string" && value.name.trim()) {
+    if (isCoordinate(value.lat, 90) && isCoordinate(value.lon, 180)) {
+      return { kind: "place", name: value.name.trim().slice(0, ORIGIN_NAME_MAX), lat: value.lat, lon: value.lon }
+    }
+  }
+  // 예전에는 도시를 이름으로만 저장했다
+  if (value.kind === "city" && typeof value.name === "string") {
+    const city = findCity(value.name)
+    if (city) return { kind: "place", name: city.name, lat: city.lat, lon: city.lon }
   }
   return { kind: "gps" }
 }
@@ -106,10 +127,7 @@ export function parseSettings(raw: unknown): Settings {
  */
 export function resolveOrigin(origin: OriginSetting, gps: Coordinates | null): Coordinates | null {
   if (origin.kind === "none") return null
-  if (origin.kind === "city") {
-    const city = findCity(origin.name)
-    return city ? { lat: city.lat, lon: city.lon } : null
-  }
+  if (origin.kind === "place") return { lat: origin.lat, lon: origin.lon }
   return gps
 }
 
@@ -132,9 +150,13 @@ export function toNightQuery(settings: Settings, origin: Coordinates | null): Ni
   return query
 }
 
-/** 헤더의 출발 위치 버튼에 적는 말. */
-export function originLabel(origin: OriginSetting, gps: Coordinates | null): string {
-  if (origin.kind === "city") return `${origin.name} 기준`
-  if (origin.kind === "gps" && gps) return "현재 위치 기준"
+/**
+ * 헤더의 출발 위치 버튼에 적는 말. 무엇을 출발 위치로 쓰고 있는지 이름으로 보여 준다.
+ *
+ * @param gpsArea 현재 위치가 속한 지역의 이름. 아직 모르면 null
+ */
+export function originLabel(origin: OriginSetting, gps: Coordinates | null, gpsArea: string | null = null): string {
+  if (origin.kind === "place") return `${origin.name}에서 출발`
+  if (origin.kind === "gps" && gps) return gpsArea ? `내 위치 · ${gpsArea}` : "내 위치에서 출발"
   return "출발 위치 정하기"
 }

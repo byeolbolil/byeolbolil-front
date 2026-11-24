@@ -6,14 +6,18 @@ import { Sheet } from "./sheet"
 
 interface SavePlaceSheetProps {
   position: Coordinates
+  /** 검색으로 고른 곳이면 그 이름을 미리 넣어 둔다 */
+  defaultName?: string
+  /** 고른 위치가 어디쯤인지. 모르면 좌표를 보여 준다 */
+  area?: string | null
   /** 저장을 시도한다. 성공하면 true */
   onSave: (name: string) => Promise<boolean>
   onClose: () => void
 }
 
 /** 지도에서 고른 위치에 이름을 붙여 내 장소로 저장한다. */
-export function SavePlaceSheet({ position, onSave, onClose }: SavePlaceSheetProps) {
-  const [name, setName] = useState("")
+export function SavePlaceSheet({ position, defaultName, area, onSave, onClose }: SavePlaceSheetProps) {
+  const [name, setName] = useState(defaultName ?? "")
   const [saving, setSaving] = useState(false)
   const trimmed = name.trim()
 
@@ -33,7 +37,7 @@ export function SavePlaceSheet({ position, onSave, onClose }: SavePlaceSheetProp
           이 장소를 뭐라고 부를까요?
         </label>
         <div className="hint">
-          고른 위치: {position.lat.toFixed(4)}, {position.lon.toFixed(4)}
+          고른 위치: {area ? `${area} (${position.lat.toFixed(4)}, ${position.lon.toFixed(4)})` : `${position.lat.toFixed(4)}, ${position.lon.toFixed(4)}`}
         </div>
         <input
           id="place-name"

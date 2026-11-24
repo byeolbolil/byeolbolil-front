@@ -177,4 +177,12 @@ export const SOURCES: readonly SourceEntry[] = [
       },
     ],
   },
+  {
+    title: "지명 검색",
+    body: "장소 이름과 행정구역은 OpenStreetMap에 올라온 것을 Photon으로 찾아요. OpenStreetMap에 없는 이름은 나오지 않아요. 그럴 때는 지도에서 직접 위치를 눌러 골라 주세요.",
+    links: [
+      { label: "© OpenStreetMap contributors", url: "https://www.openstreetmap.org/copyright" },
+      { label: "Photon", url: "https://photon.komoot.io/" },
+    ],
+  },
 ]
