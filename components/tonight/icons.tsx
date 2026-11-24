@@ -77,6 +77,15 @@ export function CloseIcon() {
   )
 }
 
+export function SearchIcon() {
+  return (
+    <svg {...STROKE} strokeWidth={2} strokeLinecap="round">
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4.5 4.5" />
+    </svg>
+  )
+}
+
 export function TonightTabIcon() {
   return (
     <svg className="ico" {...STROKE}>

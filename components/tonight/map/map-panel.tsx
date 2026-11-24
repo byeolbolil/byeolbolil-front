@@ -2,12 +2,14 @@
 
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useState, type ReactNode } from "react"
+import type { FoundPlace, PickedPlace } from "@/lib/tonight/geocode"
 import { hourTimeline, initialTimelineTime } from "@/lib/tonight/hours"
 import { MAP_LAYERS, type MapLayer } from "@/lib/tonight/night-overlay"
 import { placeKey } from "@/lib/tonight/place"
 import type { Coordinates } from "@/lib/tonight/settings"
 import { hourOf, koreanHour } from "@/lib/tonight/time"
 import type { NightPlace } from "@/lib/tonight/types"
+import { PlaceSearch } from "../place-search"
 
 // MapLibre는 window가 있어야 해서 브라우저에서만 불러온다
 const NightMap = dynamic(() => import("./night-map"), {
@@ -25,19 +27,37 @@ interface MapPanelProps {
   /** "오늘 밤" 같은 밤의 이름. 지도 위 안내에 적는다 */
   nightName: string
   onSelect: (key: string) => void
-  /** 지도의 빈 곳을 눌러 고른 위치 */
+  /** 지도의 빈 곳을 누르거나 검색해서 고른 위치 */
   pick?: Coordinates | null
-  onPick?: (position: Coordinates) => void
+  onPick?: (place: PickedPlace) => void
+  /** 이동 시간을 재는 출발 위치 */
+  origin?: Coordinates | null
   /** 지도 위에 얹는 카드(모바일의 장소 미리보기) */
   children?: ReactNode
 }
 
 /**
- * 지도와 그 조작부. 레이어는 밤 불빛, 구름, 일반 지도 셋이다.
+ * 지도와 그 조작부. 위에는 지명 검색창이 있고, 레이어는 밤 불빛, 구름, 일반 지도 셋이다.
  * 구름 레이어는 구름장을 그리지 않는다. 고른 시각에 각 장소의 예보 구름량으로 표식을 칠할 뿐이다.
  */
-export function MapPanel({ places, selectedKey, topKey, nightName, onSelect, pick, onPick, children }: MapPanelProps) {
+export function MapPanel({
+  places,
+  selectedKey,
+  topKey,
+  nightName,
+  onSelect,
+  pick,
+  onPick,
+  origin,
+  children,
+}: MapPanelProps) {
   const [layer, setLayer] = useState<MapLayer>("night")
+  /** 검색으로 고른 곳. 지도를 그쪽으로 옮긴다 */
+  const [focus, setFocus] = useState<(Coordinates & { at: number }) | null>(null)
+  const pickFound = (place: FoundPlace) => {
+    setFocus({ lat: place.lat, lon: place.lon, at: Date.now() })
+    onPick?.({ source: "search", name: place.name, address: place.address, lat: place.lat, lon: place.lon })
+  }
   const [cloudTime, setCloudTime] = useState<string | null>(null)
   const [playing, setPlaying] = useState(false)
 
@@ -105,7 +125,9 @@ export function MapPanel({ places, selectedKey, topKey, nightName, onSelect, pic
         cloudTime={layer === "cloud" ? shownTime : null}
         onSelect={onSelect}
         pick={pick}
-        onPick={onPick}
+        onPick={onPick ? (position) => onPick({ source: "map", ...position }) : undefined}
+        origin={origin}
+        focus={focus}
         controls={
           <div className="seg" role="group" aria-label="지도 레이어">
             {MAP_LAYERS.map((option) => (
@@ -124,6 +146,15 @@ export function MapPanel({ places, selectedKey, topKey, nightName, onSelect, pic
           </div>
         }
       >
+        {onPick ? (
+          <PlaceSearch
+            className="map-search"
+            label="지도에서 장소 검색"
+            placeholder="지역, 산, 천문대 이름으로 찾기"
+            emptyHint="지도에서 빈 곳을 눌러 직접 골라도 돼요."
+            onSelect={pickFound}
+          />
+        ) : null}
         <div className="map-card tl">
           <b>{nightName} 별 보기 좋은 곳</b>
           <br />

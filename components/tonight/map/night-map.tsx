@@ -15,6 +15,8 @@ const SVG_NS = "http://www.w3.org/2000/svg"
 const OVERLAY_ID = "night-lights"
 /** 이 줌부터는 모든 표식에 이름을 붙인다. 그보다 멀면 고른 곳과 가장 좋은 곳만 붙인다. */
 const LABEL_ZOOM = 8.5
+/** 검색으로 고른 곳으로 옮길 때 적어도 이만큼은 당긴다. 군 하나가 화면에 들어오는 정도다 */
+const SEARCH_ZOOM = 9.5
 const FIT_PADDING = 28
 
 // MapLibre 6은 워커를 별도 파일로 두고 그 주소를 알려 줘야 한다. 번들러가 파일을 정적 자산으로 내보낸다.
@@ -33,6 +35,10 @@ interface NightMapProps {
   /** 지도의 빈 곳을 눌러 고른 위치 */
   pick?: Coordinates | null
   onPick?: (position: Coordinates) => void
+  /** 이동 시간을 재는 출발 위치. 있으면 지도에 표시한다 */
+  origin?: Coordinates | null
+  /** 지도를 옮겨 보여 줄 곳. `at`이 바뀌면 같은 좌표라도 다시 옮긴다 */
+  focus?: (Coordinates & { at: number }) | null
   /** 지도 위 오른쪽에 놓는 조작부(레이어 전환) */
   controls?: ReactNode
   /** 지도 위에 얹는 카드들 */
@@ -194,6 +200,8 @@ export default function NightMap({
   onSelect,
   pick = null,
   onPick,
+  origin = null,
+  focus = null,
   controls,
   children,
 }: NightMapProps) {
@@ -207,6 +215,7 @@ export default function NightMap({
   const onPickRef = useRef(onPick)
   onPickRef.current = onPick
   const pickMarkerRef = useRef<Marker | null>(null)
+  const originMarkerRef = useRef<Marker | null>(null)
   layerRef.current = layer
 
   useEffect(() => {
@@ -242,6 +251,7 @@ export default function NightMap({
       for (const entry of markers.values()) entry.marker.remove()
       markers.clear()
       pickMarkerRef.current = null
+      originMarkerRef.current = null
       map.remove()
       mapRef.current = null
     }
@@ -306,6 +316,39 @@ export default function NightMap({
     element.className = "pick"
     pickMarkerRef.current = new Marker({ element, anchor: "center" }).setLngLat([pickLon, pickLat]).addTo(map)
   }, [pickLat, pickLon])
+
+  // 출발 위치 표시. 이동 시간을 어디서부터 재는지 지도에서 보이게 한다
+  const originLat = origin?.lat ?? null
+  const originLon = origin?.lon ?? null
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    originMarkerRef.current?.remove()
+    originMarkerRef.current = null
+    if (originLat === null || originLon === null) return
+    const element = document.createElement("div")
+    element.className = "origin"
+    element.setAttribute("role", "img")
+    element.setAttribute("aria-label", "출발 위치")
+    const dot = document.createElement("i")
+    const label = document.createElement("span")
+    label.textContent = "출발"
+    element.append(dot, label)
+    // 점의 가운데가 좌표에 오도록 점 반지름만큼 왼쪽으로 민다
+    originMarkerRef.current = new Marker({ element, anchor: "left", offset: [-8, 0] })
+      .setLngLat([originLon, originLat])
+      .addTo(map)
+  }, [originLat, originLon])
+
+  // 검색으로 고른 곳으로 옮긴다
+  const focusLat = focus?.lat ?? null
+  const focusLon = focus?.lon ?? null
+  const focusAt = focus?.at ?? null
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || focusLat === null || focusLon === null) return
+    map.flyTo({ center: [focusLon, focusLat], zoom: Math.max(map.getZoom(), SEARCH_ZOOM) })
+  }, [focusLat, focusLon, focusAt])
 
   // 고른 장소가 화면 밖에 있으면 그쪽으로 옮긴다
   useEffect(() => {

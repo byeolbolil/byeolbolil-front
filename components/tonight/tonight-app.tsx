@@ -8,11 +8,13 @@ import { useToast } from "@/hooks/use-toast"
 import { bookmarksApi } from "@/lib/api/bookmarks"
 import { authStore } from "@/lib/store/authStore"
 import { buildNightView } from "@/lib/tonight/facts"
+import type { PickedPlace } from "@/lib/tonight/geocode"
 import { joinParts, placeKey, travelText } from "@/lib/tonight/place"
-import { originLabel, resolveOrigin, toNightQuery, type Coordinates } from "@/lib/tonight/settings"
+import { ORIGIN_NAME_MAX, originLabel, resolveOrigin, roundCoordinate, toNightQuery } from "@/lib/tonight/settings"
 import { settingsOf, useSettings } from "@/lib/tonight/settings-store"
 import { nightDates, nightName, windowText } from "@/lib/tonight/time"
 import type { NightPlace } from "@/lib/tonight/types"
+import { useAreaName } from "@/lib/tonight/use-area-name"
 import { useGeoPosition } from "@/lib/tonight/use-geo-position"
 import { useIsDesktop } from "@/lib/tonight/use-is-desktop"
 import { useNight } from "@/lib/tonight/use-night"
@@ -80,8 +82,17 @@ export function TonightApp() {
   const tab: Tab = isDesktop && chosenTab === "map" ? "tonight" : chosenTab
   /** 모바일 지도에서 누른 표식의 장소 */
   const [peekKey, setPeekKey] = useState<string | null>(null)
-  /** 지도의 빈 곳을 눌러 고른 위치. 내 장소로 저장할 수 있다 */
-  const [pick, setPick] = useState<Coordinates | null>(null)
+  /** 지도의 빈 곳을 누르거나 검색해서 고른 위치. 출발 위치로 삼거나 내 장소로 저장할 수 있다 */
+  const [pick, setPick] = useState<PickedPlace | null>(null)
+  // 현재 위치가 어디로 잡혔는지 이름으로 보여 준다. 추천 요청과 같이 1km로 줄인 좌표만 서버로 보낸다
+  const gpsArea = useAreaName(
+    settings.origin.kind === "gps" && geo.position
+      ? { lat: roundCoordinate(geo.position.lat), lon: roundCoordinate(geo.position.lon) }
+      : null,
+  )
+  /** 빈 곳을 눌러 고른 위치가 어느 지역인지 */
+  const pickArea = useAreaName(pick?.source === "map" ? pick : null)
+  const pickName = pick ? (pick.name ?? (pickArea ? `${pickArea} 근처` : "고른 위치")) : ""
   /** 자세히 보고 있는 장소의 키 */
   const [detailKey, setDetailKey] = useState<string | null>(null)
   /** 간단히 보기에서 "자세히"를 펼쳤는지 */
@@ -131,9 +142,19 @@ export function TonightApp() {
     setPeekKey(key)
     setPick(null)
   }
-  const pickOnMap = (position: Coordinates) => {
-    setPick(position)
+  const pickOnMap = (place: PickedPlace) => {
+    setPick(place)
     setPeekKey(null)
+  }
+  /** 고른 위치를 출발 위치로 삼는다. 이동 시간을 여기서부터 다시 잰다 */
+  const startFromPick = () => {
+    if (!pick) return
+    const name = (pick.name ?? pickArea ?? "고른 위치").slice(0, ORIGIN_NAME_MAX)
+    settingsState.update({
+      origin: { kind: "place", name, lat: roundPosition(pick.lat), lon: roundPosition(pick.lon) },
+    })
+    toast({ title: "출발 위치를 바꿨어요", description: `${name}에서 걸리는 시간으로 다시 추천해요.` })
+    setPick(null)
   }
 
   /** 추천 명소를 내 장소로 저장한다. 저장하면 다음 추천부터 내 장소로 나온다 */
@@ -156,6 +177,8 @@ export function TonightApp() {
       await bookmarksApi.addBookmark({
         type: "CUSTOM",
         name,
+        // 직접 고른 위치는 주소가 있어야 저장된다. 지역 이름을 모르면 좌표를 적는다
+        address: pick.address || pickArea || `${pick.lat.toFixed(4)}, ${pick.lon.toFixed(4)}`,
         latitude: roundPosition(pick.lat),
         longitude: roundPosition(pick.lon),
       })
@@ -176,7 +199,7 @@ export function TonightApp() {
   }
   const addFromMap = () => {
     if (isDesktop) {
-      toast({ title: "지도에서 빈 곳을 눌러 보세요", description: "고른 위치를 내 장소로 저장할 수 있어요." })
+      toast({ title: "지도에서 찾거나 빈 곳을 눌러 보세요", description: "고른 위치를 내 장소로 저장할 수 있어요." })
     } else {
       selectTab("map")
     }
@@ -217,19 +240,26 @@ export function TonightApp() {
 
   const pickCard = pick ? (
     <div className="peek pickcard">
-      <div className="nm">고른 위치</div>
+      <div className="nm">{pickName}</div>
       <div className="sb">
-        {pick.lat.toFixed(3)}, {pick.lon.toFixed(3)} · 저장하면 이곳의 밤도 함께 비교해 드려요
+        {joinParts([pick.address, `${pick.lat.toFixed(3)}, ${pick.lon.toFixed(3)}`])}
+        <br />
+        출발 위치로 삼거나, 저장해서 이곳의 밤도 함께 비교할 수 있어요
       </div>
-      {isAuthenticated ? (
-        <button type="button" className="btn primary" onClick={() => setSheet("save")}>
-          내 장소로 저장
+      <div className="pick-actions">
+        <button type="button" className="btn" onClick={startFromPick}>
+          여기서 출발
         </button>
-      ) : (
-        <Link className="btn primary" href="/login">
-          로그인하고 저장
-        </Link>
-      )}
+        {isAuthenticated ? (
+          <button type="button" className="btn primary" onClick={() => setSheet("save")}>
+            내 장소로 저장
+          </button>
+        ) : (
+          <Link className="btn primary" href="/login">
+            로그인하고 저장
+          </Link>
+        )}
+      </div>
       <button type="button" className="x-btn" aria-label="고른 위치 지우기" onClick={() => setPick(null)}>
         <CloseIcon />
       </button>
@@ -270,7 +300,7 @@ export function TonightApp() {
           <>
             <div className="sec-title">
               <h2>지도에서 고르기</h2>
-              <p>빈 곳을 누르면 그 위치를 골라요</p>
+              <p>이름으로 찾거나 빈 곳을 눌러요</p>
             </div>
             <MapPanel
               places={places}
@@ -280,6 +310,7 @@ export function TonightApp() {
               onSelect={peekOnMap}
               pick={pick}
               onPick={pickOnMap}
+              origin={origin}
             >
               {pickCard}
               {peekPlace ? (
@@ -354,7 +385,7 @@ export function TonightApp() {
           별볼일
         </div>
         <button type="button" className="where" title="출발 위치" onClick={openSettings}>
-          {originLabel(settings.origin, geo.position)}
+          {originLabel(settings.origin, geo.position, gpsArea)}
         </button>
         <button type="button" className="gear" aria-label="설정" onClick={openSettings}>
           <SettingsIcon />
@@ -389,6 +420,7 @@ export function TonightApp() {
               onSelect={openFromMap}
               pick={pick}
               onPick={pickOnMap}
+              origin={origin}
             >
               {pickCard}
             </MapPanel>
@@ -405,6 +437,7 @@ export function TonightApp() {
         <SettingsSheet
           settings={settings}
           geoStatus={geo.status}
+          gpsArea={gpsArea}
           hasOrigin={origin !== null}
           onChange={settingsState.update}
           onOpenSources={openSources}
@@ -412,7 +445,15 @@ export function TonightApp() {
         />
       ) : null}
       {sheet === "sources" ? <SourcesSheet onClose={closeSheet} /> : null}
-      {sheet === "save" && pick ? <SavePlaceSheet position={pick} onSave={savePicked} onClose={closeSheet} /> : null}
+      {sheet === "save" && pick ? (
+        <SavePlaceSheet
+          position={pick}
+          defaultName={pick.name}
+          area={pick.address || pickArea}
+          onSave={savePicked}
+          onClose={closeSheet}
+        />
+      ) : null}
     </div>
   )
 }

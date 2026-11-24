@@ -26,9 +26,26 @@ describe("저장된 설정 읽기", () => {
       maxTravelMinutes: null,
       minClearHours: 5,
       redScreen: true,
-      origin: { kind: "city", name: "부산" },
+      origin: { kind: "place", name: "양평군", lat: 37.4916, lon: 127.4875 },
     }
     expect(parseSettings(JSON.parse(JSON.stringify(saved)))).toEqual(saved)
+  })
+
+  it("예전에 이름으로만 저장한 도시는 좌표가 있는 출발 위치로 바꿔 읽는다", () => {
+    expect(parseSettings({ origin: { kind: "city", name: "부산" } }).origin).toEqual({
+      kind: "place",
+      name: "부산",
+      lat: 35.097,
+      lon: 129.008,
+    })
+  })
+
+  it("직접 고른 출발 위치는 이름과 범위 안의 좌표가 모두 있어야 읽는다", () => {
+    const origin = (value: unknown) => parseSettings({ origin: value }).origin
+    expect(origin({ kind: "place", name: "양평군", lat: 37.4916 })).toEqual({ kind: "gps" })
+    expect(origin({ kind: "place", name: " ", lat: 37.4916, lon: 127.4875 })).toEqual({ kind: "gps" })
+    expect(origin({ kind: "place", name: "양평군", lat: 91, lon: 127.4875 })).toEqual({ kind: "gps" })
+    expect(origin({ kind: "place", name: "양평군", lat: "37.4916", lon: 127.4875 })).toEqual({ kind: "gps" })
   })
 
   it("모르는 값과 범위를 벗어난 값은 기본값으로 바꾼다", () => {
@@ -57,8 +74,11 @@ describe("출발 좌표 정하기", () => {
     expect(resolveOrigin({ kind: "gps" }, seoulMapo)).toEqual(seoulMapo)
   })
 
-  it("도시를 고르면 현재 위치보다 도시가 먼저다", () => {
-    expect(resolveOrigin({ kind: "city", name: "강릉" }, seoulMapo)).toEqual({ lat: 37.756, lon: 128.896 })
+  it("직접 고른 곳이 있으면 현재 위치보다 그곳이 먼저다", () => {
+    expect(resolveOrigin({ kind: "place", name: "강릉", lat: 37.756, lon: 128.896 }, seoulMapo)).toEqual({
+      lat: 37.756,
+      lon: 128.896,
+    })
   })
 
   it("정하지 않으면 위치를 받았어도 쓰지 않는다", () => {
@@ -66,9 +86,10 @@ describe("출발 좌표 정하기", () => {
   })
 
   it("버튼 문구", () => {
-    expect(originLabel({ kind: "gps" }, seoulMapo)).toBe("현재 위치 기준")
+    expect(originLabel({ kind: "gps" }, seoulMapo)).toBe("내 위치에서 출발")
+    expect(originLabel({ kind: "gps" }, seoulMapo, "서울특별시 성산2동")).toBe("내 위치 · 서울특별시 성산2동")
     expect(originLabel({ kind: "gps" }, null)).toBe("출발 위치 정하기")
-    expect(originLabel({ kind: "city", name: "대전" }, null)).toBe("대전 기준")
+    expect(originLabel({ kind: "place", name: "대전", lat: 36.337, lon: 127.423 }, null)).toBe("대전에서 출발")
     expect(originLabel({ kind: "none" }, seoulMapo)).toBe("출발 위치 정하기")
   })
 })
