@@ -3,24 +3,31 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { useAuthInit } from "@/components/auth/AuthProvider"
 import { authStore } from "@/lib/store/authStore"
-import { placeKey } from "@/lib/tonight/place"
+import { buildNightView } from "@/lib/tonight/facts"
+import { joinParts, placeKey, travelText } from "@/lib/tonight/place"
 import { originLabel, resolveOrigin, toNightQuery } from "@/lib/tonight/settings"
 import { settingsOf, useSettings } from "@/lib/tonight/settings-store"
-import { nightDates, nightName } from "@/lib/tonight/time"
+import { nightDates, nightName, windowText } from "@/lib/tonight/time"
 import type { NightPlace } from "@/lib/tonight/types"
 import { useGeoPosition } from "@/lib/tonight/use-geo-position"
+import { useIsDesktop } from "@/lib/tonight/use-is-desktop"
 import { useNight } from "@/lib/tonight/use-night"
+import { patternText } from "@/lib/tonight/wording"
 import { DetailView } from "./detail-view"
-import { BrandMark, ChevronIcon, SettingsIcon, TonightTabIcon } from "./icons"
+import { BrandMark, ChevronIcon, MapTabIcon, SettingsIcon, TonightTabIcon } from "./icons"
+import { MapPanel } from "./map/map-panel"
 import { MoreBlock } from "./more-block"
 import { NightPicker } from "./night-picker"
 import { NightError, NightSkeleton } from "./night-status"
+import { PlaceRow } from "./place-row"
+import { Rating } from "./rating"
 import { SettingsSheet } from "./settings-sheet"
 import { SourcesSheet } from "./sources-sheet"
 import { TonightView } from "./tonight-view"
 import "./tonight.css"
 
 type SheetKind = "settings" | "sources"
+type Tab = "tonight" | "map"
 
 /**
  * 메인 화면. 설정과 출발 위치를 읽어 오늘 밤 추천을 받고, 탭에 따라 화면을 바꾼다.
@@ -56,6 +63,12 @@ export function TonightApp() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   /** 오늘 밤의 날짜. 서버가 정한다(새벽 4시 전에는 전날). 오늘 밤 추천을 처음 받을 때 알게 된다 */
   const [knownTonight, setKnownTonight] = useState<string | null>(null)
+  const isDesktop = useIsDesktop()
+  const [chosenTab, setTab] = useState<Tab>("tonight")
+  // 넓은 화면에서는 지도가 늘 왼쪽에 있어서 지도 탭이 없다
+  const tab: Tab = isDesktop && chosenTab === "map" ? "tonight" : chosenTab
+  /** 모바일 지도에서 누른 표식의 장소 */
+  const [peekKey, setPeekKey] = useState<string | null>(null)
   /** 자세히 보고 있는 장소의 키 */
   const [detailKey, setDetailKey] = useState<string | null>(null)
   /** 간단히 보기에서 "자세히"를 펼쳤는지 */
@@ -75,7 +88,13 @@ export function TonightApp() {
   const dates = useMemo(() => (tonightDate ? nightDates(tonightDate) : []), [tonightDate])
   const shownDate = selectedDate ?? tonightDate
   const laterDates = data ? dates.filter((date) => date > data.date) : []
-  const detailPlace = detailKey && data ? (data.places.find((place) => placeKey(place) === detailKey) ?? null) : null
+  const places = data?.places ?? []
+  const findPlace = (key: string | null) => (key ? (places.find((place) => placeKey(place) === key) ?? null) : null)
+  const detailPlace = findPlace(detailKey)
+  const peekPlace = findPlace(peekKey)
+  const topPlace = data ? buildNightView(data).top : null
+  const topKey = topPlace ? placeKey(topPlace) : null
+  const shownNightName = data && tonightDate ? nightName(data.date, tonightDate) : "오늘 밤"
 
   const selectDate = (date: string) => {
     setSelectedDate(date === tonightDate ? null : date)
@@ -84,10 +103,20 @@ export function TonightApp() {
   }
   const openPlace = (place: NightPlace) => {
     setDetailKey(placeKey(place))
+    setPeekKey(null)
     setMoreOpen(false)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
-  const closeDetail = () => {
+  /** 넓은 화면의 지도에서 표식을 누르면 오른쪽 패널에 그 장소를 연다 */
+  const openFromMap = (key: string) => {
+    setDetailKey(key)
+    setMoreOpen(false)
+  }
+  const selectTab = (next: Tab) => {
+    setTab(next)
+    closeDetail()
+  }
+  function closeDetail() {
     setDetailKey(null)
     setMoreOpen(false)
   }
@@ -126,13 +155,55 @@ export function TonightApp() {
         {detailPlace && extras ? (
           <DetailView
             place={detailPlace}
-            nightName={nightName(data.date, tonightDate)}
+            nightName={shownNightName}
             detailed={detailed}
             onBack={closeDetail}
             actions={extras.actions}
           >
             {extras.children}
           </DetailView>
+        ) : tab === "map" ? (
+          <>
+            <div className="sec-title">
+              <h2>지도에서 고르기</h2>
+              <p>표식을 누르면 그 장소가 나와요</p>
+            </div>
+            <MapPanel places={places} selectedKey={peekKey} topKey={topKey} nightName={shownNightName} onSelect={setPeekKey}>
+              {peekPlace ? (
+                <div className="peek">
+                  <div className="nm">
+                    {peekPlace.name} <Rating level={peekPlace.level} compact />
+                  </div>
+                  <div className="sb">
+                    {joinParts([
+                      peekPlace.bestWindow ? windowText(peekPlace.bestWindow) : patternText(peekPlace.pattern),
+                      travelText(peekPlace.travel),
+                    ])}
+                  </div>
+                  <button type="button" className="btn primary" onClick={() => openPlace(peekPlace)}>
+                    자세히
+                  </button>
+                </div>
+              ) : null}
+            </MapPanel>
+            <section className="sec">
+              <div className="sec-title">
+                <h2>지도 속 장소</h2>
+                <p>{shownNightName} 기준</p>
+              </div>
+              <div className="rows">
+                {places.map((place) => (
+                  <PlaceRow
+                    key={placeKey(place)}
+                    place={place}
+                    detailed={detailed}
+                    selected={placeKey(place) === peekKey}
+                    onOpen={openPlace}
+                  />
+                ))}
+              </div>
+            </section>
+          </>
         ) : (
           <TonightView
             night={data}
@@ -174,9 +245,13 @@ export function TonightApp() {
         </button>
       </header>
       <nav className="nav" role="tablist" aria-label="화면">
-        <button type="button" role="tab" aria-selected="true" onClick={closeDetail}>
+        <button type="button" role="tab" aria-selected={tab === "tonight"} onClick={() => selectTab("tonight")}>
           <TonightTabIcon />
           오늘 밤
+        </button>
+        <button type="button" role="tab" className="only-m" aria-selected={tab === "map"} onClick={() => selectTab("map")}>
+          <MapTabIcon />
+          지도
         </button>
         <button type="button" className="only-m" onClick={openSettings}>
           <SettingsIcon className="ico" />
@@ -184,9 +259,19 @@ export function TonightApp() {
         </button>
       </nav>
       <div className="stage">
-        <section className="mapcol" aria-label="지도" />
+        <section className="mapcol" aria-label="지도">
+          {isDesktop ? (
+            <MapPanel
+              places={places}
+              selectedKey={detailKey ?? topKey}
+              topKey={topKey}
+              nightName={shownNightName}
+              onSelect={openFromMap}
+            />
+          ) : null}
+        </section>
         <main className="view">
-          {dates.length > 0 && shownDate && !detailPlace ? (
+          {dates.length > 0 && shownDate && !detailPlace && tab === "tonight" ? (
             <NightPicker dates={dates} selected={shownDate} onSelect={selectDate} />
           ) : null}
           {content}

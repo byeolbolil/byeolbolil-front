@@ -1014,3 +1014,431 @@
     opacity: 0.5;
   }
 }
+
+/* 지도 */
+.bb {
+  .mapstack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .mapwrap {
+    position: relative;
+    height: min(66vh, 540px);
+    border-radius: 22px;
+    overflow: hidden;
+    background: #060916;
+    box-shadow: 0 1px 0 var(--hair) inset;
+  }
+  .map-loading {
+    display: grid;
+    place-items: center;
+    color: var(--ink-3);
+    font-size: 14px;
+  }
+  .mapcanvas {
+    position: absolute;
+    inset: 0;
+    font: inherit;
+  }
+
+  /* 표식 */
+  .pin {
+    border: 0;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ink);
+  }
+  .pin .mk {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    position: relative;
+  }
+  .pin .mk svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 5px oklch(0.88 0.12 86 / 0.8));
+  }
+  .pin .dot0 {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cloud);
+    opacity: 0.7;
+  }
+  .pin .cdot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid oklch(0.1 0.03 268 / 0.7);
+    box-shadow: 0 0 6px oklch(0.1 0.03 268 / 0.6);
+  }
+  .pin .cdot.none {
+    background: none;
+    border: 1.5px dashed var(--ink-3);
+    box-shadow: none;
+  }
+  .pin .pl {
+    display: none;
+    font-size: 12px;
+    font-weight: 500;
+    background: oklch(0.11 0.03 268 / 0.8);
+    border-radius: 999px;
+    padding: 2px 9px;
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+  }
+  .pin .cc {
+    margin-left: 6px;
+    font-size: 10.5px;
+    color: var(--sky-clear);
+    font-variant-numeric: tabular-nums;
+  }
+  .pin.sel .pl,
+  .pin.top .pl,
+  .pin:hover .pl,
+  .pin:focus-visible .pl,
+  .mapcanvas.near .pin .pl {
+    display: inline-block;
+  }
+  .pin:hover {
+    z-index: 4 !important;
+  }
+  .pin:hover .pl {
+    color: var(--star);
+  }
+  .pin.sel .mk {
+    width: 30px;
+    height: 30px;
+  }
+  .pin.sel .pl {
+    background: var(--star);
+    color: var(--night-0);
+    font-weight: 600;
+  }
+  .pin.sel .cc {
+    color: var(--night-0);
+  }
+  .pin.sel:hover .pl {
+    color: var(--night-0);
+  }
+  .pin.sel .mk::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1.5px solid var(--star);
+    opacity: 0.6;
+  }
+  /* 밝은 지도 위에서는 금색 별이 묻혀서 어두운 테두리를 두른다 */
+  .mapcanvas[data-layer="base"] .pin .mk svg {
+    filter: none;
+  }
+  .mapcanvas[data-layer="base"] .pin .mk path {
+    stroke: oklch(0.2 0.045 270);
+    stroke-width: 2.5;
+    stroke-linejoin: round;
+    paint-order: stroke;
+    opacity: 1;
+  }
+  .mapcanvas[data-layer="base"] .pin .dot0 {
+    background: oklch(0.45 0.03 265);
+    opacity: 1;
+  }
+  .mapcanvas[data-layer="base"] .pin .pl {
+    background: oklch(0.2 0.04 268 / 0.88);
+  }
+  .mapcanvas[data-layer="base"] .pin.sel .pl {
+    background: var(--star);
+  }
+
+  /* 지도 위 카드와 조작부 */
+  .map-card {
+    position: absolute;
+    z-index: 2;
+    background: oklch(0.11 0.03 268 / 0.78);
+    backdrop-filter: blur(8px);
+    border-radius: 14px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: var(--ink-2);
+    max-width: min(320px, calc(100% - 28px));
+  }
+  .map-card b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  /* 카드가 표식을 가려도 표식을 누를 수 있게 한다 */
+  .map-card {
+    pointer-events: none;
+  }
+  .map-legend {
+    display: none;
+    background: var(--night-1);
+    border-radius: 14px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+  .map-card.tl {
+    top: 14px;
+    left: 14px;
+  }
+  .map-card.bl {
+    bottom: 14px;
+    left: 14px;
+  }
+  .ramp {
+    height: 6px;
+    border-radius: 3px;
+    margin: 6px 0 4px;
+  }
+  .ramp.night {
+    background: linear-gradient(90deg, #0b0f22, #3a2c22, #b8814a, #ffe9c9);
+  }
+  .ramp.cloud {
+    background: linear-gradient(90deg in oklch, var(--star), var(--cloud));
+  }
+  .rl {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  .credit {
+    font-size: 10.5px;
+    color: var(--ink-3);
+    margin-top: 4px;
+  }
+  .map-ctl {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+    pointer-events: none;
+  }
+  .map-ctl > * {
+    pointer-events: auto;
+  }
+  .map-ctl .seg {
+    flex-direction: column;
+    background: oklch(0.11 0.03 268 / 0.8);
+    backdrop-filter: blur(8px);
+    border-radius: 14px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .map-ctl .seg button {
+    border: 0;
+    border-radius: 10px;
+    padding: 4px 10px;
+    font-size: 11.5px;
+  }
+  .zoom-btns {
+    display: flex;
+    flex-direction: column;
+    background: oklch(0.11 0.03 268 / 0.8);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .zoom-btns button {
+    border: 0;
+    background: none;
+    width: 30px;
+    height: 28px;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+  }
+  .zoom-btns button svg {
+    width: 14px;
+    height: 14px;
+  }
+  .zoom-btns button + button {
+    border-top: 1px solid var(--hair);
+  }
+  .zoom-btns button:hover {
+    background: var(--night-3);
+  }
+  .peek {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 3;
+    background: var(--night-1);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+    align-items: center;
+    box-shadow: 0 10px 30px oklch(0.05 0.02 268 / 0.6);
+  }
+  .peek .nm {
+    font-weight: 600;
+    font-size: 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .peek .sb {
+    font-size: 13px;
+    color: var(--ink-3);
+    grid-column: 1;
+  }
+  .peek .btn {
+    grid-row: 1 / 3;
+    grid-column: 2;
+  }
+  .mapwrap:has(.peek) .map-card.bl,
+  .mapwrap:has(.peek) .maplibregl-ctrl-bottom-right {
+    display: none;
+  }
+
+  .timebar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--night-1);
+    border-radius: 14px;
+    padding: 10px 14px;
+  }
+  .timebar button {
+    border: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--star);
+    color: var(--night-0);
+    cursor: pointer;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+  }
+  .timebar button svg {
+    width: 16px;
+    height: 16px;
+  }
+  .timebar input {
+    flex: 1;
+    min-width: 0;
+    accent-color: var(--sky-clear);
+  }
+  .timebar .tl-label {
+    font-size: 13px;
+    min-width: 64px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* MapLibre의 출처 표기를 어두운 화면에 맞춘다 */
+  .maplibregl-ctrl.maplibregl-ctrl-attrib,
+  .maplibregl-ctrl.maplibregl-ctrl-attrib.maplibregl-compact {
+    background: oklch(0.11 0.03 268 / 0.78);
+    color: var(--ink-3);
+    font-size: 10.5px;
+    border-radius: 12px;
+  }
+  .maplibregl-ctrl.maplibregl-ctrl-attrib a {
+    color: var(--ink-2);
+  }
+  .maplibregl-ctrl-attrib-button {
+    filter: invert(1);
+    opacity: 0.8;
+  }
+
+  @media (max-width: 720px) {
+    .map-card.tl {
+      display: none;
+    }
+    /* 좁은 화면에서는 지도 위가 좁아서 범례를 지도 아래에 둔다 */
+    .map-card.bl {
+      display: none;
+    }
+    .map-legend {
+      display: block;
+    }
+    .pin .pl {
+      font-size: 11px;
+      padding: 1px 7px;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .pin.sel .mk::before {
+      animation: bb-ping 2.4s ease-out infinite;
+    }
+    .peek {
+      animation: bb-up 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+  }
+}
+
+@media (min-width: 1080px) {
+  .bb {
+    .mapcol .mapstack {
+      height: 100%;
+    }
+    .mapcol .mapwrap {
+      flex: 1;
+      min-height: 0;
+      height: auto;
+    }
+    .map-ctl {
+      top: auto;
+      bottom: 44px;
+      right: 14px;
+      flex-direction: column-reverse;
+    }
+    .map-ctl .seg {
+      flex-direction: row;
+      border-radius: 999px;
+    }
+    .map-ctl .seg button {
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12px;
+    }
+    .zoom-btns button {
+      width: 34px;
+      height: 32px;
+    }
+  }
+}
+
+:root[data-red="1"] .bb .mapcanvas canvas {
+  filter: grayscale(1) sepia(1) saturate(6) hue-rotate(-40deg) brightness(0.7);
+}
+
+@keyframes bb-ping {
+  from {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+@keyframes bb-up {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+}

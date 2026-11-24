@@ -150,6 +150,16 @@ export const SOURCES: readonly SourceEntry[] = [
     ],
   },
   {
+    title: "지도",
+    body: "밤 불빛 지도는 위성이 잰 야간광(VIIRS) 값으로 별볼일이 직접 그렸어요. 어디가 밝은지 보여주는 그림이고 등급을 정하는 데는 쓰지 않아요. 바탕 지도는 OpenStreetMap 자료로 만든 OpenFreeMap의 지도예요. 구름 레이어는 구름의 모양을 그리지 않고, 고른 시각에 각 장소의 예보 구름량만 색으로 보여줘요.",
+    links: [
+      { label: "VIIRS Nighttime Lights 2024, Earth Observation Group, Payne Institute", url: "https://eogdata.mines.edu/products/vnl/" },
+      { label: "OpenFreeMap", url: "https://openfreemap.org/" },
+      { label: "OpenMapTiles", url: "https://www.openmaptiles.org/" },
+      { label: "OpenStreetMap 저작권 안내", url: "https://www.openstreetmap.org/copyright" },
+    ],
+  },
+  {
     title: "사진",
     body: "화면에 쓴 사진은 모두 재사용이 허락된 자료예요. 크기만 줄였고 자르거나 보정하지 않았어요.",
     links: [
