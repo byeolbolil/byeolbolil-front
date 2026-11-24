@@ -1039,6 +1039,8 @@
   .mapcanvas {
     position: absolute;
     inset: 0;
+    /* 표식의 z-index가 지도 위 조작부를 넘지 않도록 따로 쌓는다 */
+    z-index: 0;
     font: inherit;
   }
 
