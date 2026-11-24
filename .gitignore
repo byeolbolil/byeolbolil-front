@@ -29,3 +29,5 @@ next-env.d.ts
 # commit messages
 COMMIT_MESSAGE.txt
 PR_MESSAGE.md
+# 브라우저 점검 스크립트가 찍은 화면
+walkthrough-shots/
