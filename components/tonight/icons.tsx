@@ -102,6 +102,24 @@ export function CarIcon() {
   )
 }
 
+export function PersonIcon() {
+  return (
+    <svg {...STROKE} strokeLinecap="round">
+      <circle cx="12" cy="8.5" r="3.5" />
+      <path d="M5 19.5a7 7 0 0 1 14 0" />
+    </svg>
+  )
+}
+
+export function CameraIcon({ className }: { className?: string }) {
+  return (
+    <svg {...STROKE} strokeLinejoin="round" className={className}>
+      <path d="M4 8.5h3l1.5-2.5h7L17 8.5h3v10H4z" />
+      <circle cx="12" cy="13" r="3.2" />
+    </svg>
+  )
+}
+
 export function SearchIcon() {
   return (
     <svg {...STROKE} strokeWidth={2} strokeLinecap="round">

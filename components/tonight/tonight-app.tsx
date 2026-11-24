@@ -19,8 +19,18 @@ import { useGeoPosition } from "@/lib/tonight/use-geo-position"
 import { useIsDesktop } from "@/lib/tonight/use-is-desktop"
 import { useNight } from "@/lib/tonight/use-night"
 import { patternText } from "@/lib/tonight/wording"
+import { AccountButton } from "./account-button"
 import { DetailView } from "./detail-view"
-import { BrandMark, ChevronIcon, CloseIcon, MapTabIcon, MineTabIcon, SettingsIcon, TonightTabIcon } from "./icons"
+import {
+  BrandMark,
+  CameraIcon,
+  ChevronIcon,
+  CloseIcon,
+  MapTabIcon,
+  MineTabIcon,
+  SettingsIcon,
+  TonightTabIcon,
+} from "./icons"
 import { MapPanel } from "./map/map-panel"
 import { MoreBlock } from "./more-block"
 import { MyPlaces } from "./my-places"
@@ -424,7 +434,6 @@ export function TonightApp() {
                   <button type="button" className="linkish" onClick={openSources}>
                     추천 기준과 출처
                   </button>
-                  <Link href="/guide">별 사진 촬영 가이드</Link>
                 </p>
               }
             />
@@ -446,7 +455,9 @@ export function TonightApp() {
         <button type="button" className="where" title="출발 위치" onClick={openSettings}>
           {originLabel(settings.origin, geo.position, gpsArea)}
         </button>
-        <button type="button" className="gear" aria-label="설정" onClick={openSettings}>
+        <AccountButton pending={isInitializing} />
+        {/* 좁은 화면에서는 아래 탭에 설정이 있다 */}
+        <button type="button" className="gear only-d" aria-label="설정" onClick={openSettings}>
           <SettingsIcon />
         </button>
       </header>
@@ -463,6 +474,10 @@ export function TonightApp() {
           <MineTabIcon />
           내 장소
         </button>
+        <Link href="/guide">
+          <CameraIcon className="ico" />
+          촬영 가이드
+        </Link>
         <button type="button" className="only-m" onClick={openSettings}>
           <SettingsIcon className="ico" />
           설정
