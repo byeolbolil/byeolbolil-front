@@ -1,0 +1,62 @@
+{
+  "6": {
+    "src": "/spots/6.jpg",
+    "alt": "횡성 태기산의 모습",
+    "credit": "INSOLMAE 이원웅, CC BY-SA 3.0",
+    "url": "https://commons.wikimedia.org/wiki/File:%ED%83%9C%EA%B8%B0%EC%82%B0_%EB%B3%84_%EC%9D%BC%EC%A3%BC.jpg"
+  },
+  "12": {
+    "src": "/spots/12.jpg",
+    "alt": "연천 당포성의 모습",
+    "credit": "Jaehee Jang1, CC BY-SA 4.0",
+    "url": "https://commons.wikimedia.org/wiki/File:Dangpo3.jpg"
+  },
+  "13": {
+    "src": "/spots/13.jpg",
+    "alt": "제천 덕주산성의 모습",
+    "credit": "문화재청, 공공누리 제1유형",
+    "url": "https://commons.wikimedia.org/wiki/File:%EC%A0%9C%EC%B2%9C_%EB%8D%95%EC%A3%BC%EC%82%B0%EC%84%B1_(2).jpg"
+  },
+  "16": {
+    "src": "/spots/16.jpg",
+    "alt": "대전 시민천문대의 모습",
+    "credit": "Rickinasia, CC BY-SA 4.0",
+    "url": "https://commons.wikimedia.org/wiki/File:%EB%8C%80%EC%A0%84%EC%8B%9C%EB%AF%BC%EC%B2%9C%EB%AC%B8%EB%8C%80_Daejeon_Observatory.jpg"
+  },
+  "19": {
+    "src": "/spots/19.jpg",
+    "alt": "합천 황매산의 모습",
+    "credit": "Seong Gyu Eok Men, CC BY-SA 3.0",
+    "url": "https://commons.wikimedia.org/wiki/File:The_Way_To_Hwangmaesan_(106796859).jpeg"
+  },
+  "22": {
+    "src": "/spots/22.jpg",
+    "alt": "의령 한우산의 모습",
+    "credit": "Dittwjfsdgkvkdjg, CC BY-SA 4.0",
+    "url": "https://commons.wikimedia.org/wiki/File:UR-HUmt3.jpg"
+  },
+  "28": {
+    "src": "/spots/28.jpg",
+    "alt": "서귀포 1100고지의 모습",
+    "credit": "Loooys, CC BY-SA 3.0",
+    "url": "https://commons.wikimedia.org/wiki/File:Hallasan_1100_uplands(%ED%95%9C%EB%9D%BC%EC%82%B0_1100%EA%B3%A0%EC%A7%80).jpg"
+  },
+  "30": {
+    "src": "/spots/30.jpg",
+    "alt": "제주 새별오름의 모습",
+    "credit": "Grapesurgeon, CC BY-SA 4.0",
+    "url": "https://commons.wikimedia.org/wiki/File:Saebyeol_Oreum_04.jpg"
+  },
+  "54": {
+    "src": "/spots/54.jpg",
+    "alt": "포항 호미곶의 모습",
+    "credit": "Mobius6, CC BY 4.0",
+    "url": "https://commons.wikimedia.org/wiki/File:Homigot_20240113_009.jpg"
+  },
+  "64": {
+    "src": "/spots/64.jpg",
+    "alt": "용눈이오름의 모습",
+    "credit": "Y-S.Ko, CC BY-SA 4.0",
+    "url": "https://commons.wikimedia.org/wiki/File:%EC%9A%A9%EB%88%88%EC%9D%B4%EC%98%A4%EB%A6%84_(2018.05.08).jpg"
+  }
+}

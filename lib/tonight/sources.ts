@@ -160,19 +160,12 @@ export const SOURCES: readonly SourceEntry[] = [
     ],
   },
   {
-    title: "사진",
-    body: "화면에 쓴 사진은 모두 재사용이 허락된 자료예요. 크기만 줄였고 자르거나 보정하지 않았어요.",
+    title: "사진과 그림",
+    body: "장소 사진은 위키미디어 공용에서 재사용이 허락된 것만 골라 썼고, 사진마다 작가와 라이선스를 사진 위에 적었어요. 크기만 줄였고 자르거나 보정하지 않았어요. 그 장소가 어떤 곳인지 보여주려는 사진이라 대부분 낮에 찍은 풍경이에요. 사진을 구하지 못한 장소는 다른 곳의 사진을 빌려 쓰지 않고, 오늘 밤 예보(구름, 달, 광해 등급)로 그린 하늘 그림을 보여줘요. 그림 속 별의 수는 느낌을 전하려는 것이고 실제로 보이는 별의 수를 계산한 것은 아니에요.",
     links: [
+      { label: "위키미디어 공용", url: "https://commons.wikimedia.org/" },
       {
-        label: '"밤하늘의 은하수", 이원웅(INSOLMAE), CC BY-SA 3.0',
-        url: "https://commons.wikimedia.org/wiki/File:%EB%B0%A4%ED%95%98%EB%8A%98%EC%9D%98_%EC%9D%80%ED%95%98%EC%88%98.jpg",
-      },
-      {
-        label: '"덕유산의 밤", Mg shin, CC BY-SA 3.0',
-        url: "https://commons.wikimedia.org/wiki/File:%EB%8D%95%EC%9C%A0%EC%82%B0%EC%9D%98_%EB%B0%A4.jpg",
-      },
-      {
-        label: '"Night Clouds", BLM Oregon and Washington, 퍼블릭 도메인',
+        label: '"Night Clouds", BLM Oregon and Washington, 퍼블릭 도메인 (가볼 만한 곳이 없는 밤의 사진)',
         url: "https://commons.wikimedia.org/wiki/File:Night_Clouds_(11424694453).jpg",
       },
     ],

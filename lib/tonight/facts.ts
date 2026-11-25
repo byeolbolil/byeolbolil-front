@@ -63,14 +63,6 @@ export function tipText(place: NightPlace): string {
   return parts.join(" ")
 }
 
-/** 하늘 사진의 종류. 흐린 밤, 달이 밝은 밤, 맑은 밤이다. */
-export type SkyPhotoKind = "clear" | "moon" | "cloudy"
-
-export function skyPhotoKind(place: NightPlace | null): SkyPhotoKind {
-  if (!place || place.level === "NO") return "cloudy"
-  return place.notes.includes("BRIGHT_MOON") ? "moon" : "clear"
-}
-
 export type EmptyKind = "NO_FORECAST" | "ALL_EXCLUDED" | "CLOUDY" | "POOR"
 
 export interface NightView {

@@ -7,7 +7,6 @@ import {
   forecastCredits,
   moonFact,
   skyFact,
-  skyPhotoKind,
   tipText,
   windowCloudAverage,
 } from "./facts"
@@ -125,15 +124,6 @@ describe("한마디", () => {
     expect(tipText(makePlace({ bestWindow: window, notes: ["CITY_LIGHTS", "DEW"] }))).toBe(
       `도시 불빛이 있어도 밝은 별자리는 충분히 보여요. 습도가 높아서 렌즈에 이슬이 맺힐 수 있어요. ${adapt}`,
     )
-  })
-})
-
-describe("하늘 사진 고르기", () => {
-  it("흐린 밤, 달 밝은 밤, 맑은 밤", () => {
-    expect(skyPhotoKind(null)).toBe("cloudy")
-    expect(skyPhotoKind(makePlace({ level: "NO" }))).toBe("cloudy")
-    expect(skyPhotoKind(makePlace({ level: "GOOD", notes: ["BRIGHT_MOON"] }))).toBe("moon")
-    expect(skyPhotoKind(makePlace({ level: "STRONG" }))).toBe("clear")
   })
 })
 

@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState, type ReactNode } from "react"
 import { buildNightView, emptyMessage, type EmptyKind } from "@/lib/tonight/facts"
-import { SKY_PHOTOS } from "@/lib/tonight/photos"
+import { CLOUDY_NIGHT_PHOTO } from "@/lib/tonight/photos"
 import { placeKey } from "@/lib/tonight/place"
 import { daysBetween, nightName, windowText } from "@/lib/tonight/time"
 import type { NightPlace, NightQuery, NightRecommendation } from "@/lib/tonight/types"
@@ -149,7 +149,7 @@ function EmptyNight({ kind, name, maxTravelHours, tonightDate, laterDates, query
   const lookAhead = kind === "CLOUDY" || kind === "POOR"
   const next = useNextGoodNight(lookAhead, laterDates, query)
   const message = emptyMessage(kind, maxTravelHours)
-  const photo = SKY_PHOTOS.cloudy
+  const photo = CLOUDY_NIGHT_PHOTO
 
   let body: ReactNode = null
   if (next.status === "searching") {
