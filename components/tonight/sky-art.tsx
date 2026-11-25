@@ -1,5 +1,6 @@
 import { useId } from "react"
 import { windowHours } from "@/lib/tonight/hours"
+import { moonLitPath } from "@/lib/tonight/moon"
 import type { NightHour, NightPlace } from "@/lib/tonight/types"
 
 const WIDTH = 400
@@ -27,7 +28,7 @@ function randomFrom(seed: number): () => number {
 }
 
 interface SkyArtProps {
-  place: Pick<NightPlace, "type" | "id" | "name" | "bortleClass" | "moonBrightness" | "hours" | "bestWindow" | "level">
+  place: Pick<NightPlace, "type" | "id" | "name" | "bortleClass" | "moonBrightness" | "moon" | "hours" | "bestWindow" | "level">
   /** 밤 띠에서 훑고 있는 시간. 있으면 그 시각의 구름과 달로 그린다 */
   hour?: NightHour
 }
@@ -110,7 +111,17 @@ export function SkyArt({ place, hour }: SkyArtProps) {
       {moon > 0 ? (
         <>
           <circle cx={moonX} cy={moonY} r={30 + moon * 70} fill={`url(#${id}-moon)`} />
-          <circle cx={moonX} cy={moonY} r={11} fill="oklch(0.96 0.04 95)" opacity={0.55 + moon * 0.45} />
+          {place.moon ? (
+            <>
+              <circle cx={moonX} cy={moonY} r={11} fill="oklch(0.3 0.03 268)" />
+              <path
+                d={moonLitPath(moonX, moonY, 11, place.moon.illuminatedFraction, place.moon.waxing)}
+                fill="oklch(0.96 0.04 95)"
+              />
+            </>
+          ) : (
+            <circle cx={moonX} cy={moonY} r={11} fill="oklch(0.96 0.04 95)" opacity={0.55 + moon * 0.45} />
+          )}
         </>
       ) : null}
       <g filter={`url(#${id}-soft)`} opacity={0.5 + cloud * 0.4}>

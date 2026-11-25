@@ -3,6 +3,7 @@
  * 문장은 넣지 않았다.
  */
 import { average, moonSummary, windowHours } from "./hours"
+import { moonTimesText } from "./moon"
 import { hourOf, koreanHour } from "./time"
 import type { ForecastSource, NightPlace, NightRecommendation } from "./types"
 import { bortleName, cloudHeadline, isWorthGoing, patternText } from "./wording"
@@ -23,6 +24,14 @@ export function cloudFact(place: NightPlace): QuickFact {
 
 /** 어두운 시간이 없는 밤(예보가 끊긴 경우)은 달 이야기를 하지 않는다. */
 export function moonFact(place: NightPlace): QuickFact | null {
+  const fact = moonHeadline(place)
+  if (!fact) return null
+  // 언제 뜨고 지는지를 알면 설명 뒤에 붙인다
+  const times = moonTimesText(place.moon)
+  return times ? { title: fact.title, detail: `${fact.detail} · ${times}` } : fact
+}
+
+function moonHeadline(place: NightPlace): QuickFact | null {
   const moon = moonSummary(place)
   if (!moon) return null
   switch (moon.kind) {

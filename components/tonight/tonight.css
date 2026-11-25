@@ -2179,3 +2179,10 @@
     }
   }
 }
+
+/* 요약 옆의 작은 그림(구름 낀 하늘, 달 모양) */
+.bb .quick .gauge {
+  width: 34px;
+  height: 34px;
+  flex: none;
+}

@@ -44,6 +44,17 @@ export interface TravelEstimate {
   minutes: number
 }
 
+/** 그 장소에서 본 그 밤의 달 */
+export interface NightMoon {
+  /** 밝게 보이는 면의 비율. 삭 0, 보름 1 */
+  illuminatedFraction: number
+  /** 차오르는 중이면 true, 기우는 중이면 false */
+  waxing: boolean
+  /** 그날 정오부터 다음 날 정오 사이에 달이 뜨는 시각. 그 사이에 뜨지 않으면 없다 */
+  rise?: string
+  set?: string
+}
+
 export interface NightPlace {
   type: PlaceType
   id: number
@@ -59,6 +70,8 @@ export interface NightPlace {
   travel?: TravelEstimate
   bortleClass: number
   moonBrightness: number
+  /** 달의 모양과 뜨고 지는 시각. 이 값을 주기 전에 받아 둔 응답에는 없다 */
+  moon?: NightMoon
   forecastSource: ForecastSource
   forecastIssuedAt?: string
   hours: NightHour[]

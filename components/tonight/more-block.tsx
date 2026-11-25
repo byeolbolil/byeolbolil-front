@@ -5,7 +5,8 @@ import { PREFER_ALL_NIGHT } from "@/lib/tonight/settings"
 import { koreanClock } from "@/lib/tonight/time"
 import type { NightCriteria, NightPlace } from "@/lib/tonight/types"
 import { bortleName, cloudHeadline } from "@/lib/tonight/wording"
-import { CloudSky, DarknessScale, HumidityDrop, MoonGlow, ScoreRing } from "./gauges"
+import { moonPhaseName, moonTimesText } from "@/lib/tonight/moon"
+import { CloudSky, DarknessScale, HumidityDrop, MoonGlow, MoonPhase, ScoreRing } from "./gauges"
 import { HourStrip } from "./hour-strip"
 import { CarIcon, CityIcon, ClockIcon, MoonIcon } from "./icons"
 
@@ -32,6 +33,7 @@ export function MoreBlock({ place, nightDate, criteria, onOpenSources }: MoreBlo
   const humidity = average(basis, (hour) => hour.relativeHumidity)
   const moonHours = basis.filter((hour) => hour.moonUp).length
   const moonPercent = Math.round(place.moonBrightness * 100)
+  const moonTimes = moonTimesText(place.moon)
   const before = criteria.preferBefore === PREFER_ALL_NIGHT ? "밤사이" : `${koreanClock(criteria.preferBefore)} 전에`
   const travel = travelText(place.travel)
   const cityLights = place.bortleClass >= CITY_BORTLE_MIN
@@ -56,12 +58,19 @@ export function MoreBlock({ place, nightDate, criteria, onOpenSources }: MoreBlo
           </div>
         </li>
         <li>
-          <MoonGlow brightness={place.moonBrightness} up={moonHours > 0} />
+          {place.moon ? (
+            <MoonPhase moon={place.moon} brightness={place.moonBrightness} up={moonHours > 0} />
+          ) : (
+            <MoonGlow brightness={place.moonBrightness} up={moonHours > 0} />
+          )}
           <div>
-            <b>{moonHours > 0 ? `보름달의 ${moonPercent}% 밝기` : "달 없는 하늘"}</b>
+            <b>{place.moon ? moonPhaseName(place.moon) : moonHours > 0 ? "달이 떠 있어요" : "달 없는 하늘"}</b>
             <span>
-              {moonHours > 0 ? `${span} 중 ${moonHours}시간 떠 있어요` : `${span}에는 달이 떠 있지 않아요`}
+              {moonHours > 0
+                ? `보름일 때의 ${moonPercent}% 밝기예요. ${span} 중 ${moonHours}시간 떠 있어요`
+                : `${span}에는 달이 떠 있지 않아요`}
             </span>
+            {moonTimes ? <span>{moonTimes}</span> : null}
           </div>
         </li>
         <li>
