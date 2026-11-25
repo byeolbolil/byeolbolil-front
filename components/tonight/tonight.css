@@ -261,6 +261,7 @@
   .sky-text .sub {
     font-size: 13.5px;
     color: var(--ink-2);
+    word-break: keep-all;
   }
 
   .rating {
@@ -2527,8 +2528,8 @@
       linear-gradient(oklch(0.88 0.12 86 / 0.13), oklch(0.88 0.12 86 / 0.13)),
       var(--night-2);
   }
-  .wk[data-level="MAYBE"] .wk-mark {
-    color: var(--ink-3);
+  .wk[data-level="MAYBE"] .wk-mark path {
+    fill: var(--ink-3);
   }
   .wk[data-level="NO"] .wk-mark {
     color: var(--cloud);
