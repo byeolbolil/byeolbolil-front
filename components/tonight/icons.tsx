@@ -148,6 +148,24 @@ export function CameraIcon({ className }: { className?: string }) {
   )
 }
 
+/** 책갈피. 내 장소를 뜻한다. 저장한 곳은 속을 채운다 */
+export function BookmarkIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg {...STROKE} strokeLinejoin="round" fill={filled ? "currentColor" : "none"}>
+      <path d="M6.5 3.5h11v17L12 16.8l-5.5 3.7Z" />
+    </svg>
+  )
+}
+
+/** 달력. 이번 주 보기에 쓴다 */
+export function CalendarIcon() {
+  return (
+    <svg {...STROKE} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.5 6.5h15v13h-15zM4.5 10.5h15M8.5 4v4M15.5 4v4" />
+    </svg>
+  )
+}
+
 /** 새 창으로 여는 바깥 링크 */
 export function ExternalIcon() {
   return (

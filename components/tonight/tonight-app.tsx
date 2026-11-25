@@ -22,7 +22,9 @@ import { patternText } from "@/lib/tonight/wording"
 import { AccountButton } from "./account-button"
 import { DetailView } from "./detail-view"
 import {
+  BookmarkIcon,
   BrandMark,
+  CalendarIcon,
   CameraIcon,
   ChevronIcon,
   CloseIcon,
@@ -42,11 +44,13 @@ import { PlaceRow } from "./place-row"
 import { Rating } from "./rating"
 import { SavePlaceSheet } from "./save-place-sheet"
 import { SettingsSheet } from "./settings-sheet"
+import { Sheet } from "./sheet"
 import { SourcesSheet } from "./sources-sheet"
 import { TonightView } from "./tonight-view"
+import { WeekOutlook, WeekSection } from "./week-outlook"
 import "./tonight.css"
 
-type SheetKind = "settings" | "origin" | "sources" | "save"
+type SheetKind = "settings" | "origin" | "sources" | "save" | "week"
 type Tab = "tonight" | "map" | "mine"
 
 /** 저장하는 좌표의 자릿수. 소수 다섯째 자리는 약 1m다 */
@@ -108,6 +112,10 @@ export function TonightApp() {
   const pickName = pick ? (pick.name ?? (pickArea ? `${pickArea} 근처` : "고른 위치")) : ""
   /** 자세히 보고 있는 장소의 키 */
   const [detailKey, setDetailKey] = useState<string | null>(null)
+  /** 자세히 보고 있는 명소의 ID. 저장하거나 빼면 장소의 키가 바뀌므로(SPOT과 BOOKMARK) 명소 ID로도 찾는다 */
+  const [detailSpotId, setDetailSpotId] = useState<number | null>(null)
+  /** 저장하거나 빼는 중인 장소의 키. 추천을 다시 받을 때까지 버튼을 잠근다 */
+  const [savingKey, setSavingKey] = useState<string | null>(null)
   /** 간단히 보기에서 "자세히"를 펼쳤는지 */
   const [moreOpen, setMoreOpen] = useState(false)
   const [sheet, setSheet] = useState<SheetKind | null>(null)
@@ -127,8 +135,16 @@ export function TonightApp() {
   const laterDates = data ? dates.filter((date) => date > data.date) : []
   const places = data?.places ?? []
   const findPlace = (key: string | null) => (key ? (places.find((place) => placeKey(place) === key) ?? null) : null)
-  const detailPlace = findPlace(detailKey)
+  const detailPlace =
+    findPlace(detailKey) ??
+    (detailKey !== null && detailSpotId !== null ? (places.find((place) => place.spotId === detailSpotId) ?? null) : null)
+  /** 자세히 보고 있는 장소의 지금 키. 저장한 뒤에는 처음 연 키와 다르다 */
+  const shownDetailKey = detailPlace ? placeKey(detailPlace) : null
   const peekPlace = findPlace(peekKey)
+  // 추천을 다시 받았으면 저장 버튼을 푼다
+  useEffect(() => {
+    setSavingKey(null)
+  }, [data])
   const topPlace = data ? buildNightView(data).top : null
   const topKey = topPlace ? placeKey(topPlace) : null
   const shownNightName = data && tonightDate ? nightName(data.date, tonightDate) : "오늘 밤"
@@ -159,6 +175,7 @@ export function TonightApp() {
       window.history.pushState({ ...window.history.state, bbDetail: true }, "")
     }
     setDetailKey(key)
+    setDetailSpotId(findPlace(key)?.spotId ?? null)
     setMoreOpen(false)
   }
   /** 자세히 보기에서 나온다. `restore`면 목록에서 보던 자리로 돌아간다 */
@@ -166,6 +183,7 @@ export function TonightApp() {
     scrollToRestore.current = restore ? listScroll.current : null
     listScroll.current = null
     setDetailKey(null)
+    setDetailSpotId(null)
     setMoreOpen(false)
   }, [])
   /** 탭이나 날짜를 바꾸면서 자세히 보기를 닫을 때. 쌓아 둔 기록도 함께 되돌린다 */
@@ -235,19 +253,38 @@ export function TonightApp() {
     setPick(null)
   }
 
-  /** 추천 명소를 내 장소로 저장한다. 저장하면 다음 추천부터 내 장소로 나온다 */
-  const saveSpot = async (place: NightPlace) => {
+  /**
+   * 추천 명소를 내 장소로 저장하거나, 저장해 둔 곳을 뺀다. 저장하면 다음 추천부터 내 장소로 나오고
+   * 내 장소 탭에서 이번 주를 한꺼번에 볼 수 있다.
+   */
+  const toggleSaved = async (place: NightPlace) => {
     if (!isAuthenticated) {
       router.push("/login")
       return
     }
+    setSavingKey(placeKey(place))
     try {
-      await bookmarksApi.addBookmark({ type: "SPOT", spotId: place.spotId, name: place.name })
-      toast({ title: "내 장소에 저장했어요", description: place.name })
+      if (place.type === "BOOKMARK") {
+        await bookmarksApi.deleteBookmark(place.id)
+        toast({ title: "내 장소에서 뺐어요", description: place.name })
+        // 직접 고른 위치는 빼면 추천에서 사라진다. 보고 있던 화면을 닫는다
+        if (place.spotId === undefined && detailOpen.current) backFromDetail()
+      } else {
+        await bookmarksApi.addBookmark({ type: "SPOT", spotId: place.spotId, name: place.name })
+        toast({ title: "내 장소에 저장했어요", description: "내 장소 탭에서 이번 주를 한눈에 볼 수 있어요." })
+      }
       night.reload()
     } catch {
+      setSavingKey(null)
       toast({ title: "저장하지 못했어요", description: "잠시 뒤에 다시 시도해 주세요.", variant: "destructive" })
     }
+  }
+  /** 다른 화면에서 고른 밤의 추천 순위로 간다 */
+  const openNight = (date: string) => {
+    setSheet(null)
+    setChosenTab("tonight")
+    selectDate(date)
+    scrollPanelTo(0)
   }
   const savePicked = async (name: string): Promise<boolean> => {
     if (!pick) return false
@@ -290,12 +327,21 @@ export function TonightApp() {
   /** 장소 카드에 붙이는 버튼과 자세히 보기 */
   const heroExtras = (place: NightPlace): { actions: ReactNode; children: ReactNode } => {
     const open = detailed || moreOpen
+    const saved = place.type === "BOOKMARK"
+    const busy = savingKey === placeKey(place)
     return {
       actions: (
         <>
-          {place.type === "SPOT" && place.spotId !== undefined ? (
-            <button type="button" className="btn" onClick={() => void saveSpot(place)}>
-              저장
+          {saved || place.spotId !== undefined ? (
+            <button
+              type="button"
+              className="btn save"
+              aria-pressed={saved}
+              disabled={busy}
+              onClick={() => void toggleSaved(place)}
+            >
+              <BookmarkIcon filled={saved} />
+              {busy ? (saved ? "빼는 중" : "저장하는 중") : saved ? "내 장소에 저장됨" : "내 장소에 저장"}
             </button>
           ) : null}
           <span className="spacer" />
@@ -306,10 +352,26 @@ export function TonightApp() {
           )}
         </>
       ),
-      children:
-        open && data ? (
-          <MoreBlock place={place} nightDate={data.date} criteria={data.criteria} onOpenSources={openSources} />
-        ) : null,
+      children: (
+        <>
+          {open && data ? (
+            <MoreBlock place={place} nightDate={data.date} criteria={data.criteria} onOpenSources={openSources} />
+          ) : null}
+          <WeekSection
+            key={`${place.latitude},${place.longitude}`}
+            position={{ lat: place.latitude, lon: place.longitude }}
+            criteria={query}
+            defaultOpen={detailPlace !== null}
+            nightActions={(date) =>
+              data && date !== data.date ? (
+                <button type="button" className="btn" onClick={() => openNight(date)}>
+                  이 밤의 추천 순위 보기
+                </button>
+              ) : null
+            }
+          />
+        </>
+      ),
     }
   }
 
@@ -334,6 +396,10 @@ export function TonightApp() {
             로그인하고 저장
           </Link>
         )}
+        <button type="button" className="btn wide" onClick={() => setSheet("week")}>
+          <CalendarIcon />
+          이곳의 이번 주 보기
+        </button>
       </div>
       <button type="button" className="x-btn" aria-label="고른 위치 지우기" onClick={() => setPick(null)}>
         <CloseIcon />
@@ -344,9 +410,9 @@ export function TonightApp() {
   const myPlaces = (
     <MyPlaces
       night={data}
-      nightName={shownNightName}
-      detailed={detailed}
+      criteria={query}
       onOpenPlace={openPlace}
+      onOpenNight={openNight}
       onAddFromMap={addFromMap}
       onChanged={night.reload}
     />
@@ -366,7 +432,7 @@ export function TonightApp() {
             place={detailPlace}
             nightName={shownNightName}
             detailed={detailed}
-            others={places.filter((place) => placeKey(place) !== detailKey)}
+            others={places.filter((place) => placeKey(place) !== shownDetailKey)}
             onOpenPlace={openPlace}
             onBack={backFromDetail}
             actions={extras.actions}
@@ -507,7 +573,7 @@ export function TonightApp() {
           {isDesktop ? (
             <MapPanel
               places={places}
-              selectedKey={detailKey ?? topKey}
+              selectedKey={shownDetailKey ?? topKey}
               topKey={topKey}
               nightName={shownNightName}
               nightDate={data?.date ?? null}
@@ -548,6 +614,19 @@ export function TonightApp() {
         />
       ) : null}
       {sheet === "sources" ? <SourcesSheet onClose={closeSheet} /> : null}
+      {sheet === "week" && pick ? (
+        <Sheet title={`${pickName}의 이번 주`} onClose={closeSheet}>
+          <WeekOutlook
+            position={pick}
+            criteria={query}
+            nightActions={(date) => (
+              <button type="button" className="btn" onClick={() => openNight(date)}>
+                이 밤의 추천 순위 보기
+              </button>
+            )}
+          />
+        </Sheet>
+      ) : null}
       {sheet === "save" && pick ? (
         <SavePlaceSheet
           position={pick}

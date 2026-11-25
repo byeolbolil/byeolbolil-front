@@ -101,6 +101,13 @@ export function MapPanel({
     setPlaying(true)
   }
 
+  // 내 장소가 지도에 있을 때만 표식의 뜻을 적는다. 좁은 화면에서는 지도 아래 안내에 함께 나온다
+  const mineKey = places.some((place) => place.type === "BOOKMARK") ? (
+    <span className="pin-key mine-key">
+      <i data-mine="1" /> 네모난 하늘색 책갈피는 내 장소
+    </span>
+  ) : null
+
   const legend =
     layer === "night" ? (
       <>
@@ -183,6 +190,7 @@ export function MapPanel({
             <i data-level="MAYBE" /> 아쉬움
             <i data-level="NO" /> 어려움
           </span>
+          {mineKey}
         </div>
         {legend ? <div className="map-card bl">{legend}</div> : null}
         {children}
@@ -216,7 +224,12 @@ export function MapPanel({
           <span className="tl-label">{shownTime ? koreanHour(hourOf(shownTime)) : ""}</span>
         </div>
       ) : null}
-      {legend ? <div className="map-legend">{legend}</div> : null}
+      {legend || mineKey ? (
+        <div className="map-legend">
+          {legend}
+          {mineKey}
+        </div>
+      ) : null}
     </div>
   )
 }

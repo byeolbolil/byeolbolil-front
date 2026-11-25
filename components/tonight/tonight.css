@@ -39,6 +39,9 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    /* 옆의 출발 위치와 계정 버튼이 길어져도 이름이 두 줄로 꺾이지 않는다 */
+    flex: none;
+    white-space: nowrap;
     font-weight: 700;
     font-size: 22px;
     letter-spacing: -0.01em;
@@ -2411,4 +2414,311 @@
   width: 34px;
   height: 34px;
   flex: none;
+}
+
+/* 이번 주 보기: 요일 칸 일곱 개와 펼친 밤. 내 장소는 하늘색 책갈피로 구분한다 */
+.bb {
+  .week-sec {
+    gap: 10px;
+  }
+  .week-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .week-sum {
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+  .week {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .wk {
+    border: 1px solid transparent;
+    background: var(--night-2);
+    border-radius: 12px;
+    padding: 8px 2px 7px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    min-width: 0;
+    cursor: pointer;
+    color: var(--ink-2);
+  }
+  span.wk {
+    cursor: default;
+    opacity: 0.5;
+  }
+  .wk-day {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .wk-date {
+    font-size: 10.5px;
+    color: var(--ink-3);
+    font-family: var(--font-num);
+  }
+  .wk-mark {
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    color: var(--star);
+    font-size: 12px;
+  }
+  .wk-mark svg {
+    width: 11px;
+    height: 11px;
+  }
+  /* 좋은 밤일수록 금빛이 짙다. oklch로 섞으면 남색과 금색 사이의 보라가 나와서 반투명 금색을 겹친다 */
+  .wk[data-level="STRONG"] {
+    background:
+      linear-gradient(oklch(0.88 0.12 86 / 0.3), oklch(0.88 0.12 86 / 0.3)),
+      var(--night-2);
+  }
+  .wk[data-level="GOOD"] {
+    background:
+      linear-gradient(oklch(0.88 0.12 86 / 0.13), oklch(0.88 0.12 86 / 0.13)),
+      var(--night-2);
+  }
+  .wk[data-level="MAYBE"] .wk-mark {
+    color: var(--ink-3);
+  }
+  .wk[data-level="NO"] .wk-mark {
+    color: var(--cloud);
+    opacity: 0.75;
+  }
+  .wk[data-level="NO"] .wk-mark svg {
+    width: 16px;
+    height: 16px;
+  }
+  .wk[aria-pressed="true"] {
+    border-color: var(--star);
+  }
+  .wk-panel {
+    background: var(--night-2);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .wk-head b {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 600;
+  }
+  .wk-head span {
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .wk-facts {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .wk-facts .label {
+    display: block;
+    font-size: 11.5px;
+    color: var(--ink-3);
+  }
+  .wk-facts strong {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .wk-facts em {
+    font-style: normal;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    margin-left: 6px;
+  }
+  .wk-moon {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .wk-moon svg {
+    flex: none;
+  }
+  .wk-note {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--warn);
+  }
+  .week-credit {
+    margin: 0;
+    font-size: 11.5px;
+    color: var(--ink-3);
+    line-height: 1.6;
+  }
+  .week-skeleton {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .week-skeleton i {
+    height: 62px;
+    border-radius: 12px;
+    background: var(--night-2);
+    animation: bb-pulse 1.4s ease-in-out infinite;
+  }
+  .week-skeleton.tall i {
+    height: 120px;
+  }
+  @keyframes bb-pulse {
+    50% {
+      opacity: 0.5;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .week-skeleton i {
+      animation: none;
+    }
+  }
+
+  /* 내 장소 카드 */
+  .mycards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .mycards.refreshing {
+    opacity: 0.7;
+  }
+  .mycard {
+    background: var(--night-1);
+    border: 1px solid var(--hair);
+    border-radius: 16px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .mycard > header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .mycard > header b {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .mycard > header b svg {
+    width: 15px;
+    height: 15px;
+    flex: none;
+    color: var(--sky-clear);
+  }
+  .mycard > header span {
+    display: block;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    margin-top: 2px;
+  }
+  .mycard .actions .btn {
+    padding: 9px 14px;
+    font-size: 13.5px;
+  }
+  .lookup-search {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    max-width: none;
+  }
+  .lookup .mycard {
+    margin-top: 10px;
+  }
+
+  /* 저장 버튼: 하늘색 책갈피. 저장한 곳은 속을 채운다 */
+  .btn.save {
+    background: color-mix(in oklch, var(--sky-clear) 14%, var(--night-2));
+    color: var(--sky-clear);
+    box-shadow: inset 0 0 0 1.5px var(--sky-clear);
+    font-weight: 600;
+  }
+  .btn.save svg {
+    width: 16px;
+    height: 16px;
+  }
+  .btn.save[aria-pressed="true"] {
+    background: var(--sky-clear);
+    color: var(--night-0);
+    box-shadow: none;
+  }
+  .btn.danger {
+    background: color-mix(in oklch, var(--warn) 22%, var(--night-2));
+    color: var(--warn);
+  }
+  .btn.wide svg {
+    width: 16px;
+    height: 16px;
+  }
+  .pick-actions .btn.wide {
+    grid-column: 1 / -1;
+    flex-basis: 100%;
+    justify-content: center;
+  }
+  .mine {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--sky-clear);
+    border-color: color-mix(in oklch, var(--sky-clear) 40%, transparent);
+  }
+  .mine svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  /* 지도의 내 장소 표식: 둥근 별 배지 대신 네모난 하늘색 책갈피 배지 */
+  .pin[data-mine="1"] .mk.badge {
+    border-radius: 7px;
+    border-color: var(--sky-clear);
+    color: var(--sky-clear);
+  }
+  .pin[data-mine="1"] .mk.badge svg path {
+    fill: currentColor;
+  }
+  .pin[data-mine="1"][data-level="STRONG"] .mk.badge {
+    background: var(--sky-clear);
+    color: oklch(0.14 0.04 268);
+  }
+  .pin[data-mine="1"][data-level="MAYBE"] .mk.badge {
+    border-color: color-mix(in oklch, var(--sky-clear) 55%, var(--ink-3));
+    color: color-mix(in oklch, var(--sky-clear) 55%, var(--ink-3));
+  }
+  .pin[data-mine="1"][data-level="NO"] .mk.badge {
+    width: 20px;
+    height: 20px;
+    border-color: color-mix(in oklch, var(--sky-clear) 45%, oklch(0.45 0.03 265));
+    color: color-mix(in oklch, var(--sky-clear) 45%, oklch(0.45 0.03 265));
+  }
+  .pin[data-mine="1"][data-level="NO"] .mk.badge svg {
+    width: 11px;
+    height: 11px;
+  }
+  .pin[data-mine="1"] .cdot {
+    border-radius: 4px;
+    outline: 2px solid var(--sky-clear);
+    outline-offset: 1px;
+  }
+  .pin-key.mine-key {
+    margin-top: 2px;
+  }
+  .pin-key i[data-mine="1"] {
+    border-radius: 3px;
+    border: 2px solid var(--sky-clear);
+    background: oklch(0.14 0.04 268);
+  }
 }
