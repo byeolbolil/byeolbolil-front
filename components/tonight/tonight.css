@@ -1,6 +1,7 @@
 /*
  * 오늘 밤 추천 화면의 스타일. 목업(백엔드 저장소 docs/mockup/index.html)의 구성을 옮긴 것이다.
  * 모바일은 한 줄(최대 720px)과 하단 탭, PC(1080px 이상)는 왼쪽 지도와 오른쪽 추천 패널이다.
+ * 1200px부터는 패널을 장소 카드와 후보 목록 두 칸으로 나눠서 지도, 카드, 목록이 나란히 놓인다.
  * 다른 화면의 클래스와 겹치지 않도록 모두 .bb 아래에 둔다.
  */
 .bb {
@@ -254,6 +255,8 @@
     line-height: 1.1;
     letter-spacing: -0.02em;
     text-wrap: balance;
+    /* 긴 제목은 낱말 사이에서만 줄을 바꾼다 */
+    word-break: keep-all;
   }
   .sky-text .sub {
     font-size: 13.5px;
@@ -518,10 +521,6 @@
   }
   .btn.ghost[aria-expanded="true"] svg {
     transform: rotate(180deg);
-  }
-  .btn.back {
-    align-self: flex-start;
-    padding-left: 0;
   }
   .btn:disabled {
     opacity: 0.6;
@@ -1100,6 +1099,7 @@
   .row-sub {
     font-size: 13px;
     color: var(--ink-3);
+    word-break: keep-all;
   }
   .row .rating {
     justify-self: end;
@@ -2220,11 +2220,6 @@
   }
 }
 
-/* 자세히 보는 동안 숨겨 두는 목록. 감싸는 요소가 배치에 끼어들지 않게 한다 */
-.bb .keep {
-  display: contents;
-}
-
 /* 머리의 로그인 상태 */
 .bb {
   .acct {
@@ -2443,7 +2438,7 @@
       min-height: 0;
       padding-bottom: 16px;
     }
-    .stage > .view {
+    .stage > .panel {
       overflow-y: auto;
       overscroll-behavior: contain;
       min-height: 0;
@@ -2765,5 +2760,138 @@
     border-radius: 3px;
     border: 2px solid var(--sky-clear);
     background: oklch(0.14 0.04 268);
+  }
+}
+
+/*
+ * 스크롤하는 칸에서는 내용이 줄어들지 않고 넘쳐야 한다. PC에서 패널의 높이를 화면에 맞춰 고정한 뒤로,
+ * 가로로 스크롤하는 밤 고르기가 높이 0까지 눌려 보이지 않았다.
+ */
+.bb .view > * {
+  flex-shrink: 0;
+}
+
+/*
+ * 장소 카드와 후보 목록. 카드는 가장 좋은 곳이나 고른 곳 하나를 보여주고, 목록의 줄을 누르면 같은 자리에서 바뀐다.
+ * 1200px보다 좁으면 카드 아래에 목록이 이어지고, 그보다 넓으면 옆에 나란히 놓여 각자 스크롤한다.
+ * 1400px부터는 두 칸을 조금 더 넓게 쓴다.
+ */
+.bb {
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    min-width: 0;
+  }
+  .sec-title.stack {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .row.ranked {
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+  }
+  .row.ranked .x {
+    grid-column: 2 / -1;
+  }
+  /* 번호가 자리를 차지해서 주의 사항까지 한 줄에 넣으면 낱말이 잘린다. 아랫줄로 내린다 */
+  .row.ranked .row-sub .sep {
+    display: none;
+  }
+  .row.ranked .row-sub .note {
+    display: block;
+  }
+  .row-rank {
+    font-family: var(--font-num);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-3);
+    text-align: center;
+  }
+  /* 카드에 떠 있는 장소의 줄 */
+  .row.ranked[aria-current="true"] {
+    background: var(--night-1);
+    border-radius: 10px;
+    border-bottom-color: transparent;
+    box-shadow: inset 3px 0 0 var(--star);
+    padding-inline: 10px 8px;
+  }
+  .row.ranked[aria-current="true"] .row-rank {
+    color: var(--star);
+    font-weight: 700;
+  }
+  /* 가볼 만한 곳이 없는 밤에 장소를 골랐을 때 카드 위에 남기는 알림 */
+  .tonight.slim .tonight-body {
+    padding-block: 14px;
+  }
+}
+@media (min-width: 1200px) {
+  .bb {
+    .stage {
+      grid-template-columns: minmax(0, 1fr) 752px;
+    }
+    .stage > .panel {
+      display: grid;
+      grid-template-columns: 420px 300px;
+      grid-template-rows: minmax(0, 1fr);
+      gap: 0 32px;
+      overflow: visible;
+      padding: 0;
+    }
+    .panel > .view {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      min-height: 0;
+      padding: 0 8px 40px 2px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--night-3) transparent;
+    }
+    /* 목록이 없는 탭은 두 칸을 다 쓴다 */
+    .panel[data-cols="1"] > .view {
+      grid-column: 1 / -1;
+    }
+    .panel[data-cols="1"] .mycards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+    }
+    .panel[data-cols="1"] .lookup {
+      max-width: 520px;
+    }
+    /* 목록의 칸은 좁아서 줄을 조금 촘촘하게 놓는다 */
+    .side .row {
+      padding-block: 11px;
+    }
+    .side .row-name {
+      font-size: 15px;
+    }
+  }
+}
+@media (min-width: 1400px) {
+  .bb {
+    max-width: 1760px;
+
+    .stage {
+      grid-template-columns: minmax(0, 1fr) 852px;
+    }
+    .stage > .panel {
+      grid-template-columns: 480px 340px;
+    }
+  }
+}
+/* 세 칸으로 나누면 1400px까지는 지도 칸이 좁다. 범례를 출처 표기 위로 올리고 레이어 버튼을 세로로 세워 서로 겹치지 않게 한다 */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  .bb {
+    .map-card.bl {
+      bottom: 40px;
+      max-width: calc(100% - 28px - 96px);
+    }
+    .map-ctl .seg {
+      flex-direction: column;
+      border-radius: 14px;
+    }
+    .map-ctl .seg button {
+      border-radius: 10px;
+    }
   }
 }

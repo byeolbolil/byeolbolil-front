@@ -98,9 +98,9 @@ async function walk(browser, kind) {
   const row = page.locator(".bb .row").nth(1)
   const rowName = (await row.locator(".row-name").innerText()).split("\n")[0].trim()
   await row.click()
-  await page.waitForSelector(".bb .btn.back")
-  await page.waitForTimeout(900)
-  check((await heroName()) === rowName, `목록에서 고른 "${rowName}"이 자세한 화면에 열린다`)
+  await page.waitForTimeout(1200)
+  check((await heroName()) === rowName, `목록에서 고른 "${rowName}"이 카드에 뜬다`)
+  check((await row.getAttribute("aria-current")) === "true", "고른 줄이 목록에 표시된다")
   if (kind === "desktop") {
     const selected = await page.locator(".bb .pin.sel").getAttribute("aria-label")
     check(selected?.startsWith(rowName), `목록에서 고른 장소가 지도에서도 선택된다: ${selected}`)
@@ -183,13 +183,15 @@ async function walk(browser, kind) {
       check(peek.startsWith(markerName), `표식을 누르면 미리보기가 뜬다: ${peek}`)
       await shot("map-marker")
       await page.locator(".bb .peek").getByRole("button", { name: "자세히" }).click()
-      await page.waitForSelector(".bb .btn.back")
-      check((await heroName()) === markerName, `미리보기에서 "${markerName}"의 자세한 화면으로 간다`)
-      await page.locator(".bb .btn.back").click()
+      await page.waitForTimeout(1200)
+      check((await heroName()) === markerName, `미리보기에서 "${markerName}"의 카드로 간다`)
+      // 화면에는 돌아가는 버튼이 없고, 브라우저의 뒤로 가기가 고르기 전의 지도 탭으로 돌려보낸다
+      await page.goBack()
+      await page.waitForTimeout(600)
+      check((await page.getByRole("tab", { name: "지도" }).getAttribute("aria-selected")) === "true", "뒤로 가면 지도 탭으로 돌아온다")
     } else {
       check((await heroName()) === markerName, `표식을 누르면 오른쪽 패널에 "${markerName}"이 열린다`)
       await shot("map-marker")
-      await page.locator(".bb .btn.back").click()
     }
   }
 
@@ -223,10 +225,10 @@ async function walk(browser, kind) {
   console.log(`  기준과 출처 ${await page.locator(".bb .src li").count()}항목`)
   await shot("sources")
   await page.keyboard.press("Escape")
-  await page.waitForFunction(() => document.querySelector(".bb .view")?.getAttribute("aria-busy") !== "true")
+  await page.waitForFunction(() => document.querySelector(".bb main.view > .view")?.getAttribute("aria-busy") !== "true")
   await page.waitForTimeout(600)
   const newTop = flat(await page.locator(".bb .tonight .sky-text").first().innerText())
-  const notes = flat(await page.locator(".bb main.view").innerText()).match(/[^|]*(뺐어요)[^|]*/)?.[0]?.trim()
+  const notes = flat(await page.locator(".bb .panel").innerText()).match(/[^|]*(뺐어요)[^|]*/)?.[0]?.trim()
   console.log(`  바꾸기 전 가장 좋은 곳: ${topName}`)
   console.log(`  바꾼 뒤: ${newTop}${notes ? ` / ${notes}` : ""}`)
   await shot("after-settings")
