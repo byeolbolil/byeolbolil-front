@@ -63,6 +63,14 @@ export interface NightPlace {
   address?: string
   latitude: number
   longitude: number
+  /** 실제로 차를 대고 보는 지점의 이름("멍에전망대 주차장"). 좌표가 가리키는 곳이다. 명소에만 있다 */
+  viewpoint?: string
+  /** 어떤 곳인지 한두 문장. 명소에만 있다 */
+  description?: string
+  /** 가는 법과 주차. 명소에만 있다 */
+  guide?: string
+  /** 계절 폐쇄, 조명, 통제 같은 주의 사항 */
+  caution?: string
   level: RecommendationLevel
   pattern: NightPattern
   notes: NightNote[]

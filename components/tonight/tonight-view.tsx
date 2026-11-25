@@ -6,8 +6,10 @@ import { buildNightView, emptyMessage, type EmptyKind } from "@/lib/tonight/fact
 import { CLOUDY_NIGHT_PHOTO } from "@/lib/tonight/photos"
 import { placeKey } from "@/lib/tonight/place"
 import { daysBetween, nightName, windowText } from "@/lib/tonight/time"
+import type { Coordinates } from "@/lib/tonight/settings"
 import type { NightPlace, NightQuery, NightRecommendation } from "@/lib/tonight/types"
 import { useNextGoodNight } from "@/lib/tonight/use-next-good-night"
+import { FacilityList } from "./facility-list"
 import { ForecastCredit } from "./forecast-credit"
 import { HeroCard } from "./hero-card"
 import { PlaceRow } from "./place-row"
@@ -25,7 +27,8 @@ interface TonightViewProps {
   query: NightQuery
   detailed: boolean
   isAuthenticated: boolean
-  hasOrigin: boolean
+  /** 출발 위치. 모르면 이동 시간이 없고 천문대 목록도 거리순으로 놓지 못한다 */
+  origin: Coordinates | null
   onOpenPlace: (place: NightPlace) => void
   onSelectDate: (date: string) => void
   onOpenSettings?: () => void
@@ -44,7 +47,7 @@ export function TonightView({
   query,
   detailed,
   isAuthenticated,
-  hasOrigin,
+  origin,
   onOpenPlace,
   onSelectDate,
   onOpenSettings,
@@ -53,6 +56,7 @@ export function TonightView({
   footer,
 }: TonightViewProps) {
   const [showAll, setShowAll] = useState(false)
+  const hasOrigin = origin !== null
   const view = buildNightView(night)
   const name = nightName(night.date, tonightDate)
   const shown = showAll ? view.rest : view.rest.slice(0, SHORT_LIST)
@@ -89,7 +93,7 @@ export function TonightView({
         <section className="sec">
           <div className="sec-title">
             <h2>{view.top ? "여기도 괜찮아요" : "그나마 볼 수 있는 곳"}</h2>
-            <p>{isAuthenticated ? "내 장소와 추천 명소 중에서" : "추천 명소 중에서"}</p>
+            <p>{isAuthenticated ? "내 장소와 밤에 갈 수 있는 관측지 중에서" : "밤에 갈 수 있는 관측지 중에서"}</p>
           </div>
           <div className="rows">
             {shown.map((place) => (
@@ -130,6 +134,7 @@ export function TonightView({
           <Link href="/login">로그인</Link>하면 내가 저장한 장소도 함께 비교해 드려요.
         </p>
       ) : null}
+      <FacilityList origin={origin} />
       <ForecastCredit places={night.places} />
       {footer}
     </>

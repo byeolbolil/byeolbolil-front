@@ -57,9 +57,13 @@ export function travelText(travel: TravelEstimate | undefined): string {
   return `차로 약 ${parts.join(" ")}`
 }
 
-/** 카카오맵 길찾기 링크. 도착지 이름과 좌표만 넘긴다. */
-export function directionsUrl(place: Pick<NightPlace, "name" | "latitude" | "longitude">): string {
-  return `https://map.kakao.com/link/to/${encodeURIComponent(place.name)},${place.latitude},${place.longitude}`
+/**
+ * 카카오맵 길찾기 링크. 도착지 이름과 좌표만 넘긴다.
+ * 좌표는 차를 대는 지점의 것이라, 그 지점의 이름이 있으면 도착지 이름에 함께 적는다.
+ */
+export function directionsUrl(place: Pick<NightPlace, "name" | "latitude" | "longitude" | "viewpoint">): string {
+  const label = place.viewpoint ? `${place.name} (${place.viewpoint})` : place.name
+  return `https://map.kakao.com/link/to/${encodeURIComponent(label)},${place.latitude},${place.longitude}`
 }
 
 /** 값이 있는 조각만 " · "로 잇는다. */

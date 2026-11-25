@@ -9,8 +9,9 @@ import type { NightPlace } from "@/lib/tonight/types"
 import { levelText } from "@/lib/tonight/wording"
 import { windowHours } from "@/lib/tonight/hours"
 import { CloudSky, MoonPhase } from "./gauges"
-import { MoonIcon, SkyIcon } from "./icons"
+import { MoonIcon, PinIcon, SkyIcon } from "./icons"
 import { NightBand } from "./night-band"
+import { PlaceAbout } from "./place-about"
 import { Rating } from "./rating"
 import { SkyArt } from "./sky-art"
 
@@ -27,7 +28,8 @@ interface HeroCardProps {
 }
 
 /**
- * 장소 하나의 오늘 밤. 장소의 사진, 추천 시간대, 밤 띠, 짧은 설명 세 가지를 담는다.
+ * 장소 하나의 오늘 밤. 장소의 사진, 추천 시간대, 밤 띠, 짧은 설명 세 가지와 그곳이 어떤 곳인지를 담는다.
+ * 명소는 이름 아래에 실제로 차를 대고 보는 지점을 적는다. "합천 황매산"만으로는 어디로 가야 할지 알 수 없다.
  * 사진을 구하지 못한 장소는 다른 곳의 사진을 빌려 쓰지 않고, 오늘 밤 조건으로 그린 하늘 그림을 보여준다.
  */
 export function HeroCard({ place, eyebrow, detailed, actions, children }: HeroCardProps) {
@@ -67,6 +69,12 @@ export function HeroCard({ place, eyebrow, detailed, actions, children }: HeroCa
         <div className="sky-text">
           <div className="eyebrow">{eyebrow}</div>
           <h1>{place.name}</h1>
+          {place.viewpoint ? (
+            <div className="spot">
+              <PinIcon />
+              {place.viewpoint}
+            </div>
+          ) : null}
           <div className="sub">
             {joinParts([regionOf(place.address), travelText(place.travel), place.type === "BOOKMARK" && "내 장소"])}
           </div>
@@ -113,6 +121,7 @@ export function HeroCard({ place, eyebrow, detailed, actions, children }: HeroCa
           </li>
         </ul>
         <p className="tip">{tipText(place)}</p>
+        <PlaceAbout description={place.description} guide={place.guide} caution={place.caution} />
         <div className="actions">
           <a className="btn primary" href={directionsUrl(place)} target="_blank" rel="noopener noreferrer">
             길찾기

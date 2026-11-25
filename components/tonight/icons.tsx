@@ -102,6 +102,25 @@ export function CarIcon() {
   )
 }
 
+/** 주의 사항 앞에 놓는 느낌표 */
+export function AlertIcon() {
+  return (
+    <svg {...STROKE} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 4 3.5 19h17L12 4Z" />
+      <path d="M12 10v4.5M12 17h.01" />
+    </svg>
+  )
+}
+
+/** 삼각대 위의 망원경. 천문대와 과학관 목록에 쓴다 */
+export function TelescopeIcon() {
+  return (
+    <svg {...STROKE} strokeLinecap="round" strokeLinejoin="round">
+      <path d="m4.5 12.5 11-5.5 1.8 3.6-11 5.5-1.8-3.6ZM15.5 7l3-1.5 1.8 3.6-3 1.5M11 14.5 8 21M11 14.5l3 6.5M11 14.5V21" />
+    </svg>
+  )
+}
+
 export function PinIcon() {
   return (
     <svg {...STROKE} strokeLinejoin="round">

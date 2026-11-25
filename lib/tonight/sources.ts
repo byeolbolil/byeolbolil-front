@@ -150,6 +150,11 @@ export const SOURCES: readonly SourceEntry[] = [
     ],
   },
   {
+    title: "추천하는 장소",
+    body: "기본 후보는 밤에 누구나 가서 맨눈으로 볼 수 있다고 확인한 관측지 22곳이에요. 공식 안내와 기사, 관측 후기를 찾아 읽고 골랐고, 현장에 가 보지는 못했어요. 천문대와 과학관은 예약한 프로그램으로 망원경을 보는 곳이라 추천 순위에 넣지 않고 따로 모았어요. 장소의 위치는 그곳에서 차를 대는 주차장이나 전망대이고, OpenStreetMap과 위키백과에서 확인한 좌표예요. 겨울 폐쇄나 통제는 해마다 달라지니 가기 전에 확인해 주세요.",
+    links: [{ label: "© OpenStreetMap contributors", url: "https://www.openstreetmap.org/copyright" }],
+  },
+  {
     title: "지도",
     body: "광해 지도는 위성이 잰 야간광(VIIRS) 값으로 별볼일이 직접 그렸어요. 어디가 밝은지 보여주는 그림이고 등급을 정하는 데는 쓰지 않아요. 바탕 지도는 OpenStreetMap 자료로 만든 OpenFreeMap의 지도예요. 구름 레이어는 구름의 모양을 그리지 않고, 고른 시각에 각 장소의 예보 구름량만 색으로 보여줘요.",
     links: [

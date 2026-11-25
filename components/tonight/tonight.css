@@ -770,6 +770,150 @@
     padding: 1px 9px;
   }
 
+  /* 이름 아래의 관측 지점. 좌표가 가리키는, 실제로 차를 대는 곳이다 */
+  .sky-text .spot {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .sky-text .spot svg {
+    width: 15px;
+    height: 15px;
+    flex: none;
+    color: var(--star);
+  }
+
+  /* 장소 소개: 어떤 곳인지, 가는 법, 주의 사항 */
+  .about {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .about-desc {
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-2);
+    line-height: 1.7;
+    max-width: 62ch;
+  }
+  .about-desc::before {
+    content: "어떤 곳인가요";
+    display: block;
+    font-size: 12px;
+    color: var(--ink-3);
+    margin-bottom: 2px;
+  }
+  .about-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .about-list li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: var(--night-2);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+  .about-list svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    margin-top: 2px;
+    color: var(--ink-3);
+  }
+  .about-list b {
+    display: block;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .about-list span {
+    display: block;
+  }
+  .about-list li[data-kind="caution"] {
+    background: color-mix(in oklch, var(--warn) 12%, var(--night-2));
+  }
+  .about-list li[data-kind="caution"] svg,
+  .about-list li[data-kind="caution"] b {
+    color: var(--warn);
+  }
+
+  /* 천문대와 과학관. 추천 목록 아래에 접어 둔다 */
+  .facilities {
+    gap: 4px;
+  }
+  .fac-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    border: 0;
+    background: var(--night-2);
+    border-radius: 14px;
+    padding: 12px 14px;
+    cursor: pointer;
+  }
+  .fac-toggle > svg {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    color: var(--ink-3);
+  }
+  .fac-toggle > svg:last-child {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.2s;
+  }
+  .fac-toggle[aria-expanded="true"] > svg:last-child {
+    transform: rotate(180deg);
+  }
+  .fac-toggle span {
+    flex: 1;
+    min-width: 0;
+  }
+  .fac-toggle b {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .fac-toggle em {
+    display: block;
+    font-style: normal;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    line-height: 1.5;
+  }
+  .fac .row > svg {
+    width: 16px;
+    height: 16px;
+    color: var(--ink-3);
+    transition: transform 0.2s;
+  }
+  .fac[data-open="true"] .row {
+    border-bottom-color: transparent;
+  }
+  .fac[data-open="true"] .row > svg {
+    transform: rotate(180deg);
+  }
+  .fac-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 2px 16px;
+    border-bottom: 1px solid var(--hair);
+  }
+
   /* 목록 */
   .sec {
     display: flex;

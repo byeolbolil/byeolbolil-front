@@ -54,6 +54,12 @@ describe("그 밖의 장소 표기", () => {
     )
   })
 
+  it("차를 대는 지점의 이름이 있으면 길찾기 도착지에 함께 적는다", () => {
+    expect(
+      directionsUrl({ name: "강릉 안반데기", viewpoint: "멍에전망대 주차장", latitude: 37.62633, longitude: 128.73942 }),
+    ).toBe(`https://map.kakao.com/link/to/${encodeURIComponent("강릉 안반데기 (멍에전망대 주차장)")},37.62633,128.73942`)
+  })
+
   it("빈 조각은 건너뛰고 잇는다", () => {
     expect(joinParts(["저녁 7시 – 새벽 2시", "", undefined, "차로 약 1시간"])).toBe("저녁 7시 – 새벽 2시 · 차로 약 1시간")
     expect(joinParts([])).toBe("")
