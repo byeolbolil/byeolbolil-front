@@ -148,6 +148,15 @@ export function CameraIcon({ className }: { className?: string }) {
   )
 }
 
+/** 새 창으로 여는 바깥 링크 */
+export function ExternalIcon() {
+  return (
+    <svg {...STROKE} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19h11a1.5 1.5 0 0 0 1.5-1.5V14M14 5h5v5M19 5l-8 8" />
+    </svg>
+  )
+}
+
 export function SearchIcon() {
   return (
     <svg {...STROKE} strokeWidth={2} strokeLinecap="round">

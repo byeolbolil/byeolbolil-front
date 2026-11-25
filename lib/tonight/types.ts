@@ -71,6 +71,8 @@ export interface NightPlace {
   guide?: string
   /** 계절 폐쇄, 조명, 통제 같은 주의 사항 */
   caution?: string
+  /** 가는 길과 서는 자리를 더 자세히 적은 글. 없는 곳이 있고, 쓰기 전에 safeLinks로 거른다 */
+  links?: { title: string; url: string }[]
   level: RecommendationLevel
   pattern: NightPattern
   notes: NightNote[]

@@ -31,8 +31,15 @@ describe("unwrapFacilities", () => {
         description: "봉래산 정상의 시민천문대예요.",
         guide: "예약한 회차의 셔틀버스로만 올라가요. 2024년 3월부터 개인 차량은 정상에 갈 수 없어요.",
         caution: undefined,
+        links: [],
       },
     ])
+  })
+
+  it("공식 페이지 링크가 있으면 함께 꺼낸다", () => {
+    const withLink = { ...BYEOLMARO, links: [{ title: "별마로천문대 홈페이지", url: "https://www.yao.or.kr/" }, { title: "", url: "x" }] }
+
+    expect(unwrapFacilities(envelope([withLink]))[0].links).toEqual([{ title: "별마로천문대 홈페이지", url: "https://www.yao.or.kr/" }])
   })
 
   it("시설이 아닌 명소와 좌표가 없는 항목은 버린다", () => {
@@ -65,9 +72,9 @@ describe("straightKm", () => {
 
 describe("nearestFirst", () => {
   const facilities: Facility[] = [
-    { id: 29, title: "제주 별빛누리공원", address: "", latitude: 33.4447, longitude: 126.5492 },
-    { id: 34, title: "국립과천과학관 천문대", address: "", latitude: 37.43853, longitude: 127.0062 },
-    { id: 3, title: "영월 별마로천문대", address: "", latitude: 37.19339, longitude: 128.49547 },
+    { id: 29, title: "제주 별빛누리공원", address: "", latitude: 33.4447, longitude: 126.5492, links: [] },
+    { id: 34, title: "국립과천과학관 천문대", address: "", latitude: 37.43853, longitude: 127.0062, links: [] },
+    { id: 3, title: "영월 별마로천문대", address: "", latitude: 37.19339, longitude: 128.49547, links: [] },
   ]
 
   it("출발 위치에서 가까운 순으로 놓고 거리를 붙인다", () => {

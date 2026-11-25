@@ -848,6 +848,71 @@
     color: var(--warn);
   }
 
+  /* 더 알아보기: 남이 쓴 글과 검색. 새 창으로 연다 */
+  .about-more {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 2px;
+  }
+  .about-more > b {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--ink-3);
+  }
+  .about-more ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .about-more a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 6px 2px;
+    font-size: 13px;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in oklch, var(--ink-3) 22%, transparent);
+  }
+  .about-more li:last-child a {
+    border-bottom: 0;
+  }
+  .about-more a:hover .about-link-title,
+  .about-more a:focus-visible .about-link-title {
+    text-decoration: underline;
+    color: var(--ink);
+  }
+  .about-more svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    color: var(--ink-3);
+  }
+  .about-link-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .about-link-title {
+    line-height: 1.45;
+  }
+  .about-link-host {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .about-more a[data-kind="search"],
+  .about-more a[data-kind="search"] svg {
+    color: var(--star);
+  }
+
   /* 천문대와 과학관. 추천 목록 아래에 접어 둔다 */
   .facilities {
     gap: 4px;
