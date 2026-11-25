@@ -4,6 +4,8 @@
  */
 
 import { useId } from "react"
+import { moonLitPath } from "@/lib/tonight/moon"
+import type { NightMoon } from "@/lib/tonight/types"
 
 const SIZE = 56
 const CENTER = SIZE / 2
@@ -130,6 +132,36 @@ export function MoonGlow({ brightness, up }: { brightness: number; up: boolean }
       <circle cx={CENTER - 3} cy={CENTER - 3} r={2.2} fill="oklch(0.8 0.03 95)" opacity={0.5} />
       <circle cx={CENTER + 4} cy={CENTER + 2} r={1.6} fill="oklch(0.8 0.03 95)" opacity={0.5} />
       <circle cx={CENTER - 1} cy={CENTER + 5} r={1.2} fill="oklch(0.8 0.03 95)" opacity={0.5} />
+    </svg>
+  )
+}
+
+/**
+ * 달의 모양. 밝은 면을 실제 위상대로 그리고, 달빛이 셀수록 둘레의 빛 무리가 커진다.
+ * 떠 있지 않으면 흐리게 그린다. `size`를 주면 작은 아이콘으로도 쓴다.
+ */
+export function MoonPhase({ moon, brightness, up, size }: { moon: NightMoon; brightness: number; up: boolean; size?: number }) {
+  const glowId = useId()
+  const strength = up ? unit(brightness) : 0
+  const radius = 12
+  return (
+    <svg
+      className="gauge"
+      viewBox={`0 0 ${SIZE} ${SIZE}`}
+      aria-hidden="true"
+      style={size ? { width: size, height: size } : undefined}
+      opacity={up ? 1 : 0.45}
+    >
+      <defs>
+        <radialGradient id={glowId}>
+          <stop offset="40%" stopColor="oklch(0.95 0.04 95)" stopOpacity={strength * 0.6} />
+          <stop offset="100%" stopColor="oklch(0.95 0.04 95)" stopOpacity={0} />
+        </radialGradient>
+      </defs>
+      {strength > 0 ? <circle cx={CENTER} cy={CENTER} r={radius + 2 + strength * 13} fill={`url(#${glowId})`} /> : null}
+      {/* 어두운 면도 희미하게 보이게 둔다. 달 전체의 윤곽이 있어야 모양이 읽힌다 */}
+      <circle cx={CENTER} cy={CENTER} r={radius} fill="oklch(0.32 0.03 268)" />
+      <path d={moonLitPath(CENTER, CENTER, radius, moon.illuminatedFraction, moon.waxing)} fill="oklch(0.95 0.04 95)" />
     </svg>
   )
 }

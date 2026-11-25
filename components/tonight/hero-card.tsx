@@ -7,7 +7,9 @@ import { spotPhoto } from "@/lib/tonight/spot-photos"
 import { windowText } from "@/lib/tonight/time"
 import type { NightPlace } from "@/lib/tonight/types"
 import { levelText } from "@/lib/tonight/wording"
-import { CloudIcon, MoonIcon, SkyIcon } from "./icons"
+import { windowHours } from "@/lib/tonight/hours"
+import { CloudSky, MoonPhase } from "./gauges"
+import { MoonIcon, SkyIcon } from "./icons"
 import { NightBand } from "./night-band"
 import { Rating } from "./rating"
 import { SkyArt } from "./sky-art"
@@ -37,6 +39,11 @@ export function HeroCard({ place, eyebrow, detailed, actions, children }: HeroCa
   const moon = moonFact(place)
   const cloud = cloudFact(place)
   const sky = skyFact(place)
+  // 요약 옆의 작은 그림에 쓰는 값. 추천 시간이 없으면 어두운 시간 전체로 본다
+  const inWindow = windowHours(place.hours, place.bestWindow)
+  const basis = inWindow.length > 0 ? inWindow : place.hours.filter((hour) => hour.dark)
+  const cloudCover = basis.length > 0 ? Math.round(basis.reduce((sum, hour) => sum + hour.cloudCover, 0) / basis.length) : null
+  const moonUp = basis.some((hour) => hour.moonUp)
 
   return (
     <article className="tonight">
@@ -82,7 +89,7 @@ export function HeroCard({ place, eyebrow, detailed, actions, children }: HeroCa
         <NightBand place={place} showScore={detailed} onScrub={setScrubbed} />
         <ul className="quick">
           <li>
-            <CloudIcon />
+            <CloudSky cloudCover={cloudCover} />
             <div>
               <b>{cloud.title}</b>
               <span>{cloud.detail}</span>
@@ -90,7 +97,7 @@ export function HeroCard({ place, eyebrow, detailed, actions, children }: HeroCa
           </li>
           {moon ? (
             <li>
-              <MoonIcon />
+              {place.moon ? <MoonPhase moon={place.moon} brightness={place.moonBrightness} up={moonUp} /> : <MoonIcon />}
               <div>
                 <b>{moon.title}</b>
                 <span>{moon.detail}</span>
