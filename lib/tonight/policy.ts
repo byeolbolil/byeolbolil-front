@@ -8,8 +8,11 @@
 /** 맑은 시간으로 세는 구름량의 상한(%). Clear Sky Chart 기후 통계가 구름 30% 이하인 시간만 관측 가능 시간으로 센다. */
 export const CLEAR_CLOUD_COVER_MAX = 30
 
-/** 이 등급부터는 "별 보기 아쉬워요"까지만 준다. 근거 자료 없이 별볼일이 정한 경계다(SCORING.md 정책값). */
-export const CITY_BORTLE_MIN = 7
+/**
+ * 하늘 밝기(인공 불빛이 자연 밤하늘의 몇 배인지)가 이 값 이상이면 은하수가 보이지 않아 "별 보기 아쉬워요"까지만 준다.
+ * Duriscoe et al., JQSRT 214, 133 (2018) 표 3.
+ */
+export const MILKY_WAY_LOST_SKY = 10
 
 /** 같은 등급 안에서 이동 1시간마다 순위 값에서 빼는 점수. 별볼일이 정한 값이다(SCORING.md 정책값). */
 export const TRAVEL_PENALTY_PER_HOUR = 4

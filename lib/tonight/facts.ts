@@ -6,7 +6,8 @@ import { average, moonSummary, windowHours } from "./hours"
 import { moonTimesText } from "./moon"
 import { hourOf, koreanHour } from "./time"
 import type { ForecastSource, NightPlace, NightRecommendation, NightSummary, RecommendationLevel } from "./types"
-import { bortleName, cloudHeadline, isWorthGoing, patternText } from "./wording"
+import { skyBrightnessText, skyName } from "./sky"
+import { cloudHeadline, isWorthGoing, patternText } from "./wording"
 
 export interface QuickFact {
   title: string
@@ -48,11 +49,15 @@ function moonHeadline(place: NightPlace): QuickFact | null {
   }
 }
 
-export function skyFact(place: NightPlace): QuickFact {
-  const detail = place.notes.includes("BRIGHT_MOON")
-    ? "달빛 때문에 오늘은 별이 줄어요"
-    : `광해 9등급 중 ${place.bortleClass}등급이에요`
-  return { title: bortleName(place.bortleClass), detail }
+/** 하늘이 얼마나 어두운 곳인지. 오늘 밤 그 하늘을 더 가리는 것이 있으면 그쪽을 먼저 말한다 */
+export function skyFact(place: Pick<NightPlace, "notes" | "skyBrightness" | "skyClass">): QuickFact {
+  return { title: skyName(place.skyClass), detail: skyDetail(place) }
+}
+
+function skyDetail(place: Pick<NightPlace, "notes" | "skyBrightness">): string {
+  if (place.notes.includes("BRIGHT_MOON")) return "달빛 때문에 오늘은 별이 줄어요"
+  if (place.notes.includes("LIGHTS_IN_VIEW")) return "아래쪽 마을이나 도시의 불빛이 직접 보여요"
+  return skyBrightnessText(place.skyBrightness)
 }
 
 /**
@@ -88,6 +93,8 @@ export function tipText(place: NightPlace): string {
     parts.push("달이 밝은 날이라 은하수는 어렵지만, 달 표면을 쌍안경으로 보면 크레이터까지 보여요.")
   } else if (place.notes.includes("CITY_LIGHTS")) {
     parts.push("도시 불빛이 있어도 밝은 별자리는 충분히 보여요.")
+  } else if (place.notes.includes("LIGHTS_IN_VIEW")) {
+    parts.push("불빛이 보이는 쪽을 등지고 서면 별이 더 잘 보여요.")
   }
   if (place.notes.includes("DEW")) parts.push("습도가 높아서 렌즈에 이슬이 맺힐 수 있어요.")
   parts.push("도착하면 휴대폰 화면을 끄고 30분쯤 기다려 보세요. 눈이 어둠에 완전히 익는 데는 40분쯤 걸려요.")

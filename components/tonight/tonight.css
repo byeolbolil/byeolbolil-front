@@ -657,20 +657,32 @@
     width: 100%;
   }
   .dark-scale .cells {
+    position: relative;
     display: grid;
-    grid-template-columns: repeat(9, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 3px;
     align-items: center;
+    padding: 7px 0;
   }
   .dark-scale .cells i {
     display: block;
     height: 12px;
     border-radius: 4px;
+    opacity: 0.55;
   }
   .dark-scale .cells i[data-here] {
-    height: 22px;
-    outline: 2px solid var(--ink);
-    outline-offset: 2px;
+    opacity: 1;
+  }
+  /* 이곳의 하늘 밝기를 짚는 바늘 */
+  .dark-scale .needle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    margin-left: -1.5px;
+    border-radius: 2px;
+    background: var(--ink);
+    box-shadow: 0 0 0 2px var(--night-1);
   }
   .dark-scale .ends {
     display: flex;

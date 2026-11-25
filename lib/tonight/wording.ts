@@ -28,23 +28,6 @@ const PATTERN_TEXT: Record<NightPattern, string> = {
   CLOUDY_ALL_NIGHT: "밤새 흐려요",
 }
 
-/**
- * Bortle(2001)이 붙인 등급 이름을 우리말로 옮긴 것.
- * Bortle, "Gauging Light Pollution: The Bortle Dark-Sky Scale", Sky & Telescope, 2001년 2월.
- */
-const BORTLE_NAME = [
-  "",
-  "아주 어두운 하늘",
-  "진짜 어두운 하늘",
-  "시골 하늘",
-  "시골과 교외 사이",
-  "교외 하늘",
-  "밝은 교외 하늘",
-  "교외와 도시 사이",
-  "도시 하늘",
-  "도심 하늘",
-] as const
-
 const SOURCE_NAME: Record<ForecastSource, string> = {
   OPEN_METEO: "Open-Meteo",
   MET_NORWAY: "MET Norway",
@@ -83,13 +66,11 @@ export function noteText(note: NightNote, place: Pick<NightPlace, "bestWindow">)
       return "달이 밝아요"
     case "CITY_LIGHTS":
       return "도시 불빛이 강해요"
+    case "LIGHTS_IN_VIEW":
+      return "불빛이 직접 보여요"
     case "DEW":
       return "이슬 주의"
   }
-}
-
-export function bortleName(bortleClass: number): string {
-  return BORTLE_NAME[bortleClass] ?? ""
 }
 
 export function forecastSourceName(source: ForecastSource): string {

@@ -4,6 +4,7 @@
  * 같은 출처의 `/api/...`로 부르고 Next의 rewrite가 백엔드로 넘긴다(`next.config.mjs`). 백엔드 CORS가 운영 도메인과
  * localhost만 허용해서, 브라우저가 백엔드를 직접 부르면 Vercel 미리보기 도메인에서 막힌다.
  */
+import { knownNotes, knownSky } from "./clean"
 import type { NightQuery, NightRecommendation, NightSummary, RecommendationLevel } from "./types"
 
 const BASE_PATH = "/api/v1/recommendations"
@@ -55,7 +56,12 @@ export function unwrapNight(body: unknown): NightRecommendation {
   if (typeof data.date !== "string" || !Array.isArray(data.places) || !isRecord(data.criteria)) {
     throw new NightApiError(0, "추천 응답의 형식이 올바르지 않습니다.")
   }
-  return data as unknown as NightRecommendation
+  const places = data.places.filter(isRecord).map((place) => {
+    // 이전 응답에 있던 Bortle 등급은 받지 않는다. 하늘 밝기로 바뀌었다
+    const { bortleClass: _bortleClass, skyBrightness: _skyBrightness, skyClass: _skyClass, ...rest } = place
+    return { ...rest, ...knownSky(place), notes: knownNotes(place.notes) }
+  })
+  return { ...data, places } as unknown as NightRecommendation
 }
 
 const LEVELS: readonly string[] = ["STRONG", "GOOD", "MAYBE", "NO"]

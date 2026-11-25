@@ -35,7 +35,8 @@
      "distanceKm": 113.1,
      "minutes": 147
     },
-    "bortleClass": 2,
+    "skyBrightness": 1.49,
+    "skyClass": "DARK",
     "moonBrightness": 0.87,
     "forecastSource": "OPEN_METEO",
     "forecastIssuedAt": "2026-11-23T21:00:00+09:00",
@@ -220,7 +221,8 @@
      "distanceKm": 137.5,
      "minutes": 179
     },
-    "bortleClass": 4,
+    "skyBrightness": 4.11,
+    "skyClass": "RURAL",
     "moonBrightness": 0.87,
     "forecastSource": "OPEN_METEO",
     "forecastIssuedAt": "2026-11-23T21:00:00+09:00",
@@ -406,7 +408,8 @@
      "distanceKm": 68.5,
      "minutes": 89
     },
-    "bortleClass": 7,
+    "skyBrightness": 24.52,
+    "skyClass": "SUBURBAN",
     "moonBrightness": 0.87,
     "forecastSource": "OPEN_METEO",
     "forecastIssuedAt": "2026-11-23T21:00:00+09:00",
@@ -584,7 +587,8 @@
      "distanceKm": 134.5,
      "minutes": 175
     },
-    "bortleClass": 4,
+    "skyBrightness": 4.11,
+    "skyClass": "RURAL",
     "moonBrightness": 0.87,
     "forecastSource": "OPEN_METEO",
     "forecastIssuedAt": "2026-11-23T21:00:00+09:00",

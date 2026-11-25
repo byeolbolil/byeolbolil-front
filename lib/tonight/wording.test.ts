@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import { makeHours } from "./__fixtures__"
 import type { NightNote, NightPattern, RecommendationLevel } from "./types"
 import {
-  bortleName,
   cloudHeadline,
   forecastSourceName,
   hourSkyText,
@@ -56,6 +55,10 @@ describe("주의 문구", () => {
     expect(noteText(note, { bestWindow: window })).toBe(text)
   })
 
+  it("불빛이 직접 보이는 곳", () => {
+    expect(noteText("LIGHTS_IN_VIEW", {})).toBe("불빛이 직접 보여요")
+  })
+
   it("늦게 개는 곳은 맑아지는 시각을 넣는다", () => {
     expect(noteText("CLEARS_LATE", { bestWindow: window })).toBe("새벽 3시부터 맑아져요")
     expect(noteText("CLEARS_LATE", {})).toBe("늦게 맑아져요")
@@ -94,12 +97,6 @@ describe("하늘 상태 문구", () => {
 })
 
 describe("이름 붙이기", () => {
-  it("Bortle 1~9 등급의 이름", () => {
-    expect(bortleName(1)).toBe("아주 어두운 하늘")
-    expect(bortleName(9)).toBe("도심 하늘")
-    expect(bortleName(10)).toBe("")
-  })
-
   it("예보 출처", () => {
     expect(forecastSourceName("OPEN_METEO")).toBe("Open-Meteo")
     expect(forecastSourceName("MET_NORWAY")).toBe("MET Norway")

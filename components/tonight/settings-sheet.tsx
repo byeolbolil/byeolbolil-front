@@ -32,7 +32,7 @@ export function SettingsSheet({
     <Sheet title="나에게 맞추기" onClose={onClose}>
       <div className="q">
         <div className="ql">보기 방식</div>
-        <div className="hint">자세히를 고르면 점수, 구름량, 광해 등급 같은 숫자를 함께 보여줘요.</div>
+        <div className="hint">자세히를 고르면 점수, 구름량, 하늘 밝기 같은 숫자를 함께 보여줘요.</div>
         <div className="seg" role="group" aria-label="보기 방식">
           <button type="button" aria-pressed={settings.viewMode === "simple"} onClick={() => onChange({ viewMode: "simple" })}>
             간단히

@@ -1,4 +1,5 @@
 import { useId } from "react"
+import { skyGlow } from "@/lib/tonight/sky"
 import { windowHours } from "@/lib/tonight/hours"
 import { moonLitPath } from "@/lib/tonight/moon"
 import type { NightHour, NightPlace } from "@/lib/tonight/types"
@@ -28,7 +29,7 @@ function randomFrom(seed: number): () => number {
 }
 
 interface SkyArtProps {
-  place: Pick<NightPlace, "type" | "id" | "name" | "bortleClass" | "moonBrightness" | "moon" | "hours" | "bestWindow" | "level">
+  place: Pick<NightPlace, "type" | "id" | "name" | "skyBrightness" | "moonBrightness" | "moon" | "hours" | "bestWindow" | "level">
   /** 밤 띠에서 훑고 있는 시간. 있으면 그 시각의 구름과 달로 그린다 */
   hour?: NightHour
 }
@@ -53,8 +54,8 @@ export function SkyArt({ place, hour }: SkyArtProps) {
   const moon = moonUp ? Math.min(1, Math.max(0, place.moonBrightness)) : 0
   const daylight = hour ? !hour.dark : false
 
-  // 등급 1에서 가장 많고 9에서 가장 적다. 달빛이 밝으면 더 준다
-  const glow = (Math.min(9, Math.max(1, place.bortleClass)) - 1) / 8
+  // 자연 그대로의 하늘에서 가장 많고 도시에서 가장 적다. 달빛이 밝으면 더 준다
+  const glow = skyGlow(place.skyBrightness)
   const starCount = Math.round((150 - 125 * glow) * (1 - 0.55 * moon))
   const stars = Array.from({ length: 150 }, () => ({
     x: random() * WIDTH,

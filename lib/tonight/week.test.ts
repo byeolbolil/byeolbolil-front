@@ -40,7 +40,9 @@ describe("unwrapWeek", () => {
     name: "우리집 옥상",
     latitude: 37.55,
     longitude: 126.91,
-    bortleClass: 8,
+    skyBrightness: 67.7,
+    skyClass: "URBAN",
+    bortleClass: 9,
     nights: [night("2026-11-25", "MAYBE", 3), { date: 3 }, null],
   }
 
