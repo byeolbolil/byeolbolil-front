@@ -5,7 +5,7 @@
 import { average, moonSummary, windowHours } from "./hours"
 import { moonTimesText } from "./moon"
 import { hourOf, koreanHour } from "./time"
-import type { ForecastSource, NightPlace, NightRecommendation } from "./types"
+import type { ForecastSource, NightPlace, NightRecommendation, NightSummary, RecommendationLevel } from "./types"
 import { bortleName, cloudHeadline, isWorthGoing, patternText } from "./wording"
 
 export interface QuickFact {
@@ -119,6 +119,27 @@ export function buildNightView(recommendation: NightRecommendation): NightView {
     return { top: null, rest, empty }
   }
   return { top: null, rest, empty: rest.length === 0 ? "CLOUDY" : "POOR" }
+}
+
+/**
+ * 밤 고르기에 그릴 밤마다의 등급. 요약으로 받은 값을 쓰되, 지금 보고 있는 밤은 받아 둔 추천의 첫 장소 등급으로 덮는다.
+ * 요약과 추천은 따로 받아서 그 사이에 예보가 새로 나올 수 있는데, 그래도 버튼과 카드가 서로 다른 말을 하지 않는다.
+ * 평가한 곳이 없는 밤은 들어 있지 않다.
+ */
+export function nightLevels(
+  summary: NightSummary | null,
+  shown: NightRecommendation | null,
+): Map<string, RecommendationLevel> {
+  const levels = new Map<string, RecommendationLevel>()
+  for (const night of summary?.nights ?? []) {
+    if (night.level) levels.set(night.date, night.level)
+  }
+  if (shown) {
+    const first = shown.places[0]
+    if (first) levels.set(shown.date, first.level)
+    else levels.delete(shown.date)
+  }
+  return levels
 }
 
 /** 가볼 만한 곳이 없는 밤의 제목과 설명. `maxTravelHours`는 이동 시간 한도를 적용했을 때만 넘긴다. */

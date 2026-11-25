@@ -7,7 +7,7 @@ import { useAuthInit } from "@/components/auth/AuthProvider"
 import { useToast } from "@/hooks/use-toast"
 import { bookmarksApi } from "@/lib/api/bookmarks"
 import { authStore } from "@/lib/store/authStore"
-import { buildNightView } from "@/lib/tonight/facts"
+import { buildNightView, nightLevels } from "@/lib/tonight/facts"
 import type { PickedPlace } from "@/lib/tonight/geocode"
 import { joinParts, placeKey, travelText } from "@/lib/tonight/place"
 import { ORIGIN_NAME_MAX, originLabel, resolveOrigin, roundCoordinate, toNightQuery } from "@/lib/tonight/settings"
@@ -17,7 +17,7 @@ import type { NightPlace } from "@/lib/tonight/types"
 import { useAreaName } from "@/lib/tonight/use-area-name"
 import { useGeoPosition } from "@/lib/tonight/use-geo-position"
 import { useIsDesktop, useIsWide } from "@/lib/tonight/use-is-desktop"
-import { useNight } from "@/lib/tonight/use-night"
+import { useNight, useNightSummary } from "@/lib/tonight/use-night"
 import { patternText } from "@/lib/tonight/wording"
 import { AccountButton } from "./account-button"
 import {
@@ -125,6 +125,17 @@ export function TonightApp() {
   const ready = settingsState.hydrated && !locating && (!hadToken.current || !isInitializing)
   const night = useNight(selectedDate, query, ready)
   const data = night.data
+  // 밤 고르기에 그릴 밤마다의 등급. 추천과 따로 받아서, 늦게 오거나 받지 못해도 추천을 막지 않는다
+  const nightSummary = useNightSummary(query, ready)
+  const levels = useMemo(
+    () => nightLevels(nightSummary.summary, night.stale ? null : data),
+    [nightSummary.summary, night.stale, data],
+  )
+  /** 내 장소가 바뀌면 후보가 달라지므로 추천과 밤마다의 등급을 함께 다시 받는다 */
+  const reloadNights = () => {
+    night.reload()
+    nightSummary.reload()
+  }
 
   const tonightDate = knownTonight ?? (selectedDate === null && data ? data.date : null)
   useEffect(() => {
@@ -281,7 +292,7 @@ export function TonightApp() {
         await bookmarksApi.addBookmark({ type: "SPOT", spotId: place.spotId, name: place.name })
         toast({ title: "내 장소에 저장했어요", description: "내 장소 탭에서 이번 주를 한눈에 볼 수 있어요." })
       }
-      night.reload()
+      reloadNights()
     } catch {
       setSavingKey(null)
       toast({ title: "저장하지 못했어요", description: "잠시 뒤에 다시 시도해 주세요.", variant: "destructive" })
@@ -307,7 +318,7 @@ export function TonightApp() {
       })
       toast({ title: "내 장소에 저장했어요", description: name })
       setPick(null)
-      night.reload()
+      reloadNights()
       return true
     } catch {
       toast({ title: "저장하지 못했어요", description: "잠시 뒤에 다시 시도해 주세요.", variant: "destructive" })
@@ -438,7 +449,7 @@ export function TonightApp() {
       onOpenPlace={openPlace}
       onOpenNight={openNight}
       onAddFromMap={addFromMap}
-      onChanged={night.reload}
+      onChanged={reloadNights}
     />
   )
 
@@ -506,7 +517,7 @@ export function TonightApp() {
   if (tab === "mine") {
     content = myPlaces
   } else if (night.error) {
-    content = <NightError error={night.error} onRetry={night.reload} />
+    content = <NightError error={night.error} onRetry={reloadNights} />
   } else if (data && tonightDate) {
     content = (
       <div className={`view${refreshing}`} aria-busy={night.loading}>
@@ -614,7 +625,13 @@ export function TonightApp() {
         <div className="panel" ref={panelRef} data-cols={tab === "tonight" ? "2" : "1"}>
           <main className="view" ref={cardRef}>
             {dates.length > 0 && shownDate && tab === "tonight" ? (
-              <NightPicker dates={dates} selected={shownDate} onSelect={selectDate} />
+              <NightPicker
+                dates={dates}
+                selected={shownDate}
+                onSelect={selectDate}
+                levels={levels}
+                settled={nightSummary.summary !== null}
+              />
             ) : null}
             {content}
           </main>

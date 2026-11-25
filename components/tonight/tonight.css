@@ -143,20 +143,24 @@
     display: none;
   }
 
-  /* 밤 고르기 */
+  /* 밤 고르기. 일곱 밤이 한 줄에 다 보이고, 칸마다 이름, 날짜, 그 밤에 가장 좋은 곳의 등급을 세로로 놓는다 */
   .nights {
-    display: flex;
-    gap: 4px;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(42px, 1fr));
+    gap: 2px;
     overflow-x: auto;
     scrollbar-width: none;
 
     button {
-      flex: 0 0 auto;
       border: 0;
       background: none;
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 13.5px;
+      padding: 8px 0 6px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      min-width: 0;
       color: var(--ink-3);
       cursor: pointer;
     }
@@ -164,6 +168,47 @@
       background: var(--night-2);
       color: var(--ink);
     }
+    button[aria-pressed="true"] .nt-name {
+      font-weight: 600;
+    }
+  }
+  .nt-name {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .nt-date {
+    font-size: 10.5px;
+    font-family: var(--font-num);
+    color: var(--ink-3);
+  }
+  /* 등급은 장소 카드와 같은 말로 그린다: 별 셋, 둘, 하나, 그리고 구름 */
+  .nt-mark {
+    height: 16px;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--star);
+    font-size: 11px;
+  }
+  .nt-mark svg {
+    width: 10.5px;
+    height: 10.5px;
+  }
+  .nights [data-level="NONE"] .nt-mark {
+    color: var(--ink-3);
+  }
+  /* 가볼 만한 밤(별 둘부터)만 금빛으로 남기고, 아쉬운 밤의 별 하나는 흐리게 둔다. 별은 제 색으로 칠해져 있어서 path를 바꾼다 */
+  .nights [data-level="MAYBE"] .nt-mark path {
+    fill: var(--ink-3);
+  }
+  .nights [data-level="NO"] .nt-mark {
+    color: var(--cloud);
+    opacity: 0.75;
+  }
+  .nights [data-level="NO"] .nt-mark svg {
+    width: 15px;
+    height: 15px;
   }
 
   /* 추천 카드 */

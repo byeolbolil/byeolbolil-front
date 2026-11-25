@@ -103,6 +103,17 @@ export interface NightRecommendation {
   places: NightPlace[]
 }
 
+/**
+ * 오늘 밤부터 7일의 밤마다 후보 가운데 가장 좋은 등급(`GET /api/v1/recommendations/nights`).
+ * 같은 조건으로 받은 그 밤 추천의 첫 장소 등급과 같다.
+ */
+export interface NightSummary {
+  /** 오늘 밤의 날짜 */
+  startDate: string
+  /** 날짜순. 평가한 장소가 없는 밤은 `level`이 빠져 있다 */
+  nights: { date: string; level?: RecommendationLevel }[]
+}
+
 /** 요청 쿼리. 모두 선택이고, 출발지는 위도와 경도를 함께 보내야 한다. */
 export interface NightQuery {
   lat?: number
