@@ -400,6 +400,7 @@ export function TonightApp() {
                     </div>
                     <div className="sb">
                       {joinParts([
+                        peekPlace.viewpoint,
                         peekPlace.bestWindow ? windowText(peekPlace.bestWindow) : patternText(peekPlace.pattern),
                         travelText(peekPlace.travel),
                       ])}
@@ -439,7 +440,7 @@ export function TonightApp() {
               query={query}
               detailed={detailed}
               isAuthenticated={isAuthenticated}
-              hasOrigin={origin !== null}
+              origin={origin}
               onOpenPlace={openPlace}
               onSelectDate={selectDate}
               onOpenSettings={openSettings}
