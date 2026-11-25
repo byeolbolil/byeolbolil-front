@@ -1262,11 +1262,46 @@
   }
   .skeleton .sky {
     display: grid;
-    place-items: center;
-    color: var(--ink-3);
+    place-items: end center;
+    color: var(--ink-2);
     font-size: 14px;
+    line-height: 1.6;
     text-align: center;
-    padding: 0 24px;
+    padding: 0 24px 22px;
+    background: radial-gradient(120% 90% at 50% 0%, oklch(0.25 0.07 272), var(--night-0) 72%);
+  }
+  .skeleton .sky svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .skeleton .sky span {
+    position: relative;
+    text-shadow: 0 1px 10px var(--night-0);
+  }
+  /* 기다리는 동안 그리는 북두칠성. 움직임을 줄인 기기에서는 이 모습 그대로 멈춰 있다 */
+  .sk-dust circle {
+    fill: var(--ink);
+    opacity: 0.45;
+  }
+  .sk-line {
+    stroke: var(--star);
+    stroke-width: 1;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    opacity: 0.55;
+  }
+  .sk-star {
+    fill: var(--star);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .sk-meteor {
+    stroke: var(--ink);
+    stroke-width: 1.2;
+    stroke-linecap: round;
+    opacity: 0;
   }
   .skeleton .bar {
     height: 14px;
@@ -1493,6 +1528,21 @@
     .skeleton .bar {
       animation: bb-pulse 1.6s ease-in-out infinite;
     }
+    /* 별이 자루 끝부터 하나씩 켜지고 선이 뒤따라 이어진 뒤, 같은 순서로 꺼지고 다시 시작한다 */
+    .sk-dust circle {
+      animation: bb-twinkle 2.6s ease-in-out infinite alternate;
+    }
+    .sk-star {
+      animation: bb-star-in 6s ease-out infinite both;
+      animation-delay: calc(var(--i) * 0.38s);
+    }
+    .sk-line {
+      animation: bb-line-in 6s ease-out infinite both;
+      animation-delay: calc(var(--i) * 0.38s + 0.22s);
+    }
+    .sk-meteor {
+      animation: bb-meteor 6s ease-in infinite;
+    }
   }
 }
 
@@ -1586,6 +1636,65 @@
 @keyframes bb-pulse {
   50% {
     opacity: 0.5;
+  }
+}
+@keyframes bb-twinkle {
+  from {
+    opacity: 0.12;
+  }
+  to {
+    opacity: 0.8;
+  }
+}
+@keyframes bb-star-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  5% {
+    opacity: 1;
+    transform: scale(1.6);
+  }
+  10%,
+  55% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  65%,
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+@keyframes bb-line-in {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0.55;
+  }
+  7%,
+  55% {
+    stroke-dashoffset: 0;
+    opacity: 0.55;
+  }
+  65%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes bb-meteor {
+  0%,
+  44% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  46% {
+    opacity: 0.9;
+  }
+  52%,
+  100% {
+    opacity: 0;
+    transform: translate(-84px, 49px);
   }
 }
 
