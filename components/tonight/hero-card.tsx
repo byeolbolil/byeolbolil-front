@@ -1,14 +1,15 @@
 "use client"
 
 import { useState, type ReactNode } from "react"
-import { cloudFact, moonFact, skyFact, skyPhotoKind, tipText } from "@/lib/tonight/facts"
-import { SKY_PHOTOS } from "@/lib/tonight/photos"
+import { cloudFact, moonFact, skyFact, tipText } from "@/lib/tonight/facts"
 import { directionsUrl, joinParts, regionOf, travelText } from "@/lib/tonight/place"
+import { spotPhoto } from "@/lib/tonight/spot-photos"
 import { windowText } from "@/lib/tonight/time"
 import type { NightPlace } from "@/lib/tonight/types"
 import { CloudIcon, MoonIcon, SkyIcon } from "./icons"
 import { NightBand } from "./night-band"
 import { Rating } from "./rating"
+import { SkyArt } from "./sky-art"
 
 interface HeroCardProps {
   place: NightPlace
@@ -22,14 +23,16 @@ interface HeroCardProps {
   children?: ReactNode
 }
 
-/** 장소 하나의 오늘 밤. 하늘 사진, 추천 시간대, 밤 띠, 짧은 설명 세 가지를 담는다. */
+/**
+ * 장소 하나의 오늘 밤. 장소의 사진, 추천 시간대, 밤 띠, 짧은 설명 세 가지를 담는다.
+ * 사진을 구하지 못한 장소는 다른 곳의 사진을 빌려 쓰지 않고, 오늘 밤 조건으로 그린 하늘 그림을 보여준다.
+ */
 export function HeroCard({ place, eyebrow, detailed, actions, children }: HeroCardProps) {
   const [scrubbed, setScrubbed] = useState<number | null>(null)
-  const photoKind = skyPhotoKind(place)
-  const photo = SKY_PHOTOS[photoKind]
+  const photo = spotPhoto(place)
   const scrubbedHour = scrubbed === null ? undefined : place.hours[scrubbed]
-  // 흐린 밤 사진은 이미 구름이라 덮지 않는다
-  const veil = scrubbedHour && photoKind !== "cloudy" ? scrubbedHour.cloudCover / 100 : 0
+  // 밤 띠를 훑으면 그 시각의 구름량만큼 사진을 덮는다. 그림은 스스로 그 시각의 하늘을 그린다
+  const veil = scrubbedHour ? scrubbedHour.cloudCover / 100 : 0
   const moon = moonFact(place)
   const cloud = cloudFact(place)
   const sky = skyFact(place)
@@ -37,13 +40,23 @@ export function HeroCard({ place, eyebrow, detailed, actions, children }: HeroCa
   return (
     <article className="tonight">
       <div className="sky">
-        {/* 정적 자산을 그대로 보여준다. next/image 최적화는 꺼져 있다(next.config.mjs) */}
-        <img className="photo" src={photo.src} alt={photo.alt} />
-        <div className="veil" style={{ opacity: veil }} aria-hidden="true" />
+        {photo ? (
+          <>
+            {/* 정적 자산을 그대로 보여준다. next/image 최적화는 꺼져 있다(next.config.mjs) */}
+            <img className="photo" src={photo.src} alt={photo.alt} loading="lazy" />
+            <div className="veil" style={{ opacity: veil }} aria-hidden="true" />
+          </>
+        ) : (
+          <SkyArt place={place} hour={scrubbedHour} />
+        )}
         <div className="shade" aria-hidden="true" />
-        <a className="photo-credit" href={photo.url} target="_blank" rel="noopener noreferrer" title={photo.credit}>
-          사진: {photo.credit}
-        </a>
+        {photo ? (
+          <a className="photo-credit" href={photo.url} target="_blank" rel="noopener noreferrer" title={photo.credit}>
+            사진: {photo.credit}
+          </a>
+        ) : (
+          <span className="photo-credit">그림: 오늘 밤 예보로 그린 하늘</span>
+        )}
         <Rating level={place.level} />
         <div className="sky-text">
           <div className="eyebrow">{eyebrow}</div>

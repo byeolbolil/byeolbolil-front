@@ -1,0 +1,12 @@
+[
+  { "spotId": 6, "name": "횡성 태기산", "file": "File:태기산 별 일주.jpg" },
+  { "spotId": 12, "name": "연천 당포성", "file": "File:Dangpo3.jpg" },
+  { "spotId": 13, "name": "제천 덕주산성", "file": "File:제천 덕주산성 (2).jpg" },
+  { "spotId": 16, "name": "대전 시민천문대", "file": "File:대전시민천문대 Daejeon Observatory.jpg", "artist": "Rickinasia" },
+  { "spotId": 19, "name": "합천 황매산", "file": "File:The Way To Hwangmaesan (106796859).jpeg" },
+  { "spotId": 22, "name": "의령 한우산", "file": "File:UR-HUmt3.jpg" },
+  { "spotId": 28, "name": "서귀포 1100고지", "file": "File:Hallasan 1100 uplands(한라산 1100고지).jpg" },
+  { "spotId": 30, "name": "제주 새별오름", "file": "File:Saebyeol Oreum 04.jpg" },
+  { "spotId": 54, "name": "포항 호미곶", "file": "File:Homigot 20240113 009.jpg" },
+  { "spotId": 64, "name": "용눈이오름", "file": "File:용눈이오름 (2018.05.08).jpg" }
+]

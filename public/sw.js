@@ -34,7 +34,7 @@ function isImmutable(url) {
 
 /** 주소는 그대로인데 내용이 바뀔 수 있는 정적 파일. 캐시로 먼저 답하고 뒤에서 새로 받아 둔다 */
 function isStaticAsset(url) {
-  return url.pathname.startsWith("/sky/") || url.pathname.startsWith("/map/") || url.pathname.startsWith("/icons/")
+  return url.pathname.startsWith("/sky/") || url.pathname.startsWith("/spots/") || url.pathname.startsWith("/map/") || url.pathname.startsWith("/icons/")
 }
 
 async function cacheFirst(request) {
