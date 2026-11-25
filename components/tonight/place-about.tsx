@@ -1,4 +1,7 @@
-import { linkHost, safeLinks, searchUrl } from "@/lib/tonight/links"
+"use client"
+
+import { useState } from "react"
+import { linkHost, safeLinks, searchUrl, type PlaceLink } from "@/lib/tonight/links"
 import { AlertIcon, CarIcon, ClockIcon, ExternalIcon, SearchIcon } from "./icons"
 
 interface PlaceAboutProps {
@@ -54,7 +57,7 @@ export function PlaceAbout({ name, description, guide, caution, links, facility 
           {references.map((link) => (
             <li key={link.url}>
               <a href={link.url} target="_blank" rel="noopener noreferrer">
-                <ExternalIcon />
+                <LinkThumb link={link} />
                 <span className="about-link-text">
                   <span className="about-link-title">{link.title}</span>
                   <span className="about-link-host">{linkHost(link.url)}</span>
@@ -65,11 +68,39 @@ export function PlaceAbout({ name, description, guide, caution, links, facility 
           <li>
             <a href={searchUrl(name, facility)} target="_blank" rel="noopener noreferrer" data-kind="search">
               <SearchIcon />
-              <span className="about-link-title">{facility ? "네이버에서 찾아보기" : "네이버에서 후기 찾아보기"}</span>
+              <span className="about-link-title">{facility ? "구글에서 찾아보기" : "구글에서 후기 찾아보기"}</span>
             </a>
           </li>
         </ul>
       </div>
     </div>
+  )
+}
+
+/**
+ * 링크의 미리보기. 그 글이 대표 이미지로 내건 것을 남의 서버에서 바로 부른다. 어디서 불렀는지 알리지 않고
+ * 부르고, 받지 못하면 바깥 링크 아이콘으로 바꾼다.
+ */
+function LinkThumb({ link }: { link: PlaceLink }) {
+  const [failed, setFailed] = useState(false)
+  if (!link.imageUrl || failed) {
+    return (
+      <span className="about-thumb" data-empty="true">
+        <ExternalIcon />
+      </span>
+    )
+  }
+  return (
+    <span className="about-thumb">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={link.imageUrl}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        referrerPolicy="no-referrer"
+        onError={() => setFailed(true)}
+      />
+    </span>
   )
 }
