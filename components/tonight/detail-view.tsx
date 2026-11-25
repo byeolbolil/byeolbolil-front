@@ -21,6 +21,8 @@ interface DetailViewProps {
   others: readonly NightPlace[]
   onOpenPlace: (place: NightPlace) => void
   onBack: () => void
+  /** 사진 위에 놓는 버튼 */
+  corner?: ReactNode
   actions?: ReactNode
   children?: ReactNode
 }
@@ -29,7 +31,17 @@ interface DetailViewProps {
  * 장소 하나를 자세히 보는 화면. 목록이나 지도에서 장소를 고르면 열린다.
  * 아래에 다른 후보를 함께 두어서, 목록으로 돌아가지 않고도 후보 사이를 오갈 수 있다.
  */
-export function DetailView({ place, nightName, detailed, others, onOpenPlace, onBack, actions, children }: DetailViewProps) {
+export function DetailView({
+  place,
+  nightName,
+  detailed,
+  others,
+  onOpenPlace,
+  onBack,
+  corner,
+  actions,
+  children,
+}: DetailViewProps) {
   const [showAll, setShowAll] = useState(false)
   const runs = clearRuns(place.hours)
   const shown = showAll ? others : others.slice(0, SHORT_LIST)
@@ -42,7 +54,7 @@ export function DetailView({ place, nightName, detailed, others, onOpenPlace, on
         </svg>
         돌아가기
       </button>
-      <HeroCard key={placeKey(place)} place={place} eyebrow={nightName} detailed={detailed} actions={actions}>
+      <HeroCard key={placeKey(place)} place={place} eyebrow={nightName} detailed={detailed} corner={corner} actions={actions}>
         {children}
       </HeroCard>
       {runs.length > 1 ? (
@@ -51,8 +63,8 @@ export function DetailView({ place, nightName, detailed, others, onOpenPlace, on
       {others.length > 0 ? (
         <section className="sec">
           <div className="sec-title">
-            <h2>다른 후보</h2>
-            <p>{nightName} 추천 순서대로</p>
+            <h2>{nightName}의 다른 후보</h2>
+            <p>별 보기 좋은 순서예요</p>
           </div>
           <div className="rows">
             {shown.map((other) => (
