@@ -350,8 +350,8 @@ export function TonightApp() {
     const busy = savingKey === placeKey(place)
     const canSave = saved || place.spotId !== undefined
     return {
-      // 저장은 카드 맨 위에서도 누를 수 있게 사진 위에 하나 더 둔다. 아래 버튼까지 내려가지 않아도 된다
-      corner: canSave ? (
+      // 저장 버튼은 하나만 둔다. 사진 바로 아래라 스크롤하지 않고 누를 수 있고 사진을 가리지 않는다
+      save: canSave ? (
         <button
           type="button"
           className="save-pill"
@@ -361,23 +361,11 @@ export function TonightApp() {
           onClick={() => void toggleSaved(place)}
         >
           <BookmarkIcon filled={saved} />
-          {saved ? "저장됨" : "저장"}
+          {busy ? (saved ? "빼는 중" : "저장 중") : saved ? "저장됨" : "저장"}
         </button>
       ) : null,
       actions: (
         <>
-          {canSave ? (
-            <button
-              type="button"
-              className="btn save"
-              aria-pressed={saved}
-              disabled={busy}
-              onClick={() => void toggleSaved(place)}
-            >
-              <BookmarkIcon filled={saved} />
-              {busy ? (saved ? "빼는 중" : "저장하는 중") : saved ? "내 장소에 저장됨" : "내 장소에 저장"}
-            </button>
-          ) : null}
           <span className="spacer" />
           {detailed ? null : (
             <button type="button" className="btn ghost" aria-expanded={open} onClick={() => setMoreOpen((value) => !value)}>

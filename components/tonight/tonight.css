@@ -343,31 +343,33 @@
     backdrop-filter: blur(6px);
   }
 
-  /* 사진 오른쪽 위의 저장 버튼. 사진 출처가 있으면 그 아래에 놓는다 */
-  .sky-corner {
-    position: absolute;
-    right: 14px;
-    top: 16px;
-    z-index: 2;
+  /* 등급을 설명하는 줄과 저장 버튼. 저장 버튼은 사진 위가 아니라 사진 바로 아래의 이 줄에 둔다 */
+  .why-row {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
   }
-  .sky-corner[data-credit="1"] {
-    top: 36px;
+  .why-row .why {
+    flex: 1;
+    min-width: 0;
   }
   .save-pill {
+    flex: none;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 5px;
     border: 0;
     cursor: pointer;
-    border-radius: 999px;
+    border-radius: 12px;
     padding: 8px 14px 8px 11px;
-    min-height: 40px;
+    min-height: 44px;
     font-size: 14px;
     font-weight: 600;
+    white-space: nowrap;
     color: var(--sky-clear);
-    background: oklch(0.12 0.03 268 / 0.78);
+    background: var(--night-2);
     box-shadow: inset 0 0 0 1.5px var(--sky-clear);
-    backdrop-filter: blur(6px);
   }
   .save-pill svg {
     width: 16px;
