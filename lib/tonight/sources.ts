@@ -58,25 +58,43 @@ export const SOURCES: readonly SourceEntry[] = [
     status: "정책",
   },
   {
-    title: "하늘 밝기 등급 이름",
-    body: "광해 정도를 1(가장 어두움)부터 9(도심)까지 나눈 Bortle 등급과 등급별 이름을 우리말로 옮겨 써요.",
+    title: "하늘 밝기",
+    body: "위성이 잰 밤의 불빛에서, 둘레 300km의 불빛이 하늘 전체를 얼마나 밝히는지를 계산해요. 값은 하늘 전체에서 평균한 인공 불빛이 자연 밤하늘 밝기의 몇 배인지예요. 미국 국립공원관리청 연구진이 전천 카메라 측정으로 맞춘 모형이고, 논문의 측정지 24곳을 같은 계산으로 다시 구해 확인했어요. 위성 자료는 2024년 것이에요.",
     links: [
       {
-        label: "Bortle, Gauging Light Pollution: The Bortle Dark-Sky Scale, Sky & Telescope, 2001",
-        url: "https://en.wikipedia.org/wiki/Bortle_scale",
+        label: "Duriscoe et al., A simplified model of all-sky artificial sky glow derived from VIIRS Day/Night band data, JQSRT 214, 2018",
+        url: "https://doi.org/10.1016/j.jqsrt.2018.04.028",
+      },
+      {
+        label: "위성 자료: VIIRS Nighttime Lights V2 (Earth Observation Group, Payne Institute for Public Policy, CC BY 4.0), Elvidge et al., Remote Sensing 13, 2021",
+        url: "https://eogdata.mines.edu/products/vnl/",
       },
     ],
   },
   {
-    title: "위성 야간광 → 광해 등급",
-    body: "지금의 광해 등급은 위성이 잰 밝기를 등급표로 바꿔서 만든 값인데, 그 등급표의 근거를 찾지 못했어요. 위성 값을 Bortle 등급으로 바로 바꾸는 공인된 표도 없어요. 위성 값은 그 자리에서 위로 나가는 빛이고, 하늘 밝기는 멀리 있는 도시 불빛까지 합친 값이라서 달라요. 인공 밝기 비율로 등급을 나누는 이 논문의 방식으로 바꾸려고 해요.",
+    title: "하늘의 다섯 등급",
+    body: "하늘 밝기 0.33배, 2배, 10배, 50배를 경계로 나눠요. 앞의 세 값은 위 논문의 표이고 10배부터는 은하수가 보이지 않아요. 50배는 눈이 어둠에 적응하지 못한다는 밝기를 옮긴 어림값이에요. 등급의 이름은 별볼일이 붙였어요.",
     links: [
       {
         label: "Falchi et al., The new world atlas of artificial night sky brightness, Science Advances, 2016",
-        url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4928945/",
+        url: "https://doi.org/10.1126/sciadv.1600377",
       },
     ],
-    status: "출처 없음",
+  },
+  {
+    title: "직접 보이는 불빛",
+    body: "산이 가려 주는 것은 하늘에 번진 빛보다 눈으로 곧바로 들어오는 불빛이에요. 명소마다 30m 고도 자료로 그 자리에서 보이는 불빛만 골라 더한 값을 계산해 두고, 많이 보이는 곳은 순위를 낮추고 알려 줘요. 어디부터 많다고 볼지는 다녀온 사람의 관찰 세 건에 맞춘 값이에요. 주차장 가로등 같은 현장의 조명은 위성 자료에 없어서 반영하지 못해요.",
+    links: [
+      {
+        label: "Cinzano & Falchi, The propagation of light pollution in the atmosphere, MNRAS 427, 2012",
+        url: "https://arxiv.org/abs/1209.2031",
+      },
+      {
+        label: "고도 자료: Copernicus DEM GLO-30 (© DLR e.V. 2010-2014, © Airbus Defence and Space GmbH 2014-2018, provided under COPERNICUS by the European Union and ESA)",
+        url: "https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM",
+      },
+    ],
+    status: "정책",
   },
   {
     title: "습도와 이슬: 80% 이상이면 주의",
@@ -119,13 +137,13 @@ export const SOURCES: readonly SourceEntry[] = [
   },
   {
     title: '도시 하늘은 "별 보기 아쉬워요"까지',
-    body: "광해 7등급 이상인 곳은 맑은 밤이어도 \"별 보기 아쉬워요\"까지만 줘요. 도심의 맑은 밤을 \"별 보기 아주 좋아요\"로 권하지 않으려고 별볼일이 정한 경계예요.",
+    body: "은하수가 보이지 않는 하늘(인공 불빛이 자연의 10배 이상)은 맑은 밤이어도 \"별 보기 아쉬워요\"까지만 줘요. 하늘 밝기만으로는 작은 도시의 시내가 걸러지지 않아서, 서 있는 곳 둘레 1km가 밝은 곳도 같이 낮춰요. 둘레가 밝다고 보는 경계는 별볼일이 정했어요.",
     links: [],
     status: "정책",
   },
   {
     title: "시간별 점수 계산식",
-    body: "어두운 시간마다 100점에서 시작해 구름, 광해, 달, 박명이 남기는 비율을 차례로 곱해요. 곱으로 묶은 것은 광해가 심한 곳에서 달의 영향이 줄어든다는 관측과 맞지만, 광해 0.5, 달 0.3, 박명 0.2라는 가중치에는 근거 자료가 없어서 별볼일이 정했어요. 점수는 등급을 정하지 않고, 맑은 구간이 여럿일 때 어느 쪽을 추천할지와 같은 등급 안의 순서에만 써요.",
+    body: "어두운 시간마다 100점에서 시작해 구름, 하늘 밝기, 직접 보이는 불빛, 달, 박명이 남기는 비율을 차례로 곱해요. 곱으로 묶은 것은 광해가 심한 곳에서 달의 영향이 줄어든다는 관측과 맞지만, 하늘 밝기 0.5, 달 0.3, 박명과 직접 보이는 불빛 0.2라는 가중치에는 근거 자료가 없어서 별볼일이 정했어요. 점수는 등급을 정하지 않고, 맑은 구간이 여럿일 때 어느 쪽을 추천할지와 같은 등급 안의 순서에만 써요.",
     links: [{ label: "Puschnig, Wallner & Posch, MNRAS, 2020", url: "https://arxiv.org/abs/1912.05673" }],
     status: "정책",
   },

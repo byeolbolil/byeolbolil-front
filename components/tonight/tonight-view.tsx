@@ -21,7 +21,7 @@ const SHORT_LIST = 4
 
 /** 장소 카드에 붙이는 버튼과 펼침 내용 */
 export interface CardExtras {
-  corner?: ReactNode
+  save?: ReactNode
   actions?: ReactNode
   children?: ReactNode
 }
@@ -74,7 +74,7 @@ export function NightCard({ night, tonightDate, laterDates, query, detailed, sel
           place={place}
           eyebrow={isTop ? `${name} 가장 좋은 곳` : name}
           detailed={detailed}
-          corner={cardExtras.corner}
+          save={cardExtras.save}
           actions={cardExtras.actions}
         >
           {cardExtras.children}

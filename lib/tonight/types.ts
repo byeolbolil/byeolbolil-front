@@ -15,7 +15,10 @@ export type NightPattern =
   | "BRIEF_CLEAR"
   | "CLOUDY_ALL_NIGHT"
 
-export type NightNote = "CLEARS_LATE" | "BRIGHT_MOON" | "CITY_LIGHTS" | "DEW"
+export type NightNote = "CLEARS_LATE" | "BRIGHT_MOON" | "CITY_LIGHTS" | "LIGHTS_IN_VIEW" | "DEW"
+
+/** 하늘 밝기로 나눈 등급. 어두운 쪽부터 */
+export type SkyClass = "NATURAL" | "DARK" | "RURAL" | "SUBURBAN" | "URBAN"
 
 export type ForecastSource = "OPEN_METEO" | "MET_NORWAY"
 
@@ -78,7 +81,10 @@ export interface NightPlace {
   notes: NightNote[]
   bestWindow?: ClearWindow
   travel?: TravelEstimate
-  bortleClass: number
+  /** 하늘 전체의 인공 불빛이 자연 밤하늘 밝기의 몇 배인지. 자료가 없는 곳(한국 둘레 밖)에는 없다 */
+  skyBrightness?: number
+  /** 하늘 밝기로 나눈 등급. `skyBrightness`가 없으면 같이 없다 */
+  skyClass?: SkyClass
   moonBrightness: number
   /** 달의 모양과 뜨고 지는 시각. 이 값을 주기 전에 받아 둔 응답에는 없다 */
   moon?: NightMoon

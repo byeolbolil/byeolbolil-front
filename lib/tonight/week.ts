@@ -6,6 +6,7 @@
  */
 import { authApi } from "@/lib/api/auth"
 import { authStore } from "@/lib/store/authStore"
+import { knownNotes, knownSky } from "./clean"
 import type { Coordinates } from "./settings"
 import { daysBetween, weekdayOf } from "./time"
 import type {
@@ -17,6 +18,7 @@ import type {
   NightPattern,
   NightQuery,
   RecommendationLevel,
+  SkyClass,
 } from "./types"
 import { levelStars } from "./wording"
 
@@ -42,7 +44,9 @@ export interface WeekPlace {
   address?: string
   latitude: number
   longitude: number
-  bortleClass: number
+  /** 하늘 전체의 인공 불빛이 자연 밤하늘 밝기의 몇 배인지. 자료가 없는 곳에는 없다 */
+  skyBrightness?: number
+  skyClass?: SkyClass
   forecastSource?: ForecastSource
   forecastIssuedAt?: string
   /** 날짜순. 예보가 닿지 않는 밤은 빠져 있고, 예보를 받지 못한 장소는 비어 있다 */
@@ -111,12 +115,15 @@ export function unwrapWeek(body: unknown): WeekOutlook {
   for (const item of data.places) {
     if (!isRecord(item) || !isFiniteNumber(item.latitude) || !isFiniteNumber(item.longitude)) continue
     const nights = Array.isArray(item.nights)
-      ? item.nights.filter(
-          (night): night is WeekNight =>
-            isRecord(night) && typeof night.date === "string" && typeof night.level === "string" && Array.isArray(night.hours),
-        )
+      ? item.nights
+          .filter(
+            (night): night is WeekNight =>
+              isRecord(night) && typeof night.date === "string" && typeof night.level === "string" && Array.isArray(night.hours),
+          )
+          .map((night) => ({ ...night, notes: knownNotes(night.notes) }))
       : []
-    places.push({ ...(item as unknown as WeekPlace), nights })
+    const { bortleClass: _bortleClass, skyBrightness: _skyBrightness, skyClass: _skyClass, ...rest } = item
+    places.push({ ...(rest as unknown as WeekPlace), ...knownSky(item), nights })
   }
   return {
     startDate: data.startDate,

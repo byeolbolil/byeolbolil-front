@@ -3,6 +3,8 @@
  * 그림은 값을 옮긴 것일 뿐이고 판정은 하지 않는다. 판정은 서버가 준 등급과 주의 사항을 그대로 쓴다.
  */
 
+import { SKY_CLASSES, skyScalePosition } from "@/lib/tonight/sky"
+import type { SkyClass } from "@/lib/tonight/types"
 import { useId } from "react"
 import { moonLitPath } from "@/lib/tonight/moon"
 import type { NightMoon } from "@/lib/tonight/types"
@@ -189,21 +191,23 @@ export function HumidityDrop({ humidity }: { humidity: number | null }) {
 }
 
 /**
- * 하늘이 얼마나 어두운지. Bortle 1등급(가장 어두움)부터 9등급(도심)까지 아홉 칸을 놓고 이곳의 칸을 짚는다.
- * 칸의 색은 등급이 오를수록 밝아지는 그림일 뿐이고 실제 하늘 밝기에 맞춘 것은 아니다.
+ * 하늘이 얼마나 어두운지. 자연 그대로의 하늘부터 도시 하늘까지 다섯 등급을 한 칸씩 놓고, 이곳의 하늘 밝기를 바늘로 짚는다.
+ * 칸 안에서도 밝을수록 오른쪽에 온다. 칸의 색은 등급이 오를수록 밝아지는 그림일 뿐이고 실제 밝기에 맞춘 것은 아니다.
  */
-export function DarknessScale({ bortleClass }: { bortleClass: number }) {
-  const classes = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+export function DarknessScale({ skyBrightness, skyClass }: { skyBrightness?: number; skyClass?: SkyClass }) {
   return (
     <div className="dark-scale" aria-hidden="true">
       <div className="cells">
-        {classes.map((value) => (
+        {SKY_CLASSES.map((value, index) => (
           <i
             key={value}
-            data-here={value === bortleClass ? "1" : undefined}
-            style={{ background: `color-mix(in oklch, oklch(0.9 0.11 80) ${(value - 1) * 10 + 6}%, oklch(0.3 0.09 275))` }}
+            data-here={value === skyClass ? "1" : undefined}
+            style={{ background: `color-mix(in oklch, oklch(0.9 0.11 80) ${index * 20 + 6}%, oklch(0.3 0.09 275))` }}
           />
         ))}
+        {skyBrightness === undefined ? null : (
+          <b className="needle" style={{ left: `${(skyScalePosition(skyBrightness) * 100).toFixed(1)}%` }} />
+        )}
       </div>
       <div className="ends">
         <span>어두운 하늘</span>

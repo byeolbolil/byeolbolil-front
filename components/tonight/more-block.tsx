@@ -1,14 +1,15 @@
 import { average, windowHours } from "@/lib/tonight/hours"
 import { travelText } from "@/lib/tonight/place"
-import { CITY_BORTLE_MIN, CLEAR_CLOUD_COVER_MAX, TRAVEL_PENALTY_PER_HOUR } from "@/lib/tonight/policy"
+import { CLEAR_CLOUD_COVER_MAX, MILKY_WAY_LOST_SKY, TRAVEL_PENALTY_PER_HOUR } from "@/lib/tonight/policy"
+import { skyBrightnessText, skyHint, skyName } from "@/lib/tonight/sky"
 import { PREFER_ALL_NIGHT } from "@/lib/tonight/settings"
 import { koreanClock } from "@/lib/tonight/time"
 import type { NightCriteria, NightPlace } from "@/lib/tonight/types"
-import { bortleName, cloudHeadline } from "@/lib/tonight/wording"
+import { cloudHeadline } from "@/lib/tonight/wording"
 import { moonPhaseName, moonTimesText } from "@/lib/tonight/moon"
 import { CloudSky, DarknessScale, HumidityDrop, MoonGlow, MoonPhase, ScoreRing } from "./gauges"
 import { HourStrip } from "./hour-strip"
-import { CarIcon, CityIcon, ClockIcon, MoonIcon } from "./icons"
+import { CarIcon, CityIcon, ClockIcon, MoonIcon, SkyIcon } from "./icons"
 
 interface MoreBlockProps {
   place: NightPlace
@@ -36,7 +37,10 @@ export function MoreBlock({ place, nightDate, criteria, onOpenSources }: MoreBlo
   const moonTimes = moonTimesText(place.moon)
   const before = criteria.preferBefore === PREFER_ALL_NIGHT ? "밤사이" : `${koreanClock(criteria.preferBefore)} 전에`
   const travel = travelText(place.travel)
-  const cityLights = place.bortleClass >= CITY_BORTLE_MIN
+  // 서버는 등급을 실제로 낮췄을 때만 CITY_LIGHTS를 붙인다. 이미 낮은 등급인 밤에도 해당되는 곳임을 알리려고 하늘 밝기도 본다
+  const cityLights =
+    place.notes.includes("CITY_LIGHTS") || (place.skyBrightness !== undefined && place.skyBrightness >= MILKY_WAY_LOST_SKY)
+  const lightsInView = place.notes.includes("LIGHTS_IN_VIEW")
 
   return (
     <div className="more">
@@ -82,10 +86,14 @@ export function MoreBlock({ place, nightDate, criteria, onOpenSources }: MoreBlo
         </li>
         <li className="stack">
           <div>
-            <b>{bortleName(place.bortleClass)}</b>
-            <span>광해 9등급 중 {place.bortleClass}등급이에요. 낮을수록 별이 많이 보여요</span>
+            <b>{skyName(place.skyClass)}</b>
+            <span>
+              {skyBrightnessText(place.skyBrightness)}
+              {place.skyClass ? `. ${skyHint(place.skyClass)}` : ""}
+            </span>
+            {lightsInView ? <span>아래쪽 마을이나 도시의 불빛이 산에 가리지 않고 직접 보여요</span> : null}
           </div>
-          <DarknessScale bortleClass={place.bortleClass} />
+          <DarknessScale skyBrightness={place.skyBrightness} skyClass={place.skyClass} />
         </li>
       </ul>
 
@@ -123,8 +131,16 @@ export function MoreBlock({ place, nightDate, criteria, onOpenSources }: MoreBlo
         <li>
           <CityIcon />
           <div>
-            도시 하늘(광해 {CITY_BORTLE_MIN}등급 이상)은 &quot;별 보기 아쉬워요&quot;까지만 줘요
+            은하수가 보이지 않는 하늘(인공 불빛이 자연의 {MILKY_WAY_LOST_SKY}배 이상)이나 불빛에 둘러싸인 곳은 &quot;별 보기
+            아쉬워요&quot;까지만 줘요
             {cityLights ? <em>이곳에 해당돼요</em> : null}
+          </div>
+        </li>
+        <li>
+          <SkyIcon />
+          <div>
+            하늘이 어두울수록, 아래쪽 불빛이 산에 가려질수록 같은 등급 안에서 앞에 와요
+            {lightsInView ? <em>이곳은 불빛이 직접 보여요</em> : null}
           </div>
         </li>
         <li>
