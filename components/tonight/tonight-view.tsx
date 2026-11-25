@@ -34,7 +34,7 @@ interface TonightViewProps {
   onOpenSettings?: () => void
   onOpenOrigin?: () => void
   /** 가장 좋은 곳 카드에 붙일 버튼과 펼침 내용 */
-  heroExtras?: (place: NightPlace) => { actions?: ReactNode; children?: ReactNode }
+  heroExtras?: (place: NightPlace) => { corner?: ReactNode; actions?: ReactNode; children?: ReactNode }
   /** 목록 아래에 덧붙이는 내용 */
   footer?: ReactNode
 }
@@ -63,7 +63,7 @@ export function TonightView({
   const hidden = view.rest.length - shown.length
   const missing = night.candidateCount - night.evaluatedCount
   const maxTravelHours = night.criteria.maxTravelMinutes ? Math.round(night.criteria.maxTravelMinutes / 60) : null
-  const extras = view.top && heroExtras ? heroExtras(view.top) : {}
+  const extras: { corner?: ReactNode; actions?: ReactNode; children?: ReactNode } = view.top && heroExtras ? heroExtras(view.top) : {}
 
   return (
     <>
@@ -73,6 +73,7 @@ export function TonightView({
           place={view.top}
           eyebrow={`${name} 가장 좋은 곳`}
           detailed={detailed}
+          corner={extras.corner}
           actions={extras.actions}
         >
           {extras.children}

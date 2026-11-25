@@ -21,6 +21,8 @@ interface HeroCardProps {
   eyebrow: string
   /** 자세히 보기 설정. 밤 띠를 훑을 때 점수도 보여준다 */
   detailed: boolean
+  /** 사진 오른쪽 위에 놓는 버튼. 스크롤하지 않고 바로 누를 수 있어야 하는 저장 버튼을 둔다 */
+  corner?: ReactNode
   /** 길찾기 옆에 놓는 버튼들 */
   actions?: ReactNode
   /** 카드 아래에 펼치는 내용 */
@@ -32,7 +34,7 @@ interface HeroCardProps {
  * 명소는 이름 아래에 실제로 차를 대고 보는 지점을 적는다. "합천 황매산"만으로는 어디로 가야 할지 알 수 없다.
  * 사진을 구하지 못한 장소는 다른 곳의 사진을 빌려 쓰지 않고, 오늘 밤 조건으로 그린 하늘 그림을 보여준다.
  */
-export function HeroCard({ place, eyebrow, detailed, actions, children }: HeroCardProps) {
+export function HeroCard({ place, eyebrow, detailed, corner, actions, children }: HeroCardProps) {
   const [scrubbed, setScrubbed] = useState<number | null>(null)
   const photo = spotPhoto(place)
   const scrubbedHour = scrubbed === null ? undefined : place.hours[scrubbed]
@@ -66,6 +68,11 @@ export function HeroCard({ place, eyebrow, detailed, actions, children }: HeroCa
           </a>
         ) : null}
         <Rating level={place.level} />
+        {corner ? (
+          <div className="sky-corner" data-credit={photo ? "1" : "0"}>
+            {corner}
+          </div>
+        ) : null}
         <div className="sky-text">
           <div className="eyebrow">{eyebrow}</div>
           <h1>{place.name}</h1>

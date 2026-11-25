@@ -325,14 +325,29 @@ export function TonightApp() {
   const closeSheet = useCallback(() => setSheet(null), [])
 
   /** 장소 카드에 붙이는 버튼과 자세히 보기 */
-  const heroExtras = (place: NightPlace): { actions: ReactNode; children: ReactNode } => {
+  const heroExtras = (place: NightPlace): { corner: ReactNode; actions: ReactNode; children: ReactNode } => {
     const open = detailed || moreOpen
     const saved = place.type === "BOOKMARK"
     const busy = savingKey === placeKey(place)
+    const canSave = saved || place.spotId !== undefined
     return {
+      // 저장은 카드 맨 위에서도 누를 수 있게 사진 위에 하나 더 둔다. 아래 버튼까지 내려가지 않아도 된다
+      corner: canSave ? (
+        <button
+          type="button"
+          className="save-pill"
+          aria-pressed={saved}
+          aria-label={saved ? "내 장소에 저장됨. 누르면 빼요" : "내 장소에 저장"}
+          disabled={busy}
+          onClick={() => void toggleSaved(place)}
+        >
+          <BookmarkIcon filled={saved} />
+          {saved ? "저장됨" : "저장"}
+        </button>
+      ) : null,
       actions: (
         <>
-          {saved || place.spotId !== undefined ? (
+          {canSave ? (
             <button
               type="button"
               className="btn save"
@@ -435,6 +450,7 @@ export function TonightApp() {
             others={places.filter((place) => placeKey(place) !== shownDetailKey)}
             onOpenPlace={openPlace}
             onBack={backFromDetail}
+            corner={extras.corner}
             actions={extras.actions}
           >
             {extras.children}
