@@ -16,18 +16,31 @@ interface PlaceRowProps {
   place: NightPlace
   /** 자세히 보기 설정이면 시간별 띠와 평균 점수를 함께 보여준다 */
   detailed: boolean
+  /** 지금 카드에 떠 있는 장소인지 */
   selected?: boolean
+  /** 그 밤의 추천 순서. 순서가 뜻을 갖는 목록에서만 넘긴다 */
+  rank?: number
   onOpen: (place: NightPlace) => void
 }
 
-/** 목록의 한 줄. 누르면 그 장소의 자세한 화면으로 간다. */
-export function PlaceRow({ place, detailed, selected = false, onOpen }: PlaceRowProps) {
+/** 목록의 한 줄. 누르면 그 장소를 카드에 띄운다. */
+export function PlaceRow({ place, detailed, selected = false, rank, onOpen }: PlaceRowProps) {
   const sub = joinParts([place.bestWindow ? windowText(place.bestWindow) : patternText(place.pattern), travelText(place.travel)])
   const note = place.notes[0]
   const score = average(windowHours(place.hours, place.bestWindow), (hour) => hour.score)
 
   return (
-    <button type="button" className="row" aria-current={selected ? "true" : undefined} onClick={() => onOpen(place)}>
+    <button
+      type="button"
+      className={rank === undefined ? "row" : "row ranked"}
+      aria-current={selected ? "true" : undefined}
+      onClick={() => onOpen(place)}
+    >
+      {rank === undefined ? null : (
+        <span className="row-rank" aria-label={`${rank}번째`}>
+          {rank}
+        </span>
+      )}
       <div>
         <div className="row-name">
           {place.name}
@@ -41,7 +54,7 @@ export function PlaceRow({ place, detailed, selected = false, onOpen }: PlaceRow
           {sub}
           {note ? (
             <>
-              {sub ? " · " : ""}
+              {sub ? <span className="sep"> · </span> : null}
               <span className="note">{noteText(note, place)}</span>
             </>
           ) : null}

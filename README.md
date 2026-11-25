@@ -81,10 +81,10 @@ app/
 components/
   tonight/                  메인 화면
     tonight-app.tsx         탭, 선택 상태, 설정과 추천을 잇는 곳
-    tonight-view.tsx        오늘 밤 추천 (가장 좋은 곳, 후보 목록, 가볼 만한 곳이 없는 밤)
+    tonight-view.tsx        오늘 밤 추천 (장소 카드, 순위가 붙은 후보 목록, 가볼 만한 곳이 없는 밤)
     hero-card.tsx           장소 하나의 밤 (사진, 추천 시간대, 짧은 설명)
     night-band.tsx          밤 시간 띠
-    detail-view.tsx, more-block.tsx, hour-chart.tsx   자세히 보기
+    more-block.tsx, hour-strip.tsx                    자세히 보기
     settings-sheet.tsx, sources-sheet.tsx             설정, 추천 기준과 출처
     my-places.tsx, save-place-sheet.tsx               내 장소
     map/                    MapLibre 지도와 레이어

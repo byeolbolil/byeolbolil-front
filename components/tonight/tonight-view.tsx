@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { buildNightView, emptyMessage, type EmptyKind } from "@/lib/tonight/facts"
+import { clearRuns } from "@/lib/tonight/hours"
 import { CLOUDY_NIGHT_PHOTO } from "@/lib/tonight/photos"
 import { placeKey } from "@/lib/tonight/place"
 import { daysBetween, nightName, windowText } from "@/lib/tonight/time"
@@ -15,10 +16,17 @@ import { HeroCard } from "./hero-card"
 import { PlaceRow } from "./place-row"
 import { Rating } from "./rating"
 
-/** 처음에 보여주는 후보 수. 나머지는 "더 보기"로 편다. */
-const SHORT_LIST = 3
+/** 목록이 카드 아래에 놓이는 화면에서 처음에 보여주는 후보 수. 나머지는 "더 보기"로 편다. */
+const SHORT_LIST = 4
 
-interface TonightViewProps {
+/** 장소 카드에 붙이는 버튼과 펼침 내용 */
+export interface CardExtras {
+  corner?: ReactNode
+  actions?: ReactNode
+  children?: ReactNode
+}
+
+interface NightCardProps {
   night: NightRecommendation
   /** 오늘 밤의 날짜. 밤의 이름("내일 밤", "목요일 밤")을 붙일 때 기준이 된다 */
   tonightDate: string
@@ -26,62 +34,33 @@ interface TonightViewProps {
   laterDates: readonly string[]
   query: NightQuery
   detailed: boolean
-  isAuthenticated: boolean
-  /** 출발 위치. 모르면 이동 시간이 없고 천문대 목록도 거리순으로 놓지 못한다 */
-  origin: Coordinates | null
-  onOpenPlace: (place: NightPlace) => void
+  /** 목록이나 지도에서 고른 장소. 없으면 그 밤에 가장 좋은 곳을 보여준다 */
+  selected: NightPlace | null
   onSelectDate: (date: string) => void
-  onOpenSettings?: () => void
-  onOpenOrigin?: () => void
-  /** 가장 좋은 곳 카드에 붙일 버튼과 펼침 내용 */
-  heroExtras?: (place: NightPlace) => { corner?: ReactNode; actions?: ReactNode; children?: ReactNode }
-  /** 목록 아래에 덧붙이는 내용 */
-  footer?: ReactNode
+  extras?: (place: NightPlace) => CardExtras
 }
 
-/** 오늘 밤 추천 화면. 가장 좋은 곳 하나를 크게, 나머지 후보를 짧은 목록으로 보여준다. */
-export function TonightView({
-  night,
-  tonightDate,
-  laterDates,
-  query,
-  detailed,
-  isAuthenticated,
-  origin,
-  onOpenPlace,
-  onSelectDate,
-  onOpenSettings,
-  onOpenOrigin,
-  heroExtras,
-  footer,
-}: TonightViewProps) {
-  const [showAll, setShowAll] = useState(false)
-  const hasOrigin = origin !== null
+/**
+ * 그 밤의 장소 하나를 크게 보여주는 카드. 처음에는 가장 좋은 곳이고, 목록이나 지도에서 다른 곳을 고르면 같은 자리에서
+ * 그 장소로 바뀐다. 화면을 새로 쌓지 않으므로 돌아가는 버튼이 없고, 1위로 돌아가려면 목록의 첫 줄을 누르면 된다.
+ * 가볼 만한 곳이 없는 밤에는 그 사정을 먼저 알리고, 그래도 장소를 고르면 알림을 줄여서 카드 위에 남긴다.
+ */
+export function NightCard({ night, tonightDate, laterDates, query, detailed, selected, onSelectDate, extras }: NightCardProps) {
   const view = buildNightView(night)
   const name = nightName(night.date, tonightDate)
-  const shown = showAll ? view.rest : view.rest.slice(0, SHORT_LIST)
-  const hidden = view.rest.length - shown.length
-  const missing = night.candidateCount - night.evaluatedCount
+  const place = selected ?? view.top
+  const isTop = place !== null && view.top !== null && placeKey(place) === placeKey(view.top)
+  const cardExtras: CardExtras = place && extras ? extras(place) : {}
+  const runs = place ? clearRuns(place.hours) : []
   const maxTravelHours = night.criteria.maxTravelMinutes ? Math.round(night.criteria.maxTravelMinutes / 60) : null
-  const extras: { corner?: ReactNode; actions?: ReactNode; children?: ReactNode } = view.top && heroExtras ? heroExtras(view.top) : {}
 
   return (
     <>
-      {view.top ? (
-        <HeroCard
-          key={placeKey(view.top)}
-          place={view.top}
-          eyebrow={`${name} 가장 좋은 곳`}
-          detailed={detailed}
-          corner={extras.corner}
-          actions={extras.actions}
-        >
-          {extras.children}
-        </HeroCard>
-      ) : (
+      {view.top ? null : (
         <EmptyNight
           kind={view.empty ?? "CLOUDY"}
           name={name}
+          compact={place !== null}
           maxTravelHours={maxTravelHours}
           tonightDate={tonightDate}
           laterDates={laterDates}
@@ -89,19 +68,107 @@ export function TonightView({
           onSelectDate={onSelectDate}
         />
       )}
+      {place ? (
+        <HeroCard
+          key={placeKey(place)}
+          place={place}
+          eyebrow={isTop ? `${name} 가장 좋은 곳` : name}
+          detailed={detailed}
+          corner={cardExtras.corner}
+          actions={cardExtras.actions}
+        >
+          {cardExtras.children}
+        </HeroCard>
+      ) : null}
+      {runs.length > 1 ? (
+        <p className="calm small">맑은 시간이 여러 번 있어요: {runs.map((run) => windowText(run)).join(", ")}</p>
+      ) : null}
+    </>
+  )
+}
 
-      {view.rest.length > 0 ? (
+interface NightCandidatesProps {
+  night: NightRecommendation
+  tonightDate: string
+  detailed: boolean
+  isAuthenticated: boolean
+  /** 출발 위치. 모르면 이동 시간이 없고 천문대 목록도 거리순으로 놓지 못한다 */
+  origin: Coordinates | null
+  /** 카드에 떠 있는 장소의 키 */
+  shownKey: string | null
+  /** 목록이 카드 옆에 제 칸을 가졌는지. 그러면 접지 않고 모두 보여주고, 고른 줄이 보이게 따라간다 */
+  beside: boolean
+  onOpenPlace: (place: NightPlace) => void
+  onOpenSettings?: () => void
+  onOpenOrigin?: () => void
+  /** 목록 아래에 덧붙이는 내용 */
+  footer?: ReactNode
+}
+
+/**
+ * 그 밤의 후보 목록. 서버가 준 추천 순서 그대로 번호를 붙이고, 카드에 떠 있는 장소의 줄을 표시한다.
+ * 줄을 누르면 카드가 그 장소로 바뀔 뿐 목록은 그대로다. 넓은 화면에서는 카드 옆 칸에, 그보다 좁으면 카드 아래에 놓인다.
+ */
+export function NightCandidates({
+  night,
+  tonightDate,
+  detailed,
+  isAuthenticated,
+  origin,
+  shownKey,
+  beside,
+  onOpenPlace,
+  onOpenSettings,
+  onOpenOrigin,
+  footer,
+}: NightCandidatesProps) {
+  const [showAll, setShowAll] = useState(false)
+  const rowsRef = useRef<HTMLDivElement>(null)
+  const hasOrigin = origin !== null
+  const view = buildNightView(night)
+  const name = nightName(night.date, tonightDate)
+  // 가볼 만한 곳이 없는 밤에는 쉬어가라는 곳을 목록에서 뺀다
+  const list = view.top ? night.places : view.rest
+  const ranked = list.map((place, index) => ({ place, rank: index + 1 }))
+  const everything = beside || showAll
+  const shown = everything
+    ? ranked
+    : // 접어 둔 목록 밖의 장소를 지도에서 골랐으면 그 줄만 끝에 덧붙인다
+      ranked.filter((item) => item.rank <= SHORT_LIST || placeKey(item.place) === shownKey)
+  const hidden = ranked.length - shown.length
+  const missing = night.candidateCount - night.evaluatedCount
+  const maxTravelHours = night.criteria.maxTravelMinutes ? Math.round(night.criteria.maxTravelMinutes / 60) : null
+
+  // 지도에서 고른 장소의 줄이 목록 칸 밖에 있으면 보이는 데까지 옮긴다. 목록이 카드 아래에 있을 때는 하지 않는다.
+  // 페이지가 카드에서 목록으로 내려가 버린다
+  useEffect(() => {
+    if (!beside || shownKey === null) return
+    rowsRef.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: "nearest" })
+  }, [beside, shownKey])
+
+  return (
+    <>
+      {ranked.length > 0 ? (
         <section className="sec">
-          <div className="sec-title">
-            <h2>{view.top ? "여기도 괜찮아요" : "그나마 볼 수 있는 곳"}</h2>
-            <p>{isAuthenticated ? "내 장소와 밤에 갈 수 있는 관측지 중에서" : "밤에 갈 수 있는 관측지 중에서"}</p>
+          <div className="sec-title stack">
+            <h2>{view.top ? `${name} 후보 ${ranked.length}곳` : "그나마 볼 수 있는 곳"}</h2>
+            <p>
+              {isAuthenticated ? "내 장소와 밤에 갈 수 있는 관측지를" : "밤에 갈 수 있는 관측지를"} 별 보기 좋은 순서로 놓았어요
+            </p>
           </div>
-          <div className="rows">
-            {shown.map((place) => (
-              <PlaceRow key={placeKey(place)} place={place} detailed={detailed} onOpen={onOpenPlace} />
+          <div className="rows" ref={rowsRef}>
+            {shown.map(({ place, rank }) => (
+              <PlaceRow
+                key={placeKey(place)}
+                place={place}
+                rank={rank}
+                detailed={detailed}
+                selected={placeKey(place) === shownKey}
+                onOpen={onOpenPlace}
+              />
             ))}
           </div>
-          {view.rest.length > SHORT_LIST ? (
+          {!beside && ranked.length > SHORT_LIST ? (
             <button type="button" className="showmore" onClick={() => setShowAll((value) => !value)}>
               {showAll ? "접기" : `${hidden}곳 더 보기`}
             </button>
@@ -145,6 +212,8 @@ export function TonightView({
 interface EmptyNightProps {
   kind: EmptyKind
   name: string
+  /** 장소 카드 위에 놓을 때. 사진 없이 한 줄로 줄인다 */
+  compact: boolean
   maxTravelHours: number | null
   tonightDate: string
   laterDates: readonly string[]
@@ -153,7 +222,7 @@ interface EmptyNightProps {
 }
 
 /** 가볼 만한 곳이 없는 밤. 그 뒤의 날짜에서 가볼 만한 첫 밤을 찾아 알려준다. */
-function EmptyNight({ kind, name, maxTravelHours, tonightDate, laterDates, query, onSelectDate }: EmptyNightProps) {
+function EmptyNight({ kind, name, compact, maxTravelHours, tonightDate, laterDates, query, onSelectDate }: EmptyNightProps) {
   const lookAhead = kind === "CLOUDY" || kind === "POOR"
   const next = useNextGoodNight(lookAhead, laterDates, query)
   const message = emptyMessage(kind, maxTravelHours)
@@ -178,6 +247,20 @@ function EmptyNight({ kind, name, maxTravelHours, tonightDate, laterDates, query
     )
   } else if (next.status === "none") {
     body = <p className="calm">앞으로 며칠은 맑은 밤이 보이지 않아요.</p>
+  }
+
+  if (compact) {
+    return (
+      <article className="tonight slim">
+        <div className="tonight-body">
+          <p className="why" data-level="NO">
+            <b>{message.title}</b>
+            {message.detail}
+          </p>
+          {body}
+        </div>
+      </article>
+    )
   }
 
   return (
