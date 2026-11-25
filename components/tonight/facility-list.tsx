@@ -86,7 +86,14 @@ function FacilityRow({ facility, open, onToggle }: FacilityRowProps) {
       </button>
       {open ? (
         <div className="fac-body">
-          <PlaceAbout description={facility.description} guide={facility.guide} caution={facility.caution} facility />
+          <PlaceAbout
+            name={facility.title}
+            description={facility.description}
+            guide={facility.guide}
+            caution={facility.caution}
+            links={facility.links}
+            facility
+          />
           <div className="actions">
             <a
               className="btn"

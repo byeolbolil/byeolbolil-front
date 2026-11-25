@@ -121,7 +121,13 @@ export function HeroCard({ place, eyebrow, detailed, actions, children }: HeroCa
           </li>
         </ul>
         <p className="tip">{tipText(place)}</p>
-        <PlaceAbout description={place.description} guide={place.guide} caution={place.caution} />
+        <PlaceAbout
+          name={place.name}
+          description={place.description}
+          guide={place.guide}
+          caution={place.caution}
+          links={place.links}
+        />
         <div className="actions">
           <a className="btn primary" href={directionsUrl(place)} target="_blank" rel="noopener noreferrer">
             길찾기

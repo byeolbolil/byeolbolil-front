@@ -4,6 +4,7 @@
  * 예약한 프로그램이나 운영 시간에 맞춰 망원경을 보는 곳이라 밤 추천에는 나오지 않는다. 화면에서는 추천 목록과
  * 따로 보여준다. 응답의 모양은 백엔드 저장소의 docs/API.md "관측지"에 있다.
  */
+import { safeLinks, type PlaceLink } from "./links"
 import type { Coordinates } from "./settings"
 
 const FACILITIES_PATH = "/api/v1/spots?kind=FACILITY"
@@ -20,6 +21,8 @@ export interface Facility {
   guide?: string
   /** 휴관처럼 미리 알아 둘 것. 없는 곳이 많다 */
   caution?: string
+  /** 운영 시간과 예약을 확인할 공식 페이지. 없으면 빈 목록 */
+  links: PlaceLink[]
 }
 
 export class SpotsError extends Error {
@@ -65,6 +68,7 @@ export function unwrapFacilities(body: unknown): Facility[] {
       description: text(item.description),
       guide: text(item.guide),
       caution: text(item.caution),
+      links: safeLinks(item.links),
     })
   }
   return facilities
