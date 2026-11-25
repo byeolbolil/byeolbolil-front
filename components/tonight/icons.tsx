@@ -102,6 +102,15 @@ export function CarIcon() {
   )
 }
 
+export function PinIcon() {
+  return (
+    <svg {...STROKE} strokeLinejoin="round">
+      <path d="M12 21s6.5-5.6 6.5-10.5a6.5 6.5 0 0 0-13 0C5.5 15.4 12 21 12 21Z" />
+      <circle cx="12" cy="10.5" r="2.3" />
+    </svg>
+  )
+}
+
 export function PersonIcon() {
   return (
     <svg {...STROKE} strokeLinecap="round">

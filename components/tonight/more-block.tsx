@@ -100,7 +100,7 @@ export function MoreBlock({ place, nightDate, criteria, onOpenSources }: MoreBlo
             <b>
               {before} {criteria.minClearHours}시간 이상
             </b>{" "}
-            이어지면 꼭 가볼 만해요
+            이어지면 &quot;별 보기 아주 좋아요&quot;예요
             <em>{place.bestWindow ? `이곳은 ${place.bestWindow.hours}시간 이어져요` : "이곳은 맑은 시간이 없어요"}</em>
           </div>
         </li>
@@ -114,7 +114,7 @@ export function MoreBlock({ place, nightDate, criteria, onOpenSources }: MoreBlo
         <li>
           <CityIcon />
           <div>
-            도시 하늘(광해 {CITY_BORTLE_MIN}등급 이상)은 &quot;잠깐 볼 수 있어요&quot;까지만 줘요
+            도시 하늘(광해 {CITY_BORTLE_MIN}등급 이상)은 &quot;별 보기 아쉬워요&quot;까지만 줘요
             {cityLights ? <em>이곳에 해당돼요</em> : null}
           </div>
         </li>

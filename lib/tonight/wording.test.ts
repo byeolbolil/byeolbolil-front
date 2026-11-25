@@ -15,10 +15,10 @@ import {
 
 describe("등급 문구", () => {
   it.each<[RecommendationLevel, string, number]>([
-    ["STRONG", "꼭 가볼 만해요", 3],
-    ["GOOD", "가볼 만해요", 2],
-    ["MAYBE", "잠깐 볼 수 있어요", 1],
-    ["NO", "오늘은 쉬어가요", 0],
+    ["STRONG", "별 보기 아주 좋아요", 3],
+    ["GOOD", "별 보기 좋아요", 2],
+    ["MAYBE", "별 보기 아쉬워요", 1],
+    ["NO", "별 보기 어려워요", 0],
   ])("%s", (level, text, stars) => {
     expect(levelText(level)).toBe(text)
     expect(levelStars(level)).toBe(stars)

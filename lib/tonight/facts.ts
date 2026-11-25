@@ -47,6 +47,28 @@ export function skyFact(place: NightPlace): QuickFact {
 }
 
 /**
+ * 이 등급이 된 이유를 한 줄로. 서버가 준 등급, 추천 시간, 주의 사항만으로 말하고 여기서 다시 판정하지 않는다.
+ * 맑은 시간이 얼마나 되는지를 먼저 말하고, 등급을 낮춘 사정이 있으면 "~지만"으로 잇는다.
+ */
+export function levelReason(place: Pick<NightPlace, "level" | "bestWindow" | "notes" | "pattern">): string {
+  const window = place.bestWindow
+  if (!window) {
+    return place.pattern === "CLOUDY_ALL_NIGHT" ? "밤새 구름이 많아요" : "어두운 시간에 맑은 틈이 이어지지 않아요"
+  }
+  const downs: string[] = []
+  if (place.notes.includes("CLEARS_LATE")) downs.push(`${koreanHour(hourOf(window.start))}에야 맑아져요`)
+  if (place.notes.includes("BRIGHT_MOON")) downs.push("달이 밝아요")
+  if (place.notes.includes("CITY_LIGHTS")) downs.push("도시 불빛이 강해요")
+  if (downs.length === 0) {
+    if (place.level === "STRONG") return `맑은 시간이 ${window.hours}시간 이어져요`
+    return window.hours < 3 ? `맑은 시간이 ${window.hours}시간뿐이에요` : `${window.hours}시간 맑지만 늦은 시간에 몰려 있어요`
+  }
+  const [first, ...rest] = downs
+  if (place.notes.includes("CLEARS_LATE")) return [`${first}`, ...rest].join(". ")
+  return `${window.hours}시간 맑지만 ${[first, ...rest].join(", ")}`
+}
+
+/**
  * 카드 아래의 한마디. 눈이 어둠에 익는 시간은 Kalloniatis & Luu, "Light and Dark Adaptation", Webvision을 따른다
  * (5~8분에 감도가 크게 바뀌고 40분쯤 평탄해진다).
  */

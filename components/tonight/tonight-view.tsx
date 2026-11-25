@@ -29,6 +29,7 @@ interface TonightViewProps {
   onOpenPlace: (place: NightPlace) => void
   onSelectDate: (date: string) => void
   onOpenSettings?: () => void
+  onOpenOrigin?: () => void
   /** 가장 좋은 곳 카드에 붙일 버튼과 펼침 내용 */
   heroExtras?: (place: NightPlace) => { actions?: ReactNode; children?: ReactNode }
   /** 목록 아래에 덧붙이는 내용 */
@@ -47,6 +48,7 @@ export function TonightView({
   onOpenPlace,
   onSelectDate,
   onOpenSettings,
+  onOpenOrigin,
   heroExtras,
   footer,
 }: TonightViewProps) {
@@ -115,10 +117,10 @@ export function TonightView({
         </p>
       ) : null}
       {missing > 0 ? <p className="calm small">{missing}곳은 예보를 받지 못해 빠졌어요.</p> : null}
-      {!hasOrigin && onOpenSettings ? (
+      {!hasOrigin && onOpenOrigin ? (
         <p className="calm small">
           출발 위치를 정하면 이동 시간도 함께 볼 수 있어요.{" "}
-          <button type="button" className="linkish" onClick={onOpenSettings}>
+          <button type="button" className="linkish" onClick={onOpenOrigin}>
             출발 위치 정하기
           </button>
         </p>

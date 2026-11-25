@@ -158,7 +158,7 @@ async function walk(browser, kind) {
   await page.waitForTimeout(4500)
   await shot("map-base")
 
-  await page.getByRole("button", { name: "밤 불빛" }).click()
+  await page.getByRole("button", { name: "광해 지도" }).click()
   await page.waitForTimeout(4000)
   // 다른 표식에 가려지지 않은 표식 하나를 누른다
   const target = await page.evaluate(() => {
@@ -197,7 +197,9 @@ async function walk(browser, kind) {
   if (kind === "mobile") await page.getByRole("tab", { name: "오늘 밤" }).click()
   await page.waitForSelector(".bb .tonight .sky-text h1")
   const countBefore = requests.length
-  await page.locator(".bb .gear").click()
+  // 좁은 화면은 아래 탭의 설정, 넓은 화면은 머리의 설정 버튼이다
+  if (kind === "mobile") await page.locator(".bb .nav button", { hasText: "설정" }).click()
+  else await page.locator(".bb .gear").click()
   const sheet = page.locator(".bb .sheet")
   await sheet.waitFor()
   await sheet.locator("details.adv summary").click()

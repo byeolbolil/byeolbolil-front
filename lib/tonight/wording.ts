@@ -5,11 +5,15 @@
 import { hourOf, koreanHour } from "./time"
 import type { ForecastSource, NightHour, NightNote, NightPattern, NightPlace, RecommendationLevel } from "./types"
 
+/**
+ * 등급의 이름. 별을 보기에 어떤 밤인지를 그대로 말한다.
+ * 처음에는 "꼭 가볼 만해요", "가볼 만해요"였는데 둘의 차이가 읽히지 않는다는 의견이 있어 바꿨다.
+ */
 const LEVEL_TEXT: Record<RecommendationLevel, string> = {
-  STRONG: "꼭 가볼 만해요",
-  GOOD: "가볼 만해요",
-  MAYBE: "잠깐 볼 수 있어요",
-  NO: "오늘은 쉬어가요",
+  STRONG: "별 보기 아주 좋아요",
+  GOOD: "별 보기 좋아요",
+  MAYBE: "별 보기 아쉬워요",
+  NO: "별 보기 어려워요",
 }
 
 /** 등급을 별 개수로. NO는 별 대신 구름으로 보여준다. */
