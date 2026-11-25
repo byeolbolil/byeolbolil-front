@@ -14,6 +14,17 @@ describe("safeLinks", () => {
     ])
   })
 
+  it("미리보기 이미지는 https 주소일 때만 남긴다", () => {
+    const links = safeLinks([
+      { title: "하나", url: "https://example.com/a", imageUrl: "https://cdn.example.com/a.jpg" },
+      { title: "둘", url: "https://example.com/b", imageUrl: "http://cdn.example.com/b.jpg" },
+      { title: "셋", url: "https://example.com/c", imageUrl: "javascript:alert(1)" },
+      { title: "넷", url: "https://example.com/d", imageUrl: 3 },
+    ])
+
+    expect(links.map((link) => link.imageUrl)).toEqual(["https://cdn.example.com/a.jpg", undefined, undefined, undefined])
+  })
+
   it("http(s)가 아닌 주소와 제목이 없는 항목은 버린다", () => {
     const links = safeLinks([
       { title: "스크립트", url: "javascript:alert(1)" },
@@ -51,11 +62,11 @@ describe("searchUrl", () => {
   it("관측지는 이름에 별 보기를 붙여 찾는다", () => {
     const url = new URL(searchUrl("고성 미시령 옛길"))
 
-    expect(url.origin + url.pathname).toBe("https://search.naver.com/search.naver")
-    expect(url.searchParams.get("query")).toBe("고성 미시령 옛길 별 보기")
+    expect(url.origin + url.pathname).toBe("https://www.google.com/search")
+    expect(url.searchParams.get("q")).toBe("고성 미시령 옛길 별 보기")
   })
 
   it("시설은 이름만으로 찾는다", () => {
-    expect(new URL(searchUrl("대전 시민천문대", true)).searchParams.get("query")).toBe("대전 시민천문대")
+    expect(new URL(searchUrl("대전 시민천문대", true)).searchParams.get("q")).toBe("대전 시민천문대")
   })
 })

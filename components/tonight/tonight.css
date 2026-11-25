@@ -872,7 +872,7 @@
     align-items: center;
     gap: 8px;
     min-height: 40px;
-    padding: 6px 2px;
+    padding: 8px 2px;
     font-size: 13px;
     color: var(--ink-2);
     text-decoration: none;
@@ -891,6 +891,23 @@
     height: 16px;
     flex: none;
     color: var(--ink-3);
+  }
+  .about-thumb {
+    flex: none;
+    width: 72px;
+    height: 54px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--night-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .about-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
   .about-link-text {
     flex: 1;

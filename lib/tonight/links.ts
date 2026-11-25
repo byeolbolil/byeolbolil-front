@@ -7,6 +7,8 @@ export interface PlaceLink {
   /** 그 글의 제목 */
   title: string
   url: string
+  /** 그 글이 대표 이미지로 내건 주소. 남의 서버에 있는 파일이라 받지 못할 수 있다 */
+  imageUrl?: string
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -22,12 +24,22 @@ export function safeLinks(value: unknown): PlaceLink[] {
     const title = item.title.trim()
     if (!title || !/^https?:\/\//i.test(item.url)) continue
     try {
-      links.push({ title, url: new URL(item.url).toString() })
+      links.push({ title, url: new URL(item.url).toString(), imageUrl: safeImage(item.imageUrl) })
     } catch {
       // 주소로 읽을 수 없는 값은 버린다
     }
   }
   return links
+}
+
+/** 미리보기 이미지는 https로 여는 것만 쓴다. http 이미지는 브라우저가 막는다 */
+function safeImage(value: unknown): string | undefined {
+  if (typeof value !== "string" || !/^https:\/\//i.test(value)) return undefined
+  try {
+    return new URL(value).toString()
+  } catch {
+    return undefined
+  }
 }
 
 /** 링크 옆에 적는 사이트 이름. "https://m.cafe.daum.net/..."는 "cafe.daum.net"이 된다 */
@@ -40,9 +52,9 @@ export function linkHost(url: string): string {
 }
 
 /**
- * 그 장소를 네이버에서 찾는 주소. 관측지는 별 보러 간 후기가 나오도록 "별 보기"를 붙이고, 시설은 이름만으로 찾는다.
+ * 그 장소를 구글에서 찾는 주소. 관측지는 별 보러 간 후기가 나오도록 "별 보기"를 붙이고, 시설은 이름만으로 찾는다.
  */
 export function searchUrl(name: string, facility = false): string {
   const query = facility ? name : `${name} 별 보기`
-  return `https://search.naver.com/search.naver?query=${encodeURIComponent(query)}`
+  return `https://www.google.com/search?q=${encodeURIComponent(query)}`
 }
