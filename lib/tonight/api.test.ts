@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import recorded from "./__fixtures__/tonight-2026-11-24.json"
-import { fetchNight, NightApiError, nightUrl, unwrapNight } from "./api"
+import { fetchNight, fetchNightSummary, NightApiError, nightSummaryUrl, nightUrl, unwrapNight, unwrapNightSummary } from "./api"
 
 describe("요청 주소", () => {
   it("날짜가 없으면 오늘 밤이다", () => {
@@ -47,6 +47,74 @@ describe("응답 꺼내기", () => {
     ["places 없음", { success: true, data: { date: "2026-11-24", criteria: {} } }],
   ])("모양이 다르면 받지 않는다: %s", (_, body) => {
     expect(() => unwrapNight(body)).toThrow(NightApiError)
+  })
+})
+
+describe("밤마다의 등급", () => {
+  // 백엔드 저장소의 docs/API.md "밤마다 가장 좋은 등급"에 실린 응답에서 넷째 밤부터 등급을 뺀 것
+  const body = {
+    success: true,
+    status: 200,
+    message: "요청이 성공적으로 처리되었습니다.",
+    data: {
+      startDate: "2026-11-09",
+      criteria: { minClearHours: 3, preferBefore: "02:00", maxTravelMinutes: null },
+      nights: [
+        { date: "2026-11-09", level: "STRONG" },
+        { date: "2026-11-10", level: "NO" },
+        { date: "2026-11-11", level: "STRONG" },
+        { date: "2026-11-12" },
+      ],
+    },
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("밤 추천과 같은 쿼리를 날짜 없는 경로에 붙인다", () => {
+    expect(nightSummaryUrl({})).toBe("/api/v1/recommendations/nights")
+    expect(nightSummaryUrl({ lat: 37.55, lon: 126.91, maxTravelMinutes: 180 })).toBe(
+      "/api/v1/recommendations/nights?lat=37.55&lon=126.91&maxTravelMinutes=180",
+    )
+  })
+
+  it("등급이 빠진 밤은 등급 없이 남긴다", () => {
+    expect(unwrapNightSummary(body)).toEqual({
+      startDate: "2026-11-09",
+      nights: [
+        { date: "2026-11-09", level: "STRONG" },
+        { date: "2026-11-10", level: "NO" },
+        { date: "2026-11-11", level: "STRONG" },
+        { date: "2026-11-12" },
+      ],
+    })
+  })
+
+  it("모르는 등급은 등급이 없는 밤으로 두고, 날짜가 없는 항목은 버린다", () => {
+    const odd = { ...body, data: { ...body.data, nights: [{ date: "2026-11-09", level: "SUPERB" }, { level: "GOOD" }, null] } }
+    expect(unwrapNightSummary(odd).nights).toEqual([{ date: "2026-11-09" }])
+  })
+
+  it.each([
+    ["null", null],
+    ["실패 봉투", { success: false, status: 400, message: "x" }],
+    ["nights 없음", { success: true, data: { startDate: "2026-11-09" } }],
+  ])("모양이 다르면 받지 않는다: %s", (_, wrong) => {
+    expect(() => unwrapNightSummary(wrong)).toThrow(NightApiError)
+  })
+
+  it("토큰이 있으면 함께 보내고 캐시를 쓰지 않는다", async () => {
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => Response.json(body))
+    vi.stubGlobal("fetch", fetchMock)
+
+    const summary = await fetchNightSummary({ minClearHours: 4 }, { accessToken: "token-1" })
+
+    expect(summary.nights).toHaveLength(4)
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe("/api/v1/recommendations/nights?minClearHours=4")
+    expect(init?.cache).toBe("no-store")
+    expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer token-1")
   })
 })
 

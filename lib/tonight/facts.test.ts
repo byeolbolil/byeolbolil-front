@@ -7,6 +7,7 @@ import {
   forecastCredits,
   levelReason,
   moonFact,
+  nightLevels,
   skyFact,
   tipText,
   windowCloudAverage,
@@ -64,6 +65,39 @@ describe("첫 화면 구성", () => {
     })
     expect(emptyMessage("CLOUDY", null).detail).toBe("갈 수 있는 곳이 모두 흐려요")
     expect(emptyMessage("POOR", 1).detail).toBe("1시간 안에 갈 수 있는 곳 중에 가볼 만한 곳이 없어요")
+  })
+})
+
+describe("밤 고르기에 그릴 등급", () => {
+  const summary = {
+    startDate: "2026-11-24",
+    nights: [{ date: "2026-11-24", level: "MAYBE" as const }, { date: "2026-11-25", level: "NO" as const }, { date: "2026-11-26" }],
+  }
+
+  it("요약에서 등급이 있는 밤만 담는다", () => {
+    expect([...nightLevels(summary, null)]).toEqual([
+      ["2026-11-24", "MAYBE"],
+      ["2026-11-25", "NO"],
+    ])
+  })
+
+  it("요약을 아직 받지 못했으면 비어 있다", () => {
+    expect(nightLevels(null, null).size).toBe(0)
+  })
+
+  it("보고 있는 밤은 받아 둔 추천의 첫 장소 등급이 요약을 이긴다", () => {
+    // 기록 응답의 첫 장소는 GOOD이다
+    const levels = nightLevels(summary, recordedNight())
+    expect(levels.get("2026-11-24")).toBe("GOOD")
+    expect(levels.get("2026-11-25")).toBe("NO")
+  })
+
+  it("요약이 없어도 보고 있는 밤의 등급은 그린다", () => {
+    expect([...nightLevels(null, recordedNight())]).toEqual([["2026-11-24", "GOOD"]])
+  })
+
+  it("보고 있는 밤에 장소가 하나도 없으면 요약의 등급도 지운다", () => {
+    expect(nightLevels(summary, nightOf({ date: "2026-11-24" })).has("2026-11-24")).toBe(false)
   })
 })
 

@@ -29,6 +29,8 @@ const VIEWPORTS = {
   desktop: { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, isMobile: false, hasTouch: false },
 }
 const KNOWN_CONSOLE_NOISE = [/status of 401/, /GPU stall due to ReadPixels/]
+// 등급을 화면에 적는 문구. lib/tonight/wording.ts와 같다
+const LEVEL_TEXT = { STRONG: "별 보기 아주 좋아요", GOOD: "별 보기 좋아요", MAYBE: "별 보기 아쉬워요", NO: "별 보기 어려워요" }
 
 mkdirSync(OUT, { recursive: true })
 const failures = []
@@ -91,6 +93,20 @@ async function walk(browser, kind) {
   console.log(`  가장 좋은 곳: ${flat(await page.locator(".bb .tonight .sky-text").first().innerText())}`)
   console.log(`  예보 출처: ${await page.locator(".bb .credit-line").first().innerText()}`)
   check(requests[0]?.includes("lat=37.55&lon=126.91"), `첫 요청에 출발지가 들어 있다: ${requests[0]}`)
+  // 밤 고르기: 칸마다 날짜가 있고, 밤마다의 등급이 도착하면 오늘 밤의 표시가 목록의 첫 장소와 같은 등급이다
+  await page
+    .waitForFunction(() => document.querySelectorAll('.bb .nights button:not([data-level="NONE"])').length > 1, null, { timeout: 30_000 })
+    .catch(() => {})
+  const nightButtons = await page.locator(".bb .nights button").evaluateAll((items) =>
+    items.map((item) => ({ date: item.querySelector(".nt-date")?.textContent ?? "", level: item.getAttribute("data-level") })),
+  )
+  const firstRating = await page.locator(".bb .side .row .rating").first().getAttribute("title")
+  check(
+    nightButtons.length === 7 && nightButtons.every((night) => /^\d{1,2}\/\d{1,2}$/.test(night.date)),
+    "밤 고르기의 일곱 칸에 날짜가 적혀 있다",
+  )
+  check(nightButtons.filter((night) => night.level !== "NONE").length > 1, `밤마다 등급이 그려진다: ${nightButtons.map((night) => night.level).join(" ")}`)
+  check(LEVEL_TEXT[nightButtons[0]?.level] === firstRating, `오늘 밤의 표시가 목록의 첫 장소와 같다: ${nightButtons[0]?.level}, "${firstRating}"`)
   await shot("home")
   await shot("home-full", { fullPage: true })
 

@@ -271,7 +271,8 @@ function EmptyNight({ kind, name, compact, maxTravelHours, tonightDate, laterDat
         <a className="photo-credit" href={photo.url} target="_blank" rel="noopener noreferrer" title={photo.credit}>
           사진: {photo.credit}
         </a>
-        <Rating level="NO" />
+        {/* 아쉬운 곳이라도 있는 밤과 어디도 볼 수 없는 밤은 등급이 다르다. 밤 고르기의 표시와 같은 등급을 적는다 */}
+        <Rating level={kind === "POOR" ? "MAYBE" : "NO"} />
         <div className="sky-text">
           <div className="eyebrow">{name}</div>
           <h1>{message.title}</h1>
