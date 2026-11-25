@@ -198,6 +198,19 @@ function tuneOverlay(map: MapLibreMap, layer: MapLayer) {
   map.setPaintProperty(OVERLAY_ID, "raster-saturation", layer === "cloud" ? -0.6 : 0)
 }
 
+/** 내 장소 표식에 그리는 책갈피 */
+const BOOKMARK_PATH = "M6.5 3.5h11v17L12 16.8l-5.5 3.7Z"
+
+function glyphSvg(d: string): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, "svg")
+  svg.setAttribute("viewBox", "0 0 24 24")
+  svg.setAttribute("aria-hidden", "true")
+  const path = document.createElementNS(SVG_NS, "path")
+  path.setAttribute("d", d)
+  svg.appendChild(path)
+  return svg
+}
+
 function starSvg(opacity: number): SVGSVGElement {
   const svg = document.createElementNS(SVG_NS, "svg")
   svg.setAttribute("viewBox", "0 0 24 24")
@@ -222,6 +235,7 @@ function paintMarker(
 ) {
   const { element, marker } = entry
   const stars = levelStars(place.level)
+  const mine = place.type === "BOOKMARK"
   // MapLibre가 붙인 클래스(위치를 잡는 데 쓴다)를 지우지 않도록 필요한 것만 켜고 끈다
   element.classList.add("pin")
   element.classList.toggle("sel", state.selected)
@@ -259,13 +273,16 @@ function paintMarker(
   } else {
     // 등급은 배지의 색과 크기로 구분한다(tonight.css의 .pin .mk.badge)
     mark.classList.add("badge")
-    if (stars > 0) mark.appendChild(starSvg(1))
-    element.setAttribute("aria-label", `${place.name}, ${levelText(place.level)}`)
+    // 내 장소는 별 대신 책갈피를 그린다. 별 보기 어려운 밤에도 어디에 저장해 뒀는지는 보여야 한다
+    if (mine) mark.appendChild(glyphSvg(BOOKMARK_PATH))
+    else if (stars > 0) mark.appendChild(starSvg(1))
+    element.setAttribute("aria-label", `${mine ? "내 장소 " : ""}${place.name}, ${levelText(place.level)}`)
   }
   element.dataset.level = state.layer === "cloud" ? "" : place.level
+  element.dataset.mine = mine ? "1" : "0"
   element.append(mark, label)
   // 표식의 가운데가 좌표에 오도록 표식 너비의 절반만큼 왼쪽으로 민다. 너비는 tonight.css와 같아야 한다
-  const badge = place.level === "STRONG" ? 26 : place.level === "NO" ? 14 : 22
+  const badge = place.level === "STRONG" ? 26 : place.level === "NO" ? (mine ? 20 : 14) : 22
   const width = state.selected ? 30 : state.layer === "cloud" ? 20 : badge
   marker.setOffset([-width / 2, 0])
 }

@@ -3,6 +3,7 @@ import { joinParts, travelText } from "@/lib/tonight/place"
 import { windowText } from "@/lib/tonight/time"
 import type { NightHour, NightPlace } from "@/lib/tonight/types"
 import { noteText, patternText } from "@/lib/tonight/wording"
+import { BookmarkIcon } from "./icons"
 import { Rating } from "./rating"
 
 function stripColor(hour: NightHour): string | undefined {
@@ -30,7 +31,11 @@ export function PlaceRow({ place, detailed, selected = false, onOpen }: PlaceRow
       <div>
         <div className="row-name">
           {place.name}
-          {place.type === "BOOKMARK" ? <span className="mine">내 장소</span> : null}
+          {place.type === "BOOKMARK" ? (
+            <span className="mine">
+              <BookmarkIcon filled />내 장소
+            </span>
+          ) : null}
         </div>
         <div className="row-sub">
           {sub}
