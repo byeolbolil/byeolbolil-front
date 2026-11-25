@@ -1,6 +1,6 @@
 import { average, windowHours } from "@/lib/tonight/hours"
 import { travelText } from "@/lib/tonight/place"
-import { CLEAR_CLOUD_COVER_MAX, MILKY_WAY_LOST_SKY, TRAVEL_PENALTY_PER_HOUR } from "@/lib/tonight/policy"
+import { CLEAR_CLOUD_COVER_MAX, MILKY_WAY_LOST_SKY } from "@/lib/tonight/policy"
 import { skyBrightnessText, skyHint, skyName } from "@/lib/tonight/sky"
 import { PREFER_ALL_NIGHT } from "@/lib/tonight/settings"
 import { koreanClock } from "@/lib/tonight/time"
@@ -146,7 +146,7 @@ export function MoreBlock({ place, nightDate, criteria, onOpenSources }: MoreBlo
         <li>
           <CarIcon />
           <div>
-            순위는 이동 1시간마다 <b>{TRAVEL_PENALTY_PER_HOUR}점</b>을 빼서 정해요
+            이동 시간은 순위에 넣지 않아요. 얼마나 먼 곳까지 볼지는 설정에서 정해요
             {travel ? <em>이곳은 {travel}</em> : null}
           </div>
         </li>

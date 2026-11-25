@@ -61,10 +61,10 @@ describe("첫 화면 구성", () => {
   it("빈 밤의 문구에 이동 시간 한도를 넣는다", () => {
     expect(emptyMessage("CLOUDY", 3)).toEqual({
       title: "구름이 많은 밤이에요",
-      detail: "3시간 안에 갈 수 있는 곳이 모두 흐려요",
+      detail: "3시간 안팎에 갈 수 있는 곳이 모두 흐려요",
     })
     expect(emptyMessage("CLOUDY", null).detail).toBe("갈 수 있는 곳이 모두 흐려요")
-    expect(emptyMessage("POOR", 1).detail).toBe("1시간 안에 갈 수 있는 곳 중에 가볼 만한 곳이 없어요")
+    expect(emptyMessage("POOR", 1).detail).toBe("1시간 안팎에 갈 수 있는 곳 중에 가볼 만한 곳이 없어요")
   })
 })
 

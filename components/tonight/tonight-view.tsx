@@ -179,7 +179,7 @@ export function NightCandidates({
       {daysBetween(tonightDate, night.date) > 0 ? <p className="calm small">멀리 볼수록 예보가 바뀌기 쉬워요.</p> : null}
       {night.excludedByTravelCount > 0 ? (
         <p className="calm small">
-          {maxTravelHours ? `${maxTravelHours}시간보다 오래 걸리는` : "이동 시간 한도를 넘는"} {night.excludedByTravelCount}곳은
+          {maxTravelHours ? `${maxTravelHours}시간을 한참 넘는` : "이동 시간 한도를 넘는"} {night.excludedByTravelCount}곳은
           뺐어요.{" "}
           {onOpenSettings ? (
             <button type="button" className="linkish" onClick={onOpenSettings}>

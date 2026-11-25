@@ -13,6 +13,3 @@ export const CLEAR_CLOUD_COVER_MAX = 30
  * Duriscoe et al., JQSRT 214, 133 (2018) 표 3.
  */
 export const MILKY_WAY_LOST_SKY = 10
-
-/** 같은 등급 안에서 이동 1시간마다 순위 값에서 빼는 점수. 별볼일이 정한 값이다(SCORING.md 정책값). */
-export const TRAVEL_PENALTY_PER_HOUR = 4
