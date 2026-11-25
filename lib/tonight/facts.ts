@@ -149,9 +149,12 @@ export function nightLevels(
   return levels
 }
 
-/** 가볼 만한 곳이 없는 밤의 제목과 설명. `maxTravelHours`는 이동 시간 한도를 적용했을 때만 넘긴다. */
+/**
+ * 가볼 만한 곳이 없는 밤의 제목과 설명. `maxTravelHours`는 이동 시간 한도를 적용했을 때만 넘긴다.
+ * 서버가 한도를 6분의 1까지 넘는 곳도 남기므로(이동 시간이 어림값이라서) "안팎"이라고 적는다.
+ */
 export function emptyMessage(kind: EmptyKind, maxTravelHours: number | null): { title: string; detail: string } {
-  const reach = maxTravelHours ? `${maxTravelHours}시간 안에 갈 수 있는 곳` : "갈 수 있는 곳"
+  const reach = maxTravelHours ? `${maxTravelHours}시간 안팎에 갈 수 있는 곳` : "갈 수 있는 곳"
   switch (kind) {
     case "CLOUDY":
       return { title: "구름이 많은 밤이에요", detail: `${reach}이 모두 흐려요` }
