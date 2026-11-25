@@ -29,7 +29,7 @@ export interface Settings {
   viewMode: ViewMode
   preferBefore: PreferBefore
   maxTravelMinutes: MaxTravelMinutes
-  /** "꼭 가볼 만해요"에 필요한 맑은 시간. API는 1~8을 받는다. */
+  /** "별 보기 아주 좋아요"에 필요한 맑은 시간. API는 1~8을 받는다. */
   minClearHours: number
   redScreen: boolean
   origin: OriginSetting

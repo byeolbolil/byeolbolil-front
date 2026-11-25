@@ -5,6 +5,7 @@ import {
   cloudFact,
   emptyMessage,
   forecastCredits,
+  levelReason,
   moonFact,
   skyFact,
   tipText,
@@ -123,6 +124,41 @@ describe("한마디", () => {
   it("도시 불빛과 이슬", () => {
     expect(tipText(makePlace({ bestWindow: window, notes: ["CITY_LIGHTS", "DEW"] }))).toBe(
       `도시 불빛이 있어도 밝은 별자리는 충분히 보여요. 습도가 높아서 렌즈에 이슬이 맺힐 수 있어요. ${adapt}`,
+    )
+  })
+})
+
+describe("등급의 이유", () => {
+  const window = { start: "2026-11-24T19:00:00+09:00", end: "2026-11-25T06:00:00+09:00", hours: 11 }
+
+  it("가장 좋은 등급은 맑은 시간이 얼마나 이어지는지 말한다", () => {
+    expect(levelReason(makePlace({ level: "STRONG", bestWindow: window, notes: [] }))).toBe("맑은 시간이 11시간 이어져요")
+  })
+
+  it("등급을 낮춘 사정이 있으면 맑은 시간 뒤에 잇는다", () => {
+    expect(levelReason(makePlace({ level: "GOOD", bestWindow: window, notes: ["BRIGHT_MOON"] }))).toBe("11시간 맑지만 달이 밝아요")
+    expect(levelReason(makePlace({ level: "MAYBE", bestWindow: window, notes: ["BRIGHT_MOON", "CITY_LIGHTS"] }))).toBe(
+      "11시간 맑지만 달이 밝아요, 도시 불빛이 강해요",
+    )
+  })
+
+  it("늦게 개는 밤은 맑아지는 시각을 먼저 말한다", () => {
+    const late = { start: "2026-11-25T03:00:00+09:00", end: "2026-11-25T06:00:00+09:00", hours: 3 }
+    expect(levelReason(makePlace({ level: "GOOD", bestWindow: late, notes: ["CLEARS_LATE"] }))).toBe("새벽 3시에야 맑아져요")
+    expect(levelReason(makePlace({ level: "MAYBE", bestWindow: late, notes: ["CLEARS_LATE", "BRIGHT_MOON"] }))).toBe(
+      "새벽 3시에야 맑아져요. 달이 밝아요",
+    )
+  })
+
+  it("사정이 따로 없는데 등급이 낮으면 맑은 시간이 짧은 것이다", () => {
+    const short = { start: "2026-11-24T22:00:00+09:00", end: "2026-11-25T00:00:00+09:00", hours: 2 }
+    expect(levelReason(makePlace({ level: "MAYBE", bestWindow: short, notes: [] }))).toBe("맑은 시간이 2시간뿐이에요")
+  })
+
+  it("추천 시간이 없는 밤은 구름 때문이다", () => {
+    expect(levelReason(makePlace({ level: "NO", bestWindow: undefined, pattern: "CLOUDY_ALL_NIGHT", notes: [] }))).toBe("밤새 구름이 많아요")
+    expect(levelReason(makePlace({ level: "NO", bestWindow: undefined, pattern: "BRIEF_CLEAR", notes: [] }))).toBe(
+      "어두운 시간에 맑은 틈이 이어지지 않아요",
     )
   })
 })

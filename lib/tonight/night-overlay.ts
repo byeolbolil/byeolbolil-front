@@ -41,7 +41,7 @@ export const KOREA_BOUNDS: [[number, number], [number, number]] = [
 export type MapLayer = "night" | "cloud" | "base"
 
 export const MAP_LAYERS: ReadonlyArray<{ value: MapLayer; label: string }> = [
-  { value: "night", label: "밤 불빛" },
+  { value: "night", label: "광해 지도" },
   { value: "cloud", label: "구름" },
   { value: "base", label: "일반 지도" },
 ]

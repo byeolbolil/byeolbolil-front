@@ -100,14 +100,14 @@ export const SOURCES: readonly SourceEntry[] = [
     ],
   },
   {
-    title: '3시간 이상 맑으면 "꼭 가볼 만해요"',
+    title: '3시간 이상 맑으면 "별 보기 아주 좋아요"',
     body: "맑은 시간 몇 시간 이상을 추천 기준으로 쓰는 서비스나 근거는 찾지 못했어요. 눈이 적응하는 40분쯤을 빼고도 2시간 넘게 볼 수 있도록 별볼일이 정한 값이고, 설정에서 바꿀 수 있어요.",
     links: [],
     status: "정책",
   },
   {
-    title: '2시간 이상 맑으면 "가볼 만해요"',
-    body: "추천 시간이 2시간보다 짧으면 \"잠깐 볼 수 있어요\"로 낮춰요. 별볼일이 정한 값이에요.",
+    title: '2시간 이상 맑으면 "별 보기 좋아요"',
+    body: "추천 시간이 2시간보다 짧으면 \"별 보기 아쉬워요\"로 낮춰요. 별볼일이 정한 값이에요.",
     links: [],
     status: "정책",
   },
@@ -118,8 +118,8 @@ export const SOURCES: readonly SourceEntry[] = [
     status: "정책",
   },
   {
-    title: '도시 하늘은 "잠깐 볼 수 있어요"까지',
-    body: "광해 7등급 이상인 곳은 맑은 밤이어도 \"잠깐 볼 수 있어요\"까지만 줘요. 도심의 맑은 밤을 \"꼭 가볼 만해요\"로 권하지 않으려고 별볼일이 정한 경계예요.",
+    title: '도시 하늘은 "별 보기 아쉬워요"까지',
+    body: "광해 7등급 이상인 곳은 맑은 밤이어도 \"별 보기 아쉬워요\"까지만 줘요. 도심의 맑은 밤을 \"별 보기 아주 좋아요\"로 권하지 않으려고 별볼일이 정한 경계예요.",
     links: [],
     status: "정책",
   },
@@ -151,7 +151,7 @@ export const SOURCES: readonly SourceEntry[] = [
   },
   {
     title: "지도",
-    body: "밤 불빛 지도는 위성이 잰 야간광(VIIRS) 값으로 별볼일이 직접 그렸어요. 어디가 밝은지 보여주는 그림이고 등급을 정하는 데는 쓰지 않아요. 바탕 지도는 OpenStreetMap 자료로 만든 OpenFreeMap의 지도예요. 구름 레이어는 구름의 모양을 그리지 않고, 고른 시각에 각 장소의 예보 구름량만 색으로 보여줘요.",
+    body: "광해 지도는 위성이 잰 야간광(VIIRS) 값으로 별볼일이 직접 그렸어요. 어디가 밝은지 보여주는 그림이고 등급을 정하는 데는 쓰지 않아요. 바탕 지도는 OpenStreetMap 자료로 만든 OpenFreeMap의 지도예요. 구름 레이어는 구름의 모양을 그리지 않고, 고른 시각에 각 장소의 예보 구름량만 색으로 보여줘요.",
     links: [
       { label: "VIIRS Nighttime Lights 2024, Earth Observation Group, Payne Institute", url: "https://eogdata.mines.edu/products/vnl/" },
       { label: "OpenFreeMap", url: "https://openfreemap.org/" },

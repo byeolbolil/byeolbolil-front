@@ -204,7 +204,6 @@ function starSvg(opacity: number): SVGSVGElement {
   svg.setAttribute("aria-hidden", "true")
   const path = document.createElementNS(SVG_NS, "path")
   path.setAttribute("d", STAR_PATH)
-  path.setAttribute("fill", "var(--star)")
   path.setAttribute("opacity", String(opacity))
   svg.appendChild(path)
   return svg
@@ -258,18 +257,17 @@ function paintMarker(
     }
     mark.appendChild(dot)
   } else {
-    if (stars > 0) {
-      mark.appendChild(starSvg(0.45 + stars * 0.18))
-    } else {
-      const dot = document.createElement("i")
-      dot.className = "dot0"
-      mark.appendChild(dot)
-    }
+    // 등급은 배지의 색과 크기로 구분한다(tonight.css의 .pin .mk.badge)
+    mark.classList.add("badge")
+    if (stars > 0) mark.appendChild(starSvg(1))
     element.setAttribute("aria-label", `${place.name}, ${levelText(place.level)}`)
   }
+  element.dataset.level = state.layer === "cloud" ? "" : place.level
   element.append(mark, label)
-  // 표식의 가운데가 좌표에 오도록 맞춘다. 고른 표식은 더 크다
-  marker.setOffset([state.selected ? -15 : -10, 0])
+  // 표식의 가운데가 좌표에 오도록 표식 너비의 절반만큼 왼쪽으로 민다. 너비는 tonight.css와 같아야 한다
+  const badge = place.level === "STRONG" ? 26 : place.level === "NO" ? 14 : 22
+  const width = state.selected ? 30 : state.layer === "cloud" ? 20 : badge
+  marker.setOffset([-width / 2, 0])
 }
 
 /**

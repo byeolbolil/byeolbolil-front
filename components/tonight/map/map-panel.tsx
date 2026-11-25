@@ -41,7 +41,7 @@ interface MapPanelProps {
 }
 
 /**
- * 지도와 그 조작부. 위에는 지명 검색창이 있고, 레이어는 밤 불빛, 구름, 일반 지도 셋이다.
+ * 지도와 그 조작부. 위에는 지명 검색창이 있고, 레이어는 광해 지도, 구름, 일반 지도 셋이다.
  * 구름 레이어는 고른 시각의 구름 예보를 지도에 그리고, 각 장소의 예보 구름량으로 표식을 칠한다.
  * 구름장은 약 40km 간격의 격자 예보를 부드럽게 이은 것이라 큰 흐름만 보여 준다.
  */
@@ -177,8 +177,12 @@ export function MapPanel({
         ) : null}
         <div className="map-card tl">
           <b>{nightName} 별 보기 좋은 곳</b>
-          <br />
-          별이 밝을수록 추천도가 높아요
+          <span className="pin-key">
+            <i data-level="STRONG" /> 아주 좋음
+            <i data-level="GOOD" /> 좋음
+            <i data-level="MAYBE" /> 아쉬움
+            <i data-level="NO" /> 어려움
+          </span>
         </div>
         {legend ? <div className="map-card bl">{legend}</div> : null}
         {children}

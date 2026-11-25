@@ -1,11 +1,12 @@
 "use client"
 
 import { useState, type ReactNode } from "react"
-import { cloudFact, moonFact, skyFact, tipText } from "@/lib/tonight/facts"
+import { cloudFact, levelReason, moonFact, skyFact, tipText } from "@/lib/tonight/facts"
 import { directionsUrl, joinParts, regionOf, travelText } from "@/lib/tonight/place"
 import { spotPhoto } from "@/lib/tonight/spot-photos"
 import { windowText } from "@/lib/tonight/time"
 import type { NightPlace } from "@/lib/tonight/types"
+import { levelText } from "@/lib/tonight/wording"
 import { CloudIcon, MoonIcon, SkyIcon } from "./icons"
 import { NightBand } from "./night-band"
 import { Rating } from "./rating"
@@ -54,9 +55,7 @@ export function HeroCard({ place, eyebrow, detailed, actions, children }: HeroCa
           <a className="photo-credit" href={photo.url} target="_blank" rel="noopener noreferrer" title={photo.credit}>
             사진: {photo.credit}
           </a>
-        ) : (
-          <span className="photo-credit">그림: 오늘 밤 예보로 그린 하늘</span>
-        )}
+        ) : null}
         <Rating level={place.level} />
         <div className="sky-text">
           <div className="eyebrow">{eyebrow}</div>
@@ -67,6 +66,10 @@ export function HeroCard({ place, eyebrow, detailed, actions, children }: HeroCa
         </div>
       </div>
       <div className="tonight-body">
+        <p className="why" data-level={place.level}>
+          <b>{levelText(place.level)}</b>
+          {levelReason(place)}
+        </p>
         {place.bestWindow ? (
           <div className="time-row">
             <div>

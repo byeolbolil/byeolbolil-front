@@ -28,6 +28,7 @@ import {
   CloseIcon,
   MapTabIcon,
   MineTabIcon,
+  PinIcon,
   SettingsIcon,
   TonightTabIcon,
 } from "./icons"
@@ -35,6 +36,7 @@ import { MapPanel } from "./map/map-panel"
 import { MoreBlock } from "./more-block"
 import { MyPlaces } from "./my-places"
 import { NightPicker } from "./night-picker"
+import { OriginSheet } from "./origin-sheet"
 import { NightError, NightSkeleton } from "./night-status"
 import { PlaceRow } from "./place-row"
 import { Rating } from "./rating"
@@ -44,7 +46,7 @@ import { SourcesSheet } from "./sources-sheet"
 import { TonightView } from "./tonight-view"
 import "./tonight.css"
 
-type SheetKind = "settings" | "sources" | "save"
+type SheetKind = "settings" | "origin" | "sources" | "save"
 type Tab = "tonight" | "map" | "mine"
 
 /** 저장하는 좌표의 자릿수. 소수 다섯째 자리는 약 1m다 */
@@ -101,6 +103,7 @@ export function TonightApp() {
       : null,
   )
   /** 빈 곳을 눌러 고른 위치가 어느 지역인지 */
+  const originText = originLabel(settings.origin, geo.position, gpsArea)
   const pickArea = useAreaName(pick?.source === "map" ? pick : null)
   const pickName = pick ? (pick.name ?? (pickArea ? `${pickArea} 근처` : "고른 위치")) : ""
   /** 자세히 보고 있는 장소의 키 */
@@ -130,6 +133,16 @@ export function TonightApp() {
   const topKey = topPlace ? placeKey(topPlace) : null
   const shownNightName = data && tonightDate ? nightName(data.date, tonightDate) : "오늘 밤"
 
+  /**
+   * 추천 목록이 스크롤되는 곳. 넓은 화면에서는 페이지를 고정하고 오른쪽 패널만 움직이고,
+   * 좁은 화면에서는 페이지 전체가 움직인다.
+   */
+  const panelRef = useRef<HTMLElement>(null)
+  const scrollPosition = () => (isDesktop ? (panelRef.current?.scrollTop ?? 0) : window.scrollY)
+  const scrollPanelTo = (top: number, smooth = false) => {
+    const target = isDesktop ? panelRef.current : window
+    target?.scrollTo({ top, behavior: smooth ? "smooth" : "auto" })
+  }
   /** 자세히 보기로 들어갈 때 목록이 스크롤돼 있던 위치. 돌아오면 그 자리를 다시 보여준다 */
   const listScroll = useRef<number | null>(null)
   const scrollToRestore = useRef<number | null>(null)
@@ -142,7 +155,7 @@ export function TonightApp() {
    */
   const showDetail = (key: string) => {
     if (!detailOpen.current) {
-      listScroll.current = window.scrollY
+      listScroll.current = scrollPosition()
       window.history.pushState({ ...window.history.state, bbDetail: true }, "")
     }
     setDetailKey(key)
@@ -183,7 +196,9 @@ export function TonightApp() {
     if (detailKey !== null || scrollToRestore.current === null) return
     const top = scrollToRestore.current
     scrollToRestore.current = null
-    window.scrollTo({ top })
+    scrollPanelTo(top)
+    // 스크롤할 곳은 화면 너비로만 정해지고, 돌아온 순간에만 옮기면 된다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detailKey])
 
   const selectDate = (date: string) => {
@@ -193,7 +208,7 @@ export function TonightApp() {
   const openPlace = (place: NightPlace) => {
     showDetail(placeKey(place))
     setPeekKey(null)
-    window.scrollTo({ top: 0, behavior: "smooth" })
+    scrollPanelTo(0, true)
   }
   /** 넓은 화면의 지도에서 표식을 누르면 오른쪽 패널에 그 장소를 연다 */
   const openFromMap = (key: string) => {
@@ -258,7 +273,7 @@ export function TonightApp() {
     setChosenTab(next)
     closeDetail()
     // 이전 탭에서 내려 둔 스크롤이 남으면 새 화면의 중간부터 보인다
-    window.scrollTo({ top: 0 })
+    scrollPanelTo(0)
   }
   const addFromMap = () => {
     if (isDesktop) {
@@ -268,6 +283,7 @@ export function TonightApp() {
     }
   }
   const openSettings = useCallback(() => setSheet("settings"), [])
+  const openOrigin = useCallback(() => setSheet("origin"), [])
   const openSources = useCallback(() => setSheet("sources"), [])
   const closeSheet = useCallback(() => setSheet(null), [])
 
@@ -427,6 +443,7 @@ export function TonightApp() {
               onOpenPlace={openPlace}
               onSelectDate={selectDate}
               onOpenSettings={openSettings}
+              onOpenOrigin={openOrigin}
               // 숨겨 둔 동안에는 펼침 내용을 그리지 않는다. 자세히 보기의 것과 같은 그림이 두 벌 생긴다
               heroExtras={detailPlace ? undefined : heroExtras}
               footer={
@@ -452,8 +469,9 @@ export function TonightApp() {
           <BrandMark />
           별볼일
         </div>
-        <button type="button" className="where" title="출발 위치" onClick={openSettings}>
-          {originLabel(settings.origin, geo.position, gpsArea)}
+        <button type="button" className="where" title="출발 위치 바꾸기" onClick={openOrigin}>
+          <PinIcon />
+          <span>{originText}</span>
         </button>
         <AccountButton pending={isInitializing} />
         {/* 좁은 화면에서는 아래 탭에 설정이 있다 */}
@@ -501,7 +519,7 @@ export function TonightApp() {
             </MapPanel>
           ) : null}
         </section>
-        <main className="view">
+        <main className="view" ref={panelRef}>
           {dates.length > 0 && shownDate && !detailPlace && tab === "tonight" ? (
             <NightPicker dates={dates} selected={shownDate} onSelect={selectDate} />
           ) : null}
@@ -511,11 +529,20 @@ export function TonightApp() {
       {sheet === "settings" ? (
         <SettingsSheet
           settings={settings}
-          geoStatus={geo.status}
-          gpsArea={gpsArea}
+          originText={originText}
           hasOrigin={origin !== null}
           onChange={settingsState.update}
+          onOpenOrigin={openOrigin}
           onOpenSources={openSources}
+          onClose={closeSheet}
+        />
+      ) : null}
+      {sheet === "origin" ? (
+        <OriginSheet
+          origin={settings.origin}
+          geoStatus={geo.status}
+          gpsArea={gpsArea}
+          onChange={(next) => settingsState.update({ origin: next })}
           onClose={closeSheet}
         />
       ) : null}

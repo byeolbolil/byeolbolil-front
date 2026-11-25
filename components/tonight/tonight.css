@@ -1308,13 +1308,6 @@
     height: 100%;
     filter: drop-shadow(0 0 5px oklch(0.88 0.12 86 / 0.8));
   }
-  .pin .dot0 {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--cloud);
-    opacity: 0.7;
-  }
   .pin .cdot {
     width: 14px;
     height: 14px;
@@ -1378,21 +1371,6 @@
     border-radius: 50%;
     border: 1.5px solid var(--star);
     opacity: 0.6;
-  }
-  /* 밝은 지도 위에서는 금색 별이 묻혀서 어두운 테두리를 두른다 */
-  .mapcanvas[data-layer="base"] .pin .mk svg {
-    filter: none;
-  }
-  .mapcanvas[data-layer="base"] .pin .mk path {
-    stroke: oklch(0.2 0.045 270);
-    stroke-width: 2.5;
-    stroke-linejoin: round;
-    paint-order: stroke;
-    opacity: 1;
-  }
-  .mapcanvas[data-layer="base"] .pin .dot0 {
-    background: oklch(0.45 0.03 265);
-    opacity: 1;
   }
   .mapcanvas[data-layer="base"] .pin .pl {
     background: oklch(0.2 0.04 268 / 0.88);
@@ -2044,5 +2022,160 @@
 @media (min-width: 1080px) {
   .bb .gear.only-d {
     display: grid;
+  }
+}
+
+/* 지도의 장소 표식: 어두운 테두리를 두른 배지. 밝은 불빛 위에서도 묻히지 않고, 등급은 색과 크기로 구분한다 */
+.bb {
+  .pin .mk.badge {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: oklch(0.14 0.04 268);
+    border: 2px solid var(--star);
+    color: var(--star);
+    box-shadow:
+      0 0 0 2px oklch(0.08 0.03 268 / 0.7),
+      0 2px 8px oklch(0.05 0.02 268 / 0.7);
+  }
+  .pin .mk.badge svg {
+    width: 12px;
+    height: 12px;
+    filter: none;
+  }
+  .pin .mk.badge svg path {
+    fill: currentColor;
+  }
+  .pin[data-level="STRONG"] .mk.badge {
+    width: 26px;
+    height: 26px;
+    background: var(--star);
+    color: oklch(0.14 0.04 268);
+  }
+  .pin[data-level="STRONG"] .mk.badge svg {
+    width: 15px;
+    height: 15px;
+  }
+  .pin[data-level="MAYBE"] .mk.badge {
+    border-color: var(--ink-3);
+    color: var(--ink-3);
+  }
+  .pin[data-level="NO"] .mk.badge {
+    width: 14px;
+    height: 14px;
+    border-color: oklch(0.45 0.03 265);
+    background: oklch(0.22 0.03 265);
+  }
+  .pin.sel .mk.badge {
+    width: 30px;
+    height: 30px;
+  }
+  .pin.sel .mk.badge svg {
+    width: 16px;
+    height: 16px;
+  }
+  /* 지도 위 안내의 표식 보기 */
+  .pin-key {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
+    margin-top: 6px;
+    font-size: 11.5px;
+  }
+  .pin-key i {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    border: 2px solid var(--star);
+    background: oklch(0.14 0.04 268);
+    margin-left: 6px;
+  }
+  .pin-key i:first-child {
+    margin-left: 0;
+  }
+  .pin-key i[data-level="STRONG"] {
+    background: var(--star);
+  }
+  .pin-key i[data-level="MAYBE"] {
+    border-color: var(--ink-3);
+  }
+  .pin-key i[data-level="NO"] {
+    width: 8px;
+    height: 8px;
+    border-color: oklch(0.45 0.03 265);
+    background: oklch(0.22 0.03 265);
+  }
+
+  /* 머리의 출발 위치 버튼 */
+  .where {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .where svg {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    color: var(--sky-clear);
+  }
+  .where span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 등급의 이유 한 줄 */
+  .why {
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: color-mix(in oklch, var(--star) 9%, var(--night-2));
+    border-left: 3px solid var(--star);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .why b {
+    font-weight: 600;
+    margin-right: 6px;
+  }
+  .why[data-level="MAYBE"],
+  .why[data-level="NO"] {
+    background: var(--night-2);
+    border-left-color: var(--cloud);
+  }
+}
+
+/* PC: 페이지는 고정하고 오른쪽 패널만 스크롤한다 */
+@media (min-width: 1080px) {
+  .bb {
+    height: 100dvh;
+    min-height: 0;
+    padding-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .stage {
+      flex: 1;
+      min-height: 0;
+      grid-template-rows: minmax(0, 1fr);
+      align-items: stretch;
+    }
+    .mapcol {
+      position: static;
+      height: auto;
+      min-height: 0;
+      padding-bottom: 16px;
+    }
+    .stage > .view {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      min-height: 0;
+      padding: 0 8px 40px 2px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--night-3) transparent;
+    }
   }
 }
