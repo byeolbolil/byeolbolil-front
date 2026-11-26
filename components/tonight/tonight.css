@@ -1020,8 +1020,9 @@
     gap: 6px;
     min-width: 0;
   }
-  /* 영상이 모두 지워져 카드가 하나도 남지 않으면 제목도 감춘다 */
-  .about-videos:not(:has(li)) {
+  /* 영상이 모두 지워져 카드가 하나도 남지 않으면 빈 줄과 그 설명을 감추고 찾아보기만 남긴다 */
+  .about-videos ul:empty,
+  .about-videos ul:empty + .about-check {
     display: none;
   }
   .about-videos > b {
@@ -1106,6 +1107,32 @@
   .about-videos a:hover .about-video-title,
   .about-videos a:focus-visible .about-video-title {
     text-decoration: underline;
+  }
+  /* 우리 화면에 싣지 못하는 영상(인스타그램, 네이버 클립)은 검색 탭으로 보낸다 */
+  .about-video-search {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  .about-video-search span {
+    flex-basis: 100%;
+    font-size: 12.5px;
+    color: var(--ink-2);
+  }
+  .about-videos .about-video-search a {
+    flex-direction: row;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklch, var(--star) 45%, transparent);
+    font-size: 12.5px;
+    color: var(--star);
+  }
+  .about-videos .about-video-search a:hover,
+  .about-videos .about-video-search a:focus-visible {
+    background: color-mix(in oklch, var(--star) 12%, transparent);
   }
 
   /* 더 알아보기: 남이 쓴 글과 검색. 새 창으로 연다 */
