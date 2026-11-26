@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { knownNotes, knownSky } from "./clean"
-import { naverSearchUrl, pointMapUrl, safePoints, searchUrl } from "./links"
+import { naverSearchUrl, pointMapUrl, safePoints, safeVideos, searchUrl, youtubeSearchUrl } from "./links"
 import { skyBrightnessText, skyGlow, skyHint, skyName, skyScalePosition } from "./sky"
 
 describe("하늘 밝기를 말로", () => {
@@ -116,6 +116,45 @@ describe("보는 자리", () => {
     expect(naverSearchUrl("합천 황매산")).toBe(`https://search.naver.com/search.naver?query=${query}`)
     expect(naverSearchUrl("대전 시민천문대", true)).toBe(
       `https://search.naver.com/search.naver?query=${encodeURIComponent("대전 시민천문대")}`,
+    )
+  })
+})
+
+describe("영상으로 미리 보기", () => {
+  const video = {
+    title: "4K) 안반데기 3월 은하수 타임랩스",
+    channel: "Han",
+    url: "https://www.youtube.com/watch?v=xEfv8BDCpgw",
+    thumbnailUrl: "https://i.ytimg.com/vi/xEfv8BDCpgw/mqdefault.jpg",
+    shortForm: false,
+  }
+
+  it("제목이 있고 주소와 그림이 유튜브의 것인 영상만 남긴다", () => {
+    const videos = safeVideos([
+      video,
+      { ...video, url: "https://www.youtube.com/shorts/gQ7YRq4dKpU", shortForm: true },
+      { ...video, title: "  " },
+      { ...video, url: "https://example.com/watch?v=xEfv8BDCpgw" },
+      { ...video, url: "http://www.youtube.com/watch?v=xEfv8BDCpgw" },
+      { ...video, url: "javascript:alert(1)" },
+      { ...video, thumbnailUrl: "https://example.com/a.jpg" },
+      { ...video, thumbnailUrl: undefined },
+      null,
+    ])
+
+    expect(videos).toEqual([video, { ...video, url: "https://www.youtube.com/shorts/gQ7YRq4dKpU", shortForm: true }])
+    expect(safeVideos(undefined)).toEqual([])
+  })
+
+  it("채널 이름이 없어도 영상은 남기고, 쇼츠 표시는 true일 때만 켠다", () => {
+    expect(safeVideos([{ ...video, channel: undefined, shortForm: "yes" }])).toEqual([
+      { ...video, channel: "", shortForm: false },
+    ])
+  })
+
+  it("유튜브 검색은 장소 이름에 별을 붙여 찾는다", () => {
+    expect(youtubeSearchUrl("원주 거돈사지")).toBe(
+      `https://www.youtube.com/results?search_query=${encodeURIComponent("원주 거돈사지 별")}`,
     )
   })
 })

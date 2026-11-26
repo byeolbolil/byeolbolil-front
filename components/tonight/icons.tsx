@@ -175,6 +175,16 @@ export function ExternalIcon() {
   )
 }
 
+/** 영상 미리보기 위에 얹는 재생 표시 */
+export function PlayIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="11" fill="oklch(0.1 0.02 268 / 0.62)" />
+      <path d="M9.6 7.4v9.2l7.4-4.6z" fill="currentColor" />
+    </svg>
+  )
+}
+
 export function SearchIcon() {
   return (
     <svg {...STROKE} strokeWidth={2} strokeLinecap="round">

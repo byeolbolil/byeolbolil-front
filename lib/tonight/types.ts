@@ -78,6 +78,8 @@ export interface NightPlace {
   links?: { title: string; url: string; imageUrl?: string }[]
   /** 이 명소 안에서 서서 보는 자리들. 자리가 하나뿐인 곳에는 없다. 쓰기 전에 safePoints로 거른다 */
   points?: { name: string; access: string; latitude?: number; longitude?: number }[]
+  /** 이 명소에서 별을 본 유튜브 영상. 찾지 못한 곳에는 없다. 쓰기 전에 safeVideos로 거른다 */
+  videos?: { title: string; channel: string; url: string; thumbnailUrl: string; shortForm: boolean }[]
   level: RecommendationLevel
   pattern: NightPattern
   notes: NightNote[]
