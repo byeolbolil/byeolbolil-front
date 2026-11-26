@@ -1,15 +1,16 @@
 /**
- * 밤 불빛 이미지와 지도 스타일의 위치 정보.
+ * 광해 지도 이미지와 지도 스타일의 위치 정보.
  *
- * 이미지는 `scripts/render_night_overlay.py`가 VIIRS 야간광 값으로 그린 것이고, 아래 범위를 웹 메르카토르로 그렸다.
- * 스크립트의 LON0, LON1, LAT0, LAT1과 같아야 한다. 다르면 불빛이 지도와 어긋난다.
+ * 이미지는 `scripts/render_sky_overlay.py`가 백엔드의 하늘 밝기 격자(밤 추천이 장소마다 읽는 것과 같은 격자)로
+ * 그린 것이고, 아래 범위를 웹 메르카토르로 그렸다. 스크립트가 마지막에 출력하는 격자의 범위와 같아야 한다.
+ * 다르면 밝은 곳이 지도와 어긋난다.
  */
 export const NIGHT_OVERLAY = {
-  url: "/map/night-lights.webp",
+  url: "/map/sky-brightness.webp",
   west: 124.5,
   east: 131.0,
-  south: 33.0,
-  north: 38.75,
+  south: 32.9,
+  north: 38.7,
 } as const
 
 /** MapLibre image 소스의 좌표 순서: 왼쪽 위, 오른쪽 위, 오른쪽 아래, 왼쪽 아래. */
@@ -26,7 +27,7 @@ export const NIGHT_OVERLAY_CORNERS: [[number, number], [number, number], [number
  * https://openfreemap.org/
  */
 export const MAP_STYLES = {
-  /** 밤 불빛과 구름 레이어 아래에 까는 어두운 지도 */
+  /** 광해와 구름 레이어 아래에 까는 어두운 지도 */
   dark: "https://tiles.openfreemap.org/styles/dark",
   /** 일반 지도 */
   base: "https://tiles.openfreemap.org/styles/liberty",
