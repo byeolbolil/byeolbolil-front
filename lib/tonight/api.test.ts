@@ -91,6 +91,17 @@ describe("밤마다의 등급", () => {
     })
   })
 
+  it("별 보기 좋은 곳의 수를 받고, 정수가 아니면 버린다", () => {
+    const counted = {
+      ...body,
+      data: { ...body.data, nights: [{ date: "2026-11-09", level: "STRONG", goodCount: 8 }, { date: "2026-11-10", level: "NO", goodCount: -1 }] },
+    }
+    expect(unwrapNightSummary(counted).nights).toEqual([
+      { date: "2026-11-09", level: "STRONG", goodCount: 8 },
+      { date: "2026-11-10", level: "NO" },
+    ])
+  })
+
   it("모르는 등급은 등급이 없는 밤으로 두고, 날짜가 없는 항목은 버린다", () => {
     const odd = { ...body, data: { ...body.data, nights: [{ date: "2026-11-09", level: "SUPERB" }, { level: "GOOD" }, null] } }
     expect(unwrapNightSummary(odd).nights).toEqual([{ date: "2026-11-09" }])

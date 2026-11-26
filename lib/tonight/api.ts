@@ -81,7 +81,9 @@ export function unwrapNightSummary(body: unknown): NightSummary {
   for (const item of data.nights) {
     if (!isRecord(item) || typeof item.date !== "string") continue
     const known = typeof item.level === "string" && LEVELS.includes(item.level)
-    nights.push(known ? { date: item.date, level: item.level as RecommendationLevel } : { date: item.date })
+    const night: NightSummary["nights"][number] = known ? { date: item.date, level: item.level as RecommendationLevel } : { date: item.date }
+    if (typeof item.goodCount === "number" && Number.isInteger(item.goodCount) && item.goodCount >= 0) night.goodCount = item.goodCount
+    nights.push(night)
   }
   return { startDate: data.startDate, nights }
 }

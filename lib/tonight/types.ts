@@ -122,8 +122,8 @@ export interface NightRecommendation {
 export interface NightSummary {
   /** 오늘 밤의 날짜 */
   startDate: string
-  /** 날짜순. 평가한 장소가 없는 밤은 `level`이 빠져 있다 */
-  nights: { date: string; level?: RecommendationLevel }[]
+  /** 날짜순. 평가한 장소가 없는 밤은 `level`과 `goodCount`가 빠져 있다 */
+  nights: { date: string; level?: RecommendationLevel; goodCount?: number }[]
 }
 
 /** 요청 쿼리. 모두 선택이고, 출발지는 위도와 경도를 함께 보내야 한다. */
