@@ -15,6 +15,23 @@ type RegisterRequest = components['schemas']['RegisterRequest'];
 type AuthTokenResponse = components['schemas']['AuthTokenResponse'];
 
 /**
+ * 로그인이나 가입이 거절됐을 때 던진다. 공통 클라이언트(axios.ts)가 401을 정상 응답으로 넘기므로, 본문의
+ * `success: false`를 보고 상태 코드를 붙여 여기서 오류로 바꾼다.
+ */
+export class AuthRejected extends Error {
+  constructor(readonly status: number, message: string) {
+    super(message)
+    this.name = 'AuthRejected'
+  }
+}
+
+function rejectedOf(response: unknown): AuthRejected | null {
+  const body = response as { success?: boolean; status?: number; message?: string } | null
+  if (body && body.success === false) return new AuthRejected(body.status ?? 0, body.message ?? '')
+  return null
+}
+
+/**
  * 인증 API 클라이언트
  */
 export const authApi = {
@@ -29,6 +46,8 @@ export const authApi = {
         '/api/v1/auth/login',
         credentials
       ) as AuthTokenResponse;
+      const rejected = rejectedOf(response);
+      if (rejected) throw rejected;
 
       const accessToken = response.accessToken;
       if (!accessToken) {
@@ -64,6 +83,8 @@ export const authApi = {
         '/api/v1/auth/register',
         data
       ) as AuthTokenResponse;
+      const rejected = rejectedOf(response);
+      if (rejected) throw rejected;
 
       const accessToken = response.accessToken;
       if (!accessToken) {

@@ -155,6 +155,14 @@ async function walk(browser, kind) {
   await shot("card-week")
   await tabs.getByRole("tab", { name: "오늘 밤" }).click()
 
+  // 로그인하지 않고 저장을 누르면 페이지를 옮기지 않고 로그인 창이 뜬다
+  const urlBefore = page.url()
+  await page.locator(".bb .save-pill").first().click()
+  await page.waitForSelector(".bb .login", { timeout: 5000 })
+  check(page.url() === urlBefore, "저장을 누르면 보던 화면 위에 로그인 창이 뜬다")
+  await shot("login")
+  await page.keyboard.press("Escape")
+
   // 5. 지도와 세 레이어
   if (kind === "mobile") {
     await page.getByRole("tab", { name: "지도" }).click()

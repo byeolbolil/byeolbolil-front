@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { buildNightView, emptyMessage, type EmptyKind } from "@/lib/tonight/facts"
 import { clearRuns } from "@/lib/tonight/hours"
@@ -96,6 +95,8 @@ interface NightCandidatesProps {
   onOpenPlace: (place: NightPlace) => void
   onOpenSettings?: () => void
   onOpenOrigin?: () => void
+  /** 로그인 창을 연다 */
+  onLogin: () => void
   /** 목록 아래에 덧붙이는 내용 */
   footer?: ReactNode
 }
@@ -114,6 +115,7 @@ export function NightCandidates({
   onOpenPlace,
   onOpenSettings,
   onOpenOrigin,
+  onLogin,
   footer,
 }: NightCandidatesProps) {
   const [showAll, setShowAll] = useState(false)
@@ -189,7 +191,10 @@ export function NightCandidates({
       ) : null}
       {!isAuthenticated ? (
         <p className="calm small">
-          <Link href="/login">로그인</Link>하면 내가 저장한 장소도 함께 비교해 드려요.
+          <button type="button" className="linkish" onClick={onLogin}>
+            로그인
+          </button>
+          하면 내가 저장한 장소도 함께 비교해 드려요.
         </p>
       ) : null}
       <FacilityList origin={origin} />

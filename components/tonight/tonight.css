@@ -2999,3 +2999,66 @@
   color: var(--warn);
   margin-top: 2px;
 }
+
+/* 로그인 시트 */
+.login {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.login-why {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--star);
+}
+.login-social {
+  display: grid;
+  gap: 8px;
+}
+.login-social .btn {
+  justify-content: center;
+  width: 100%;
+}
+.login-social .btn[data-provider="kakao"] {
+  background: #fee500;
+  color: #191600;
+}
+.login-social .btn[data-provider="naver"] {
+  background: #03c75a;
+  color: #fff;
+}
+.login-social .btn[data-provider="google"] {
+  background: #fff;
+  color: #1f1f1f;
+}
+.login-or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.login-or::before,
+.login-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--hair);
+}
+.login-form {
+  display: grid;
+  gap: 8px;
+}
+.login-form .btn {
+  justify-content: center;
+  width: 100%;
+}
+.login-error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--warn);
+}
+.login > .linkish {
+  align-self: center;
+  font-size: 13px;
+}

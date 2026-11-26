@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { useAuthInit } from "@/components/auth/AuthProvider"
 import { useToast } from "@/hooks/use-toast"
@@ -39,6 +38,7 @@ import { MyPlaces } from "./my-places"
 import { NightPicker } from "./night-picker"
 import { OriginSheet } from "./origin-sheet"
 import { NightError, NightSkeleton } from "./night-status"
+import { LoginSheet } from "./login-sheet"
 import { PickSky } from "./pick-sky"
 import { PlaceRow } from "./place-row"
 import { Rating } from "./rating"
@@ -50,7 +50,24 @@ import { NightCandidates, NightCard, type CardExtras } from "./tonight-view"
 import { WeekOutlook } from "./week-outlook"
 import "./tonight.css"
 
-type SheetKind = "settings" | "origin" | "sources" | "save" | "week"
+type SheetKind = "settings" | "origin" | "sources" | "save" | "week" | "login"
+
+/** 로그인 창을 열 때 하려던 일. 로그인하면 이어서 한다 */
+type AfterLogin = { kind: "saveSpot"; spotId: number; name: string } | { kind: "savePick" } | { kind: "none" }
+
+/**
+ * 소셜 로그인으로 페이지를 떠났다 돌아올 때 이어 갈 것. 떠나기 직전에 sessionStorage에 남기고, 돌아와서 한 번 읽고 지운다.
+ * 보던 탭과 밤, 카드에 띄운 장소, 지도에서 고른 위치와 하려던 일이다.
+ */
+const RESUME_KEY = "bb.resumeAfterLogin"
+interface Resume {
+  tab: Tab
+  date: string | null
+  detailKey: string | null
+  detailSpotId: number | null
+  pick: PickedPlace | null
+  after: AfterLogin | null
+}
 type Tab = "tonight" | "map" | "mine"
 
 /** 저장하는 좌표의 자릿수. 소수 다섯째 자리는 약 1m다 */
@@ -65,7 +82,6 @@ export function TonightApp() {
   const isAuthenticated = authStore((state) => state.isAuthenticated)
   const { isInitializing } = useAuthInit()
   const { toast } = useToast()
-  const router = useRouter()
   // 저장된 토큰이 있으면 시작할 때의 재발급이 끝난 뒤에 추천을 받는다. 그래야 내 장소가 처음부터 들어간다.
   const hadToken = useRef<boolean | null>(null)
   if (hadToken.current === null) hadToken.current = authStore.getState().accessToken !== null
@@ -119,6 +135,28 @@ export function TonightApp() {
   /** 저장하거나 빼는 중인 장소의 키. 추천을 다시 받을 때까지 버튼을 잠근다 */
   const [savingKey, setSavingKey] = useState<string | null>(null)
   const [sheet, setSheet] = useState<SheetKind | null>(null)
+  /** 로그인 창을 열면서 미뤄 둔 일 */
+  const [afterLogin, setAfterLogin] = useState<AfterLogin | null>(null)
+  /** 소셜 로그인에서 돌아와 아직 하지 못한 일. 로그인 확인이 끝나면 한다 */
+  const [resumed, setResumed] = useState<AfterLogin | null>(null)
+  // 소셜 로그인에서 돌아왔으면 떠나기 전의 화면으로 되돌린다
+  useEffect(() => {
+    let saved: Resume | null = null
+    try {
+      const raw = window.sessionStorage.getItem(RESUME_KEY)
+      window.sessionStorage.removeItem(RESUME_KEY)
+      saved = raw ? (JSON.parse(raw) as Resume) : null
+    } catch {
+      saved = null
+    }
+    if (!saved) return
+    setChosenTab(saved.tab)
+    setSelectedDate(saved.date)
+    setDetailKey(saved.detailKey)
+    setDetailSpotId(saved.detailSpotId)
+    setPick(saved.pick)
+    setResumed(saved.after ?? { kind: "none" })
+  }, [])
 
   const locating = geo.status === "checking" || geo.status === "locating"
   const ready = settingsState.hydrated && !locating && (!hadToken.current || !isInitializing)
@@ -275,7 +313,7 @@ export function TonightApp() {
    */
   const toggleSaved = async (place: NightPlace) => {
     if (!isAuthenticated) {
-      router.push("/login")
+      if (place.spotId !== undefined) askLogin({ kind: "saveSpot", spotId: place.spotId, name: place.name })
       return
     }
     setSavingKey(placeKey(place))
@@ -295,6 +333,54 @@ export function TonightApp() {
       toast({ title: "저장하지 못했어요", description: "잠시 뒤에 다시 시도해 주세요.", variant: "destructive" })
     }
   }
+  /** 다른 페이지로 옮기지 않고 로그인 창을 띄운다. 로그인하면 `after`를 이어서 한다 */
+  const askLogin = (after: AfterLogin) => {
+    setAfterLogin(after)
+    setSheet("login")
+  }
+  /** 로그인한 뒤에 미뤄 둔 일을 한다. 내 장소가 추천에 들어오도록 추천은 늘 다시 받는다 */
+  const continueAfterLogin = async (after: AfterLogin | null) => {
+    if (after?.kind === "saveSpot") {
+      try {
+        await bookmarksApi.addBookmark({ type: "SPOT", spotId: after.spotId, name: after.name })
+        toast({ title: "내 장소에 저장했어요", description: after.name })
+      } catch (error) {
+        const status = (error as { response?: { status?: number } }).response?.status
+        toast(
+          status === 409
+            ? { title: "이미 내 장소에 있어요", description: after.name }
+            : { title: "저장하지 못했어요", description: "잠시 뒤에 다시 시도해 주세요.", variant: "destructive" },
+        )
+      }
+    }
+    reloadNights()
+    if (after?.kind === "savePick") setSheet("save")
+  }
+  const finishLogin = () => {
+    const after = afterLogin
+    setAfterLogin(null)
+    setSheet(null)
+    toast({ title: "로그인했어요" })
+    void continueAfterLogin(after)
+  }
+  // 소셜 로그인에서 돌아왔으면, 로그인 확인이 끝난 뒤에 미뤄 둔 일을 한다
+  useEffect(() => {
+    if (!resumed || isInitializing) return
+    setResumed(null)
+    if (isAuthenticated) void continueAfterLogin(resumed)
+    // 돌아온 뒤 한 번만 하면 된다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumed, isInitializing, isAuthenticated])
+  /** 소셜 로그인으로 떠나기 직전에 보던 것과 하려던 일을 남긴다 */
+  const rememberBeforeLeaving = () => {
+    const resume: Resume = { tab, date: selectedDate, detailKey, detailSpotId, pick, after: afterLogin }
+    try {
+      window.sessionStorage.setItem(RESUME_KEY, JSON.stringify(resume))
+    } catch {
+      // 저장소를 쓸 수 없으면 돌아와서 처음 화면부터 본다
+    }
+  }
+
   /** 다른 화면에서 고른 밤의 추천 순위로 간다 */
   const openNight = (date: string) => {
     setSheet(null)
@@ -393,9 +479,9 @@ export function TonightApp() {
             내 장소로 저장
           </button>
         ) : (
-          <Link className="btn primary" href="/login">
+          <button type="button" className="btn primary" onClick={() => askLogin({ kind: "savePick" })}>
             로그인하고 저장
-          </Link>
+          </button>
         )}
         <button type="button" className="btn wide" onClick={() => setSheet("week")}>
           <CalendarIcon />
@@ -414,6 +500,7 @@ export function TonightApp() {
       criteria={query}
       onOpenPlace={openPlace}
       onOpenNight={openNight}
+      onLogin={() => askLogin({ kind: "none" })}
       onAddFromMap={addFromMap}
       onChanged={reloadNights}
     />
@@ -511,6 +598,7 @@ export function TonightApp() {
           onOpenPlace={openPlace}
           onOpenSettings={openSettings}
           onOpenOrigin={openOrigin}
+          onLogin={() => askLogin({ kind: "none" })}
           footer={
             <p className="credit-line links">
               <button type="button" className="linkish" onClick={openSources}>
@@ -536,7 +624,7 @@ export function TonightApp() {
           <PinIcon />
           <span>{originText}</span>
         </button>
-        <AccountButton pending={isInitializing} />
+        <AccountButton pending={isInitializing} onLogin={() => askLogin({ kind: "none" })} />
         {/* 좁은 화면에서는 아래 탭에 설정이 있다 */}
         <button type="button" className="gear only-d" aria-label="설정" onClick={openSettings}>
           <SettingsIcon />
@@ -635,6 +723,17 @@ export function TonightApp() {
             )}
           />
         </Sheet>
+      ) : null}
+      {sheet === "login" ? (
+        <LoginSheet
+          reason={afterLogin && afterLogin.kind !== "none" ? "save" : undefined}
+          onClose={() => {
+            setSheet(null)
+            setAfterLogin(null)
+          }}
+          onDone={finishLogin}
+          onLeave={rememberBeforeLeaving}
+        />
       ) : null}
       {sheet === "save" && pick ? (
         <SavePlaceSheet

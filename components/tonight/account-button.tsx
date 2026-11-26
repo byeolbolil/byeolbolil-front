@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { authApi } from "@/lib/api/authApi"
@@ -10,13 +9,15 @@ import { PersonIcon } from "./icons"
 interface AccountButtonProps {
   /** 저장된 로그인을 확인하는 중인지. 그동안은 아무것도 보이지 않는다. "로그인"이 잠깐 떴다 사라지지 않게 하려는 것이다 */
   pending: boolean
+  /** 로그인 창을 연다. 다른 페이지로 옮겨 가지 않는다 */
+  onLogin: () => void
 }
 
 /**
  * 머리의 로그인 상태. 로그인하지 않았으면 "로그인", 했으면 닉네임을 보여주고 누르면 로그아웃이 나온다.
  * 지금 로그인돼 있는지를 어느 화면에서나 알 수 있게 하는 자리다.
  */
-export function AccountButton({ pending }: AccountButtonProps) {
+export function AccountButton({ pending, onLogin }: AccountButtonProps) {
   const isAuthenticated = authStore((state) => state.isAuthenticated)
   const nickname = authStore((state) => state.user?.nickname)
   const { toast } = useToast()
@@ -42,9 +43,9 @@ export function AccountButton({ pending }: AccountButtonProps) {
   if (pending) return null
   if (!isAuthenticated) {
     return (
-      <Link className="acct" href="/login">
+      <button type="button" className="acct" onClick={onLogin}>
         로그인
-      </Link>
+      </button>
     )
   }
 
