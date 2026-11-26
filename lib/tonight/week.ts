@@ -11,6 +11,8 @@ import type { Coordinates } from "./settings"
 import { daysBetween, weekdayOf } from "./time"
 import type {
   ClearWindow,
+  NightPlace,
+  NightRecommendation,
   ForecastSource,
   NightHour,
   NightMoon,
@@ -215,4 +217,35 @@ export function weekSummary(nights: readonly WeekNight[], tonight: string): stri
   const diff = daysBetween(tonight, best.date)
   const name = diff === 0 ? "오늘 밤" : diff === 1 ? "내일 밤" : `${weekdayOf(best.date)} 밤`
   return good > 1 ? `${name}이 가장 좋아요. 좋은 밤이 ${good}번 있어요` : `${name}이 가장 좋아요`
+}
+
+/**
+ * 장소 화면에 넘길 값. 그 밤의 추천에 이 장소가 있으면(이동 시간 한도 안이면) 그 항목을 쓰고,
+ * 없으면 이번 주 응답의 그 밤으로 만든다.
+ */
+export function nightPlaceOf(place: WeekPlace, night: NightRecommendation): NightPlace {
+  const listed = night.places.find((item) => item.type === "BOOKMARK" && item.id === place.id)
+  if (listed) return listed
+  const weekNight = place.nights.find((item) => item.date === night.date)
+  return {
+    type: "BOOKMARK",
+    id: place.id ?? 0,
+    spotId: place.spotId,
+    name: place.name ?? "저장한 장소",
+    address: place.address,
+    latitude: place.latitude,
+    longitude: place.longitude,
+    skyBrightness: place.skyBrightness,
+    skyClass: place.skyClass,
+    skyRank: place.skyRank,
+    level: weekNight?.level ?? "NO",
+    pattern: weekNight?.pattern ?? "CLOUDY_ALL_NIGHT",
+    notes: weekNight?.notes ?? [],
+    bestWindow: weekNight?.bestWindow,
+    moonBrightness: weekNight?.moonBrightness ?? 0,
+    moon: weekNight?.moon,
+    hours: weekNight?.hours ?? [],
+    forecastSource: place.forecastSource ?? "OPEN_METEO",
+    forecastIssuedAt: place.forecastIssuedAt,
+  }
 }

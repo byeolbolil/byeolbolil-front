@@ -3086,3 +3086,139 @@
   height: 18px;
   transform: rotate(90deg);
 }
+
+/* 넓은 화면에서는 지도가 늘 왼쪽에 있어서 목록과 지도를 오가는 줄을 두지 않는다 */
+@media (min-width: 1080px) {
+  .bb .nav {
+    display: none;
+  }
+}
+
+/* 목록 맨 위의 내 장소 */
+.bb .my-rows {
+  display: grid;
+  gap: 6px;
+}
+.bb .my-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 10px;
+  align-items: center;
+  width: 100%;
+  border: 0;
+  background: var(--night-2);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.bb .my-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bb .my-name svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: var(--sky-clear);
+}
+.bb .my-week {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+.bb .my-week i {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  font-style: normal;
+  font-size: 10px;
+  color: var(--ink-3);
+  border-radius: 6px;
+  padding: 3px 0;
+  background: var(--night-1);
+}
+.bb .my-week i[data-on] {
+  outline: 1px solid var(--star);
+}
+.bb .my-week i[data-level="STRONG"] {
+  background: var(--night-3);
+}
+.bb .my-week em {
+  font-style: normal;
+}
+.bb .my-week svg {
+  width: 10px;
+  height: 10px;
+  color: var(--star);
+}
+.bb .my-week i[data-level="MAYBE"] svg path {
+  fill: var(--ink-3);
+}
+.bb .my-week i[data-level="NO"] svg {
+  color: var(--cloud);
+  width: 12px;
+  height: 12px;
+}
+
+/* 별 사진 찍기 시트 */
+.bb .guide {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+.bb .guide h3 {
+  margin: 0 0 6px;
+  font-size: 14.5px;
+  color: var(--ink);
+}
+.bb .guide-list,
+.bb .guide-steps {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+.bb .guide-steps {
+  margin-top: 12px;
+}
+.bb .guide-table {
+  margin: 12px 0 0;
+  display: grid;
+  gap: 1px;
+  background: var(--hair);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.bb .guide-table div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 10px;
+  background: var(--night-2);
+  padding: 8px 12px;
+}
+.bb .guide-table dt {
+  color: var(--ink-3);
+}
+.bb .guide-table dd {
+  margin: 0;
+  color: var(--ink);
+}
+.bb .guide-note {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
