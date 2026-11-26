@@ -1,7 +1,7 @@
 "use client"
 
 import { authStore } from "@/lib/store/authStore"
-import { weekdayOf } from "@/lib/tonight/time"
+import { shortNightLabel, weekdayOf } from "@/lib/tonight/time"
 import type { NightPlace, NightQuery, NightRecommendation } from "@/lib/tonight/types"
 import { useMyWeek } from "@/lib/tonight/use-week"
 import { nightPlaceOf } from "@/lib/tonight/week"
@@ -54,7 +54,7 @@ export function MySection({ night, criteria, revision, onOpen }: MySectionProps)
                   const level = place.nights.find((item) => item.date === date)?.level
                   return (
                     <i key={date} data-level={level ?? "NONE"} data-on={date === night.date ? "1" : undefined}>
-                      <em>{weekdayOf(date)}</em>
+                      <em>{shortNightLabel(date, dates[0] ?? date)}</em>
                       {level ? levelStars(level) > 0 ? <StarIcon filled /> : <CloudIcon /> : "–"}
                     </i>
                   )

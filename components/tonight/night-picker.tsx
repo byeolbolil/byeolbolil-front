@@ -1,4 +1,4 @@
-import { nightName, nightTabLabel, shortDate } from "@/lib/tonight/time"
+import { nightName, nightTabLabel, shortDate, shortNightLabel } from "@/lib/tonight/time"
 import type { RecommendationLevel } from "@/lib/tonight/types"
 import { levelStars, levelText } from "@/lib/tonight/wording"
 import { CloudIcon, StarIcon } from "./icons"
@@ -13,8 +13,8 @@ interface NightPickerProps {
   /** 밤마다의 등급을 다 받았는지. 받기 전이거나 받지 못했으면 등급이 없는 밤의 자리를 비워 둔다 */
   settled: boolean
   /**
-   * 한 줄짜리 작은 칩으로 그린다. 후보 목록의 밤을 고를 때 쓴다. 장소 화면의 큰 날짜 칸(그 장소의 일곱 밤)과
-   * 모양을 달리해서, 둘이 서로 다른 것을 고른다는 것이 보이게 한다
+   * 폭에 꼭 맞는 일곱 칸짜리 막대로 그린다. 후보 목록의 밤을 고를 때 쓴다. 장소 화면의 큰 날짜 칸(그 장소의 일곱 밤)과
+   * 모양을 달리해서, 둘이 서로 다른 것을 고른다는 것이 보이게 한다. 넘기지 않아도 일곱 밤이 다 보인다
    */
   compact?: boolean
 }
@@ -26,7 +26,7 @@ interface NightPickerProps {
 export function NightPicker({ dates, selected, onSelect, levels, settled, compact = false }: NightPickerProps) {
   const tonight = dates[0]
   return (
-    <div className={compact ? "night-chips" : "nights"} role="group" aria-label={compact ? "후보를 볼 밤" : "이 장소의 밤"}>
+    <div className={compact ? "night-bar" : "nights"} role="group" aria-label={compact ? "후보를 볼 밤" : "이 장소의 밤"}>
       {dates.map((date) => {
         const level = levels.get(date)
         const summary = level ? levelText(level) : settled ? "정보 없음" : null
@@ -41,7 +41,7 @@ export function NightPicker({ dates, selected, onSelect, levels, settled, compac
             title={label}
             onClick={() => onSelect(date)}
           >
-            <span className="nt-name">{nightTabLabel(date, tonight)}</span>
+            <span className="nt-name">{compact ? shortNightLabel(date, tonight) : nightTabLabel(date, tonight)}</span>
             {compact ? null : <span className="nt-date">{shortDate(date)}</span>}
             <span className="nt-mark" aria-hidden="true">
               <Mark level={level} settled={settled} />

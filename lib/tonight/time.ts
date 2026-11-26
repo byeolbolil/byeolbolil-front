@@ -86,6 +86,14 @@ export function nightTabLabel(date: string, tonight: string): string {
   return weekdayOf(date)
 }
 
+/** 좁은 칸에 쓰는 한두 글자 이름. "오늘", "내일", 그 뒤로는 요일의 첫 글자("일", "월") */
+export function shortNightLabel(date: string, tonight: string): string {
+  const diff = daysBetween(tonight, date)
+  if (diff === 0) return "오늘"
+  if (diff === 1) return "내일"
+  return weekdayOf(date).slice(0, 1)
+}
+
 /** 오늘 밤부터 고를 수 있는 날짜들. API는 오늘 밤부터 7일을 받는다. */
 export function nightDates(tonight: string, count = 7): string[] {
   return Array.from({ length: count }, (_, i) => addDays(tonight, i))
