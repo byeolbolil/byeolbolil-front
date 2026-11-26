@@ -133,6 +133,7 @@ export function HeroCard({ place, eyebrow, detailed, save, actions, children }: 
           caution={place.caution}
           links={place.links}
           points={place.points}
+          videos={place.videos}
         />
         <div className="actions">
           <a className="btn primary" href={directionsUrl(place)} target="_blank" rel="noopener noreferrer">

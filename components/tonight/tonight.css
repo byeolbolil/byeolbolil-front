@@ -1013,6 +1013,101 @@
     color: var(--ink-2);
   }
 
+  /* 영상으로 미리 보기: 그곳에서 찍은 유튜브 영상. 옆으로 넘겨 본다 */
+  .about-videos {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  /* 영상이 모두 지워져 카드가 하나도 남지 않으면 제목도 감춘다 */
+  .about-videos:not(:has(li)) {
+    display: none;
+  }
+  .about-videos > b {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--ink-3);
+  }
+  .about-videos ul {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 4px;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+  .about-videos li {
+    flex: none;
+    width: 172px;
+    scroll-snap-align: start;
+  }
+  .about-videos a {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-decoration: none;
+    color: var(--ink-2);
+  }
+  .about-video-thumb {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 9;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--night-2);
+  }
+  .about-video-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .about-video-thumb svg {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 34px;
+    height: 34px;
+    transform: translate(-50%, -50%);
+    color: var(--ink);
+  }
+  .about-video-thumb em {
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: oklch(0.1 0.02 268 / 0.72);
+    font-size: 11px;
+    font-style: normal;
+    color: var(--ink);
+  }
+  .about-video-title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--ink);
+  }
+  .about-video-channel {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .about-videos a:hover .about-video-title,
+  .about-videos a:focus-visible .about-video-title {
+    text-decoration: underline;
+  }
+
   /* 더 알아보기: 남이 쓴 글과 검색. 새 창으로 연다 */
   .about-more {
     display: flex;

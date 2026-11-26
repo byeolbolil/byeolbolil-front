@@ -63,6 +63,11 @@ export function naverSearchUrl(name: string, facility = false): string {
   return `https://search.naver.com/search.naver?query=${encodeURIComponent(searchQuery(name, facility))}`
 }
 
+/** 그 장소에서 별을 본 영상을 유튜브에서 찾는 주소. 골라 둔 영상이 없는 곳에서도 찾아볼 수 있게 한다 */
+export function youtubeSearchUrl(name: string): string {
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} 별`)}`
+}
+
 function searchQuery(name: string, facility: boolean): string {
   return facility ? name : `${name} 별 보기`
 }
@@ -102,3 +107,59 @@ export function pointMapUrl(placeName: string, point: PlacePoint): string | null
   const label = `${placeName} ${point.name}`
   return `https://map.kakao.com/link/map/${encodeURIComponent(label)},${point.latitude},${point.longitude}`
 }
+
+/** 그 명소에서 별을 본 유튜브 영상 하나. 제목과 채널 이름은 유튜브가 알려 준 그대로다 */
+export interface PlaceVideo {
+  title: string
+  /** 올린 채널의 이름 */
+  channel: string
+  url: string
+  /** 미리보기 그림. 유튜브의 그림 서버에 있다 */
+  thumbnailUrl: string
+  /** 쇼츠인지 */
+  shortForm: boolean
+}
+
+const YOUTUBE_HOSTS = new Set(["www.youtube.com", "youtube.com", "m.youtube.com", "youtu.be"])
+const YOUTUBE_IMAGE_HOSTS = new Set(["i.ytimg.com", "img.youtube.com"])
+
+/** https로 여는 주소이고 호스트가 허락한 곳일 때만 돌려준다 */
+function httpsOn(value: unknown, hosts: Set<string>): string | null {
+  if (typeof value !== "string") return null
+  try {
+    const url = new URL(value)
+    return url.protocol === "https:" && hosts.has(url.hostname) ? url.toString() : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 응답에서 온 영상 가운데 제목이 있고 유튜브로 여는 것만 남긴다. 주소와 그림이 유튜브의 것이 아니면 버린다.
+ * 영상 카드는 남의 사이트로 내보내는 링크라, 서버가 준 값이라도 어디로 가는지 확인한다.
+ */
+export function safeVideos(value: unknown): PlaceVideo[] {
+  if (!Array.isArray(value)) return []
+  const videos: PlaceVideo[] = []
+  for (const item of value) {
+    if (!isRecord(item) || typeof item.title !== "string") continue
+    const title = item.title.trim()
+    const url = httpsOn(item.url, YOUTUBE_HOSTS)
+    const thumbnailUrl = httpsOn(item.thumbnailUrl, YOUTUBE_IMAGE_HOSTS)
+    if (!title || !url || !thumbnailUrl) continue
+    videos.push({
+      title,
+      channel: typeof item.channel === "string" ? item.channel.trim() : "",
+      url,
+      thumbnailUrl,
+      shortForm: item.shortForm === true,
+    })
+  }
+  return videos
+}
+
+/**
+ * 유튜브는 지워진 영상의 미리보기 자리에 120×90의 빈 그림을 준다. 받은 그림이 이보다 작으면 영상이 없는 것이다.
+ * 우리가 부르는 그림은 320×180이다.
+ */
+export const MISSING_VIDEO_THUMB_MAX_WIDTH = 120
