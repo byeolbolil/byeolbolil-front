@@ -84,8 +84,17 @@ function styleUrl(layer: MapLayer): string {
 /** 어두운 공개 스타일이 가리키지만 스프라이트에는 없는 아이콘. 그대로 두면 지도를 그릴 때마다 경고가 난다. */
 const MISSING_ICON = "circle-11"
 
+/**
+ * 공개 스타일의 도로 번호 방패 레이어. 필터가 값이 없는 도로에서 형식 경고를 내고(확대하면 그려지기 시작한다),
+ * 한국 지도에는 필요 없는 미국식 방패라 스타일을 읽을 때 뺀다.
+ */
+const SHIELD_LAYERS = ["road_shield_us", "highway-shield-us-interstate", "highway-shield-non-us"]
+
 /** 지명을 한글로 적는다. OpenMapTiles의 `name`은 그 지역의 표기라서 한국 안에서는 한글이다. */
 function localizeLabels(map: MapLibreMap) {
+  for (const id of SHIELD_LAYERS) {
+    if (map.getLayer(id)) map.removeLayer(id)
+  }
   for (const layer of map.getStyle().layers) {
     if (layer.type !== "symbol") continue
     const icon = map.getLayoutProperty(layer.id, "icon-image")
