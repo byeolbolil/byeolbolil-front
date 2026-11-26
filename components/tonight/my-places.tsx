@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { authApi } from "@/lib/api/auth"
@@ -28,6 +27,8 @@ interface MyPlacesProps {
   onAddFromMap: () => void
   /** 저장한 장소가 바뀌어 추천을 다시 받아야 할 때 */
   onChanged: () => void
+  /** 로그인 창을 연다 */
+  onLogin: () => void
 }
 
 /** 저장하는 좌표의 자릿수. 소수 다섯째 자리는 약 1m다 */
@@ -37,7 +38,7 @@ const roundPosition = (value: number) => Math.round(value * 1e5) / 1e5
  * 내 장소. 저장한 곳마다 이번 주 일곱 밤을 한 줄로 늘어놓아, 어느 곳이 언제 좋은지 한꺼번에 본다.
  * 위쪽의 찾기는 저장하지 않은 곳의 이번 주도 바로 보여 주고, 마음에 들면 그 자리에서 저장한다.
  */
-export function MyPlaces({ night, criteria, onOpenPlace, onOpenNight, onAddFromMap, onChanged }: MyPlacesProps) {
+export function MyPlaces({ night, criteria, onOpenPlace, onOpenNight, onAddFromMap, onChanged, onLogin }: MyPlacesProps) {
   const isAuthenticated = authStore((state) => state.isAuthenticated)
   const nickname = authStore((state) => state.user?.nickname)
   const [revision, setRevision] = useState(0)
@@ -128,10 +129,10 @@ export function MyPlaces({ night, criteria, onOpenPlace, onOpenNight, onAddFromM
                   {saving ? "저장하는 중" : "내 장소에 저장"}
                 </button>
               ) : (
-                <Link className="btn save" href="/login">
+                <button type="button" className="btn save" onClick={onLogin}>
                   <BookmarkIcon filled={false} />
                   로그인하고 저장
-                </Link>
+                </button>
               )}
               <a
                 className="btn"
@@ -157,9 +158,9 @@ export function MyPlaces({ night, criteria, onOpenPlace, onOpenNight, onAddFromM
               자주 가는 곳을 저장해 두면 곳마다 이번 주 일곱 밤을 한눈에 비교하고, 매일 밤 추천에도 함께 넣어 드려요.
             </p>
             <div className="actions">
-              <Link className="btn primary" href="/login">
+              <button type="button" className="btn primary" onClick={onLogin}>
                 로그인
-              </Link>
+              </button>
             </div>
           </>
         ) : mine.status === "error" ? (
