@@ -174,7 +174,7 @@ export const SOURCES: readonly SourceEntry[] = [
   },
   {
     title: "지도",
-    body: "광해 지도는 장소마다 보여 드리는 하늘 밝기와 같은 계산값으로 별볼일이 직접 그렸어요. 색의 눈금은 장소 카드의 다섯 칸 눈금과 같은 자리를 써요. 하늘 밝기는 둘레 수백 km의 불빛이 하늘에 번진 정도라 지도에서도 넓게 번져 보이고, 산이 가려 주는 불빛은 이 지도에 나오지 않아요. 바탕 지도는 OpenStreetMap 자료로 만든 OpenFreeMap의 지도예요. 구름 레이어는 구름의 모양을 그리지 않고, 고른 시각에 각 장소의 예보 구름량만 색으로 보여줘요.",
+    body: "광해 지도는 장소마다 보여 드리는 하늘 밝기와 같은 계산값으로 별볼일이 직접 그렸어요. 어두운 곳(인공 불빛이 자연의 3배 아래)은 칠하지 않고 비워 둬서, 지도에서 까맣게 남은 곳이 하늘이 어두운 곳이에요. 하늘 밝기는 둘레 수백 km의 불빛이 하늘에 번진 정도라 지도에서도 넓게 번져 보이고, 산이 가려 주는 불빛은 이 지도에 나오지 않아요. 바탕 지도는 OpenStreetMap 자료로 만든 OpenFreeMap의 지도예요. 구름 레이어는 구름의 모양을 그리지 않고, 고른 시각에 각 장소의 예보 구름량만 색으로 보여줘요.",
     links: [
       { label: "VIIRS Nighttime Lights 2024, Earth Observation Group, Payne Institute", url: "https://eogdata.mines.edu/products/vnl/" },
       { label: "OpenFreeMap", url: "https://openfreemap.org/" },

@@ -6,9 +6,10 @@
 지도의 색과 장소 카드의 하늘 밝기가 같은 값에서 나온다. 형식은 백엔드 저장소의 scripts/lightpollution/export_grid.py에
 적혀 있고, 값은 하늘 전체에서 평균한 인공 불빛이 자연 밤하늘 밝기의 몇 배인지(ALR)다.
 
-색은 lib/tonight/sky.ts의 skyScalePosition과 같은 눈금으로 정한다. 다섯 등급(경계 0.33, 2, 10, 50)에 한 칸씩을 주고
-칸 안에서는 밝기의 로그로 자리를 잡는다. 그래서 장소 카드의 다섯 칸 눈금과 지도의 색이 같은 자리를 가리킨다.
-경계값과 그 출처는 백엔드 저장소 docs/SCORING.md의 "광해" 절에 있다. 색 자체는 보기 좋게 고른 것이다.
+한국 내륙은 70%가 ALR 2~10이라, 그 구간을 옅게라도 칠하면 국토 전체에 뿌연 막이 덮인다. 그래서 ALR 3 아래는 비워
+두고(어두운 곳은 지도 바탕 그대로 어둡다), 3에서 60까지를 로그로 펴서 불투명도를 2제곱에 가깝게 올린다. 빛은 호박색에서
+가장 밝은 곳만 흰빛으로 간다. 이 범위와 곡선은 보기 좋게 고른 그림의 값이고 등급의 경계가 아니다. 등급의 경계는 백엔드
+저장소 docs/SCORING.md의 "광해" 절에 있고, 범례에는 그중 은하수가 보이지 않게 되는 ALR 10의 자리를 표시한다.
 
 MapLibre의 image 소스는 네 귀퉁이 좌표 사이를 웹 메르카토르 평면에서 선형으로 늘린다. 그래서 그림의 세로축은 위도가
 아니라 메르카토르 y에 비례하게 그린다. 범위는 격자의 범위를 그대로 쓰고, 끝에 그 범위를 출력한다.
@@ -62,66 +63,39 @@ value = (log_alr[R, C] * (1 - fx) + log_alr[R, C + 1] * fx) * (1 - fy) \
     + (log_alr[R + 1, C] * (1 - fx) + log_alr[R + 1, C + 1] * fx) * fy
 alr = 10 ** value
 
-# lib/tonight/sky.ts의 눈금. 양 끝 0.05와 250 사이에 등급 경계 넷을 둔다
-EDGES = [0.05, 0.33, 2, 10, 50, 250]
+LOW, HIGH = 3, 60  # 이 사이를 로그로 편다. LOW 아래는 투명, HIGH 위는 가장 진하게
+GAMMA = 1.8
+MAX_OPACITY = 0.9
+WARM = np.array([255, 184, 104], np.float32)
+HOT = np.array([255, 244, 220], np.float32)
 
 
-def scale_position(a):
-    a = np.clip(a, EDGES[0], EDGES[-1])
-    p = np.zeros_like(a)
-    for cell in range(len(EDGES) - 1):
-        low, high = EDGES[cell], EDGES[cell + 1]
-        inside = (a > low) & (a <= high) if cell else (a <= high)
-        p[inside] = (cell + np.log(a[inside] / low) / math.log(high / low)) / (len(EDGES) - 1)
-    return p
+def position(a):
+    return np.clip(np.log(a / LOW) / math.log(HIGH / LOW), 0, 1)
 
 
-def oklch_to_srgb(l, c, h):
-    a, b = c * math.cos(math.radians(h)), c * math.sin(math.radians(h))
-    l_ = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3
-    m_ = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3
-    s_ = (l - 0.0894841775 * a - 1.2914855480 * b) ** 3
-    linear = (
-        4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_,
-        -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_,
-        -0.0041960863 * l_ - 0.7034186147 * m_ + 1.7076147010 * s_,
-    )
-    gamma = [12.92 * v if v <= 0.0031308 else 1.055 * v ** (1 / 2.4) - 0.055 for v in linear]
-    return [min(255, max(0, round(v * 255))) for v in gamma]
+def color(t):
+    heat = np.clip((t - 0.6) / 0.4, 0, 1)[..., None]
+    return WARM + (HOT - WARM) * heat
 
 
-# 장소 카드의 눈금(components/tonight/gauges.tsx의 DarknessScale)과 같은 두 색 사이를 oklch로 섞고, 가장 밝은 끝은
-# 흰빛으로 보낸다. 색상각은 짧은 쪽으로 돌아서 남보라에서 붉은빛을 지나 호박색이 된다
-STOPS = [(0.0, (0.30, 0.09, 275)), (0.8, (0.90, 0.11, 80)), (1.0, (0.98, 0.035, 90))]
+def opacity(t):
+    return t ** GAMMA * MAX_OPACITY
 
 
-def ramp(p):
-    for (p0, c0), (p1, c1) in zip(STOPS, STOPS[1:]):
-        if p <= p1:
-            t = (p - p0) / (p1 - p0)
-            dh = (c1[2] - c0[2] + 180) % 360 - 180
-            return oklch_to_srgb(c0[0] + (c1[0] - c0[0]) * t, c0[1] + (c1[1] - c0[1]) * t, c0[2] + dh * t)
-    return oklch_to_srgb(*STOPS[-1][1])
-
-
-def opacity(p):
-    # 자연 그대로의 하늘은 비워서 아래 지도가 보이게 하고, 밝아질수록 진하게 덮는다
-    return np.clip((p - 0.1) / 0.75, 0, 1) ** 1.3 * 0.88
-
-
-LUT = np.array([ramp(i / 255) for i in range(256)], np.float32)
-p = scale_position(alr)
-index = np.round(p * 255).astype(int)
-rgba = np.dstack([LUT[index], opacity(p) * 255]).astype(np.uint8)
+t = position(alr)
+rgba = np.dstack([color(t), opacity(t) * 255]).astype(np.uint8)
 Image.fromarray(rgba).save(out, quality=85, method=6)
 
 print(f"{W} x {H}px, 서 {west}, 동 {east:.6g}, 남 {south:.6g}, 북 {north}")
 
-# 범례의 색. 지도 바탕(#0b0f22)에 얹었을 때의 색을 눈금의 여섯 자리에서 뽑는다
+# 범례의 색. 지도 바탕(#0b0f22)에 얹었을 때의 색을 다섯 자리에서 뽑고, ALR 10의 자리를 함께 적는다
 base = np.array([0x0B, 0x0F, 0x22], np.float32)
 stops = []
-for at in (0, 0.2, 0.4, 0.6, 0.8, 1):
-    a = float(opacity(np.array([at]))[0])
-    color = LUT[round(at * 255)] * a + base * (1 - a)
-    stops.append("#%02x%02x%02x %d%%" % (*np.round(color).astype(int), round(at * 100)))
+for at in (0, 0.25, 0.5, 0.75, 1):
+    t = np.array([at], np.float32)
+    a = float(opacity(t)[0])
+    mixed = color(t)[0] * a + base * (1 - a)
+    stops.append("#%02x%02x%02x %d%%" % (*np.round(mixed).astype(int), round(at * 100)))
 print("범례: linear-gradient(90deg, " + ", ".join(stops) + ")")
+print(f"은하수 경계(ALR 10)의 자리: {float(position(np.array([10.0]))[0]) * 100:.0f}%")
