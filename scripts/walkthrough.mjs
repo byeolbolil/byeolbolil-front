@@ -95,13 +95,30 @@ async function walk(browser, kind) {
   check(requests[0]?.includes("lat=37.55&lon=126.91"), `첫 요청에 출발지가 들어 있다: ${requests[0]}`)
   // 목록의 밤 고르기(칩): 밤마다의 등급이 도착하면 오늘 밤의 표시가 목록의 첫 장소와 같은 등급이다
   await page
-    .waitForFunction(() => document.querySelectorAll('.bb .night-chips button:not([data-level="NONE"])').length > 1, null, { timeout: 30_000 })
+    .waitForFunction(() => document.querySelectorAll('.bb .night-bar button:not([data-level="NONE"])').length > 1, null, { timeout: 30_000 })
     .catch(() => {})
-  const nightButtons = await page.locator(".bb .night-chips button").evaluateAll((items) =>
+  const nightButtons = await page.locator(".bb .night-bar button").evaluateAll((items) =>
     items.map((item) => ({ level: item.getAttribute("data-level") })),
   )
   const firstRating = await page.locator(".bb .side .row .rating").first().getAttribute("title")
-  check(nightButtons.length === 7, "목록 위에 밤 일곱 개를 고르는 칩이 있다")
+  check(nightButtons.length === 7, "목록 위에 밤 일곱 개를 고르는 막대가 있다")
+  // 일곱 칸이 넘기지 않아도 모두 막대 안에 보인다
+  const clipped = await page.locator(".bb .night-bar").evaluate((bar) => {
+    const box = bar.getBoundingClientRect()
+    return [...bar.querySelectorAll("button")].filter((button) => {
+      const cell = button.getBoundingClientRect()
+      return cell.left < box.left - 1 || cell.right > box.right + 1 || cell.width < 24
+    }).length
+  })
+  check(clipped === 0, `목록의 밤 일곱 칸이 잘리지 않고 다 보인다 (잘린 칸 ${clipped})`)
+  // 마지막 밤을 누르면 목록이 그 밤의 후보로 바뀐다
+  await page.locator(".bb .night-bar button").last().click()
+  await page.waitForTimeout(2500)
+  const lastTitle = flat(await page.locator(".bb .side .sec-title h2").first().innerText().catch(() => ""))
+  const lastPressed = await page.locator(".bb .night-bar button").last().getAttribute("aria-pressed")
+  check(lastPressed === "true", `마지막 밤을 누르면 그 밤이 골라진다: ${lastTitle}`)
+  await page.locator(".bb .night-bar button").first().click()
+  await page.waitForTimeout(2000)
   // 첫 화면이 곧 1위 장소의 장소 화면이다. 한 번 더 누르지 않아도 그 장소의 일곱 밤이 보인다
   await page
     .waitForFunction(() => document.querySelectorAll('.bb .place-view .nights button:not([data-level="NONE"])').length > 1, null, { timeout: 30_000 })
@@ -116,7 +133,7 @@ async function walk(browser, kind) {
     check((await page.locator(".bb main .tonight").count()) > 0, "가볼 만한 곳이 없는 밤에는 그 사정을 먼저 알린다")
   }
   // 좋은 밤의 칩을 고르면 그 밤의 1위가 바로 장소 화면으로 뜬다
-  const goodChip = page.locator('.bb .night-chips button[data-level="STRONG"], .bb .night-chips button[data-level="GOOD"]').first()
+  const goodChip = page.locator('.bb .night-bar button[data-level="STRONG"], .bb .night-bar button[data-level="GOOD"]').first()
   if (await goodChip.count()) {
     await goodChip.click()
     await page.waitForSelector(".bb .place-view", { timeout: 30_000 })
@@ -124,7 +141,7 @@ async function walk(browser, kind) {
     const firstRow = (await page.locator(".bb .side .row .row-name").first().innerText()).split("\n")[0].trim()
     check((await heroName()) === firstRow, `다른 밤을 고르면 그 밤의 1위 "${firstRow}"가 바로 장소 화면으로 뜬다`)
     await shot("good-night")
-    await page.locator(".bb .night-chips button").first().click()
+    await page.locator(".bb .night-bar button").first().click()
     await page.waitForTimeout(1500)
   }
   check(nightButtons.filter((night) => night.level !== "NONE").length > 1, `밤마다 등급이 그려진다: ${nightButtons.map((night) => night.level).join(" ")}`)
