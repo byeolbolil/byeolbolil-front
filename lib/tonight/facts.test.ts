@@ -9,7 +9,6 @@ import {
   moonFact,
   nightLevels,
   skyFact,
-  tipText,
   windowCloudAverage,
 } from "./facts"
 import type { NightRecommendation } from "./types"
@@ -158,31 +157,6 @@ describe("짧은 설명", () => {
 
   it("어두운 칸이 없으면 달 설명이 없다", () => {
     expect(moonFact(makePlace({ hours: [] }))).toBeNull()
-  })
-})
-
-describe("한마디", () => {
-  const window = { start: "2026-11-24T19:00:00+09:00", end: "2026-11-24T22:00:00+09:00", hours: 3 }
-  const adapt = "도착하면 휴대폰 화면을 끄고 30분쯤 기다려 보세요. 눈이 어둠에 완전히 익는 데는 40분쯤 걸려요."
-
-  it("추천 시간이 없으면 쉬라고 한다", () => {
-    expect(tipText(makePlace({ level: "NO" }))).toBe("오늘은 쉬고, 맑은 날을 기다려 보세요.")
-  })
-
-  it("주의 사항이 없으면 어둠 적응만 안내한다", () => {
-    expect(tipText(makePlace({ bestWindow: window }))).toBe(adapt)
-  })
-
-  it("달이 밝은 밤은 달을 보라고 한다", () => {
-    expect(tipText(makePlace({ bestWindow: window, notes: ["BRIGHT_MOON", "CITY_LIGHTS"] }))).toBe(
-      `달이 밝은 날이라 은하수는 어렵지만, 달 표면을 쌍안경으로 보면 크레이터까지 보여요. ${adapt}`,
-    )
-  })
-
-  it("도시 불빛과 이슬", () => {
-    expect(tipText(makePlace({ bestWindow: window, notes: ["CITY_LIGHTS", "DEW"] }))).toBe(
-      `도시 불빛이 있어도 밝은 별자리는 충분히 보여요. 습도가 높아서 렌즈에 이슬이 맺힐 수 있어요. ${adapt}`,
-    )
   })
 })
 

@@ -4,7 +4,7 @@
  *     pnpm dev                       # 다른 터미널에서, NEXT_PUBLIC_API_URL을 백엔드로 맞춘 뒤
  *     pnpm walkthrough               # 또는 node scripts/walkthrough.mjs --out <폴더> --base http://localhost:3000
  *
- * 모바일(390x844)과 PC(1440x900)에서 각각: 오늘 밤 추천 → 다른 후보 고르기 → 밤 띠 훑기 → 자세히 보기 →
+ * 모바일(390x844)과 PC(1440x900)에서 각각: 오늘 밤 추천 → 다른 후보 고르기 → 밤 띠 훑기 → 카드의 탭 →
  * 지도의 세 레이어와 표식 → 설정 바꾸기 → 추천 기준과 출처 → 내 장소.
  * 추천 API는 앱이 쓰는 그대로(/api rewrite) 실제 백엔드를 부른다. 로그인 관련 호출은 브라우저 안에서 401로 답해서
  * 백엔드의 인증 API에는 아무것도 보내지 않는다. 그 401이 콘솔에 한 줄 남는 것은 정상이다.
@@ -137,14 +137,23 @@ async function walk(browser, kind) {
   await shot("scrub")
   if (kind === "desktop") await page.mouse.move(10, 10)
 
-  // 4. 자세히 보기
-  await page.getByRole("button", { name: "자세히" }).first().click()
-  await page.waitForSelector(".bb .more")
-  await page.locator(".bb .more").scrollIntoViewIfNeeded()
-  await page.waitForTimeout(400)
-  console.log(`  자세히: ${flat(await page.locator(".bb .glance").innerText())}`)
+  // 4. 카드의 탭: 오늘 밤(점수와 조건)은 처음부터 보이고, 장소와 이번 주는 탭으로 연다
+  const facts = flat(await page.locator(".bb .tonight .quick").first().innerText())
+  check(/\d+점/.test(facts), `점수와 조건이 처음부터 보인다: ${facts}`)
+  await page.locator(".bb .tonight .quick").first().scrollIntoViewIfNeeded()
   await shot("detail")
   await shot("detail-full", { fullPage: true })
+  const tabs = page.locator(".bb .tonight .card-tabs").first()
+  if (await tabs.getByRole("tab", { name: "장소" }).count()) {
+    await tabs.getByRole("tab", { name: "장소" }).click()
+    await page.waitForTimeout(300)
+    await shot("card-place")
+  }
+  await tabs.getByRole("tab", { name: "이번 주" }).click()
+  await page.waitForSelector(".bb .tonight .week-body", { timeout: 30000 })
+  check(true, "이번 주 탭에서 일주일이 열린다")
+  await shot("card-week")
+  await tabs.getByRole("tab", { name: "오늘 밤" }).click()
 
   // 5. 지도와 세 레이어
   if (kind === "mobile") {

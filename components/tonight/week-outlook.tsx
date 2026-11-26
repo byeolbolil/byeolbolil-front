@@ -92,29 +92,3 @@ export function WeekOutlook({ position, criteria, nightActions }: WeekOutlookPro
   }
   return <WeekBody place={place} dates={week.dates} tonight={week.startDate} nightActions={nightActions} />
 }
-
-interface WeekSectionProps extends WeekOutlookProps {
-  /** 처음부터 펼쳐 둘지. 접혀 있는 동안은 예보를 받지 않는다 */
-  defaultOpen?: boolean
-}
-
-/**
- * 장소 카드 아래에 두는 "이번 주 이곳의 밤". 눌러서 펼친다.
- * 오늘 밤이 아쉬워도 며칠 뒤가 좋을 수 있어서, 같은 장소의 일주일을 한눈에 보게 한다.
- */
-export function WeekSection({ position, criteria, nightActions, defaultOpen = false }: WeekSectionProps) {
-  const [open, setOpen] = useState(defaultOpen)
-  return (
-    <section className="sec week-sec">
-      <button type="button" className="fac-toggle" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-        <CalendarIcon />
-        <span>
-          <b>이곳의 이번 주</b>
-          <em>오늘 밤부터 일주일, 언제가 좋은지 봐요</em>
-        </span>
-        <ChevronIcon />
-      </button>
-      {open ? <WeekOutlook position={position} criteria={criteria} nightActions={nightActions} /> : null}
-    </section>
-  )
-}
