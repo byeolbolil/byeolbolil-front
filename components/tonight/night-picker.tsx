@@ -1,4 +1,4 @@
-import { nightName, nightTabLabel, shortDate, shortNightLabel } from "@/lib/tonight/time"
+import { nightName, nightTabLabel, shortDate } from "@/lib/tonight/time"
 import type { RecommendationLevel } from "@/lib/tonight/types"
 import { levelStars, levelText } from "@/lib/tonight/wording"
 import { CloudIcon, StarIcon } from "./icons"
@@ -13,38 +13,50 @@ interface NightPickerProps {
   /** 밤마다의 등급을 다 받았는지. 받기 전이거나 받지 못했으면 등급이 없는 밤의 자리를 비워 둔다 */
   settled: boolean
   /**
-   * 폭에 꼭 맞는 일곱 칸짜리 막대로 그린다. 후보 목록의 밤을 고를 때 쓴다. 장소 화면의 큰 날짜 칸(그 장소의 일곱 밤)과
-   * 모양을 달리해서, 둘이 서로 다른 것을 고른다는 것이 보이게 한다. 넘기지 않아도 일곱 밤이 다 보인다
+   * 밤마다 별 보기 좋은 곳의 수. 주면 칸의 아래 줄에 별 대신 "8곳"처럼 적는다. 후보 목록의 밤을 고를 때 쓴다.
+   * 칸 모양은 장소 화면의 날짜 칸(그 장소의 일곱 밤, 별)과 같고, 아래 줄이 말하는 것이 달라서 둘이 구분된다
    */
-  compact?: boolean
+  counts?: ReadonlyMap<string, number>
 }
 
 /**
  * 어느 밤을 볼지 고른다. 오늘 밤부터 7일이다. 칸마다 밤의 이름 아래에 날짜를 적고, 그 밤에 가장 좋은 곳의 등급을
  * 별의 수로(별 보기 어려운 밤은 구름으로) 그려서 눌러 보기 전에 어느 밤이 좋은지 알 수 있게 한다.
  */
-export function NightPicker({ dates, selected, onSelect, levels, settled, compact = false }: NightPickerProps) {
+export function NightPicker({ dates, selected, onSelect, levels, settled, counts }: NightPickerProps) {
   const tonight = dates[0]
   return (
-    <div className={compact ? "night-bar" : "nights"} role="group" aria-label={compact ? "후보를 볼 밤" : "이 장소의 밤"}>
+    <div className={counts ? "nights night-counts" : "nights"} role="group" aria-label={counts ? "후보를 볼 밤" : "이 장소의 밤"}>
       {dates.map((date) => {
         const level = levels.get(date)
-        const summary = level ? levelText(level) : settled ? "정보 없음" : null
+        const count = counts?.get(date)
+        const summary = counts
+          ? count !== undefined
+            ? `별 보기 좋은 곳 ${count}곳`
+            : settled
+              ? "정보 없음"
+              : null
+          : level
+            ? levelText(level)
+            : settled
+              ? "정보 없음"
+              : null
         const label = [`${nightName(date, tonight)} ${spokenDate(date)}`, summary].filter(Boolean).join(", ")
         return (
           <button
             key={date}
             type="button"
             data-level={level ?? "NONE"}
+            data-count={count}
             aria-pressed={date === selected}
             aria-label={label}
             title={label}
             onClick={() => onSelect(date)}
           >
-            <span className="nt-name">{compact ? shortNightLabel(date, tonight) : nightTabLabel(date, tonight)}</span>
-            {compact ? null : <span className="nt-date">{shortDate(date)}</span>}
+            <span className="nt-name">{nightTabLabel(date, tonight)}</span>
+            <span className="nt-date">{shortDate(date)}</span>
             <span className="nt-mark" aria-hidden="true">
-              <Mark level={level} settled={settled} />
+              {counts ? (count !== undefined ? `${count}곳` : settled ? "–" : null) : <Mark level={level} settled={settled} />}
             </span>
           </button>
         )

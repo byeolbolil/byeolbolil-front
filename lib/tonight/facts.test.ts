@@ -7,6 +7,7 @@ import {
   forecastCredits,
   levelReason,
   moonFact,
+  nightGoodCounts,
   nightLevels,
   skyFact,
   windowCloudAverage,
@@ -97,6 +98,24 @@ describe("밤 고르기에 그릴 등급", () => {
 
   it("보고 있는 밤에 장소가 하나도 없으면 요약의 등급도 지운다", () => {
     expect(nightLevels(summary, nightOf({ date: "2026-11-24" })).has("2026-11-24")).toBe(false)
+  })
+
+  it("별 보기 좋은 곳의 수는 요약에서 받고, 보고 있는 밤은 받아 둔 추천에서 센다", () => {
+    const withCounts = {
+      startDate: "2026-11-24",
+      nights: [
+        { date: "2026-11-24", level: "MAYBE" as const, goodCount: 0 },
+        { date: "2026-11-25", level: "STRONG" as const, goodCount: 8 },
+        { date: "2026-11-26" },
+      ],
+    }
+    expect([...nightGoodCounts(withCounts, null)]).toEqual([
+      ["2026-11-24", 0],
+      ["2026-11-25", 8],
+    ])
+    const shown = recordedNight()
+    const good = shown.places.filter((place) => place.level === "STRONG" || place.level === "GOOD").length
+    expect(nightGoodCounts(withCounts, shown).get("2026-11-24")).toBe(good)
   })
 })
 

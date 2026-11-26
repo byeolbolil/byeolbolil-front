@@ -5,7 +5,7 @@ import { useAuthInit } from "@/components/auth/AuthProvider"
 import { useToast } from "@/hooks/use-toast"
 import { bookmarksApi } from "@/lib/api/bookmarks"
 import { authStore } from "@/lib/store/authStore"
-import { buildNightView, nightLevels } from "@/lib/tonight/facts"
+import { buildNightView, nightGoodCounts, nightLevels } from "@/lib/tonight/facts"
 import type { PickedPlace } from "@/lib/tonight/geocode"
 import { joinParts, placeKey, travelText } from "@/lib/tonight/place"
 import { ORIGIN_NAME_MAX, originLabel, resolveOrigin, roundCoordinate, toNightQuery, type Coordinates } from "@/lib/tonight/settings"
@@ -173,6 +173,10 @@ export function TonightApp() {
   const nightSummary = useNightSummary(query, ready)
   const levels = useMemo(
     () => nightLevels(nightSummary.summary, night.stale ? null : data),
+    [nightSummary.summary, night.stale, data],
+  )
+  const goodCounts = useMemo(
+    () => nightGoodCounts(nightSummary.summary, night.stale ? null : data),
     [nightSummary.summary, night.stale, data],
   )
   /** 내 장소가 바뀌면 후보가 달라지므로 추천과 밤마다의 등급을 함께 다시 받는다 */
@@ -548,7 +552,7 @@ export function TonightApp() {
   const nightPicker =
     dates.length > 0 && shownDate && tab === "tonight" ? (
       <NightPicker
-        compact
+        counts={goodCounts}
         dates={dates}
         selected={shownDate}
         onSelect={selectDate}

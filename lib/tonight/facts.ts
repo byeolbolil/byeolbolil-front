@@ -131,6 +131,19 @@ export function nightLevels(
 }
 
 /**
+ * 밤마다 별 보기 좋은 곳(아주 좋음, 좋음)의 수. 지금 보고 있는 밤은 받아 둔 추천에서 바로 센다.
+ * 후보 목록의 밤 고르기에 그린다.
+ */
+export function nightGoodCounts(summary: NightSummary | null, shown: NightRecommendation | null): Map<string, number> {
+  const counts = new Map<string, number>()
+  for (const night of summary?.nights ?? []) {
+    if (night.goodCount !== undefined) counts.set(night.date, night.goodCount)
+  }
+  if (shown) counts.set(shown.date, shown.places.filter((place) => isWorthGoing(place.level)).length)
+  return counts
+}
+
+/**
  * 가볼 만한 곳이 없는 밤의 제목과 설명. `maxTravelHours`는 이동 시간 한도를 적용했을 때만 넘긴다.
  * 서버가 한도를 6분의 1까지 넘는 곳도 남기므로(이동 시간이 어림값이라서) "안팎"이라고 적는다.
  */
