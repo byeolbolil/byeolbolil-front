@@ -21,7 +21,6 @@ describe("저장된 설정 읽기", () => {
 
   it("아는 값은 그대로 읽는다", () => {
     const saved: Settings = {
-      viewMode: "detailed",
       preferBefore: "all",
       maxTravelMinutes: null,
       minClearHours: 5,
@@ -50,7 +49,6 @@ describe("저장된 설정 읽기", () => {
 
   it("모르는 값과 범위를 벗어난 값은 기본값으로 바꾼다", () => {
     const parsed = parseSettings({
-      viewMode: "expert",
       preferBefore: "04:00",
       maxTravelMinutes: 90,
       minClearHours: 9,
@@ -130,9 +128,9 @@ describe("설정을 API 쿼리로", () => {
     expect(toNightQuery({ ...DEFAULT_SETTINGS, minClearHours: 5 }, null).minClearHours).toBe(5)
   })
 
-  it("보기 방식과 적색 화면은 쿼리에 들어가지 않는다", () => {
+  it("적색 화면은 쿼리에 들어가지 않는다", () => {
     const base = toNightQuery(DEFAULT_SETTINGS, seoulMapo)
-    expect(toNightQuery({ ...DEFAULT_SETTINGS, viewMode: "detailed", redScreen: true }, seoulMapo)).toEqual(base)
+    expect(toNightQuery({ ...DEFAULT_SETTINGS, redScreen: true }, seoulMapo)).toEqual(base)
   })
 
   it("좌표는 소수 둘째 자리까지만 보낸다", () => {

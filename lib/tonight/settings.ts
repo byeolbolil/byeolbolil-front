@@ -5,8 +5,6 @@
 import { findCity } from "./cities"
 import type { NightQuery } from "./types"
 
-export type ViewMode = "simple" | "detailed"
-
 /** "몇 시까지 볼 수 있나요?"의 답. `all`은 밤새다. */
 export type PreferBefore = "00:00" | "01:00" | "02:00" | "03:00" | "all"
 
@@ -26,7 +24,6 @@ export type OriginSetting =
 export const ORIGIN_NAME_MAX = 40
 
 export interface Settings {
-  viewMode: ViewMode
   preferBefore: PreferBefore
   maxTravelMinutes: MaxTravelMinutes
   /** "별 보기 아주 좋아요"에 필요한 맑은 시간. API는 1~8을 받는다. */
@@ -62,7 +59,6 @@ export const MIN_CLEAR_HOURS_RANGE = { min: 1, max: 8 } as const
  * 이동 시간 3시간은 목업의 기본값이다.
  */
 export const DEFAULT_SETTINGS: Settings = {
-  viewMode: "simple",
   preferBefore: "02:00",
   maxTravelMinutes: 180,
   minClearHours: 3,
@@ -113,7 +109,6 @@ export function parseSettings(raw: unknown): Settings {
       ? raw.minClearHours
       : DEFAULT_SETTINGS.minClearHours
   return {
-    viewMode: raw.viewMode === "detailed" ? "detailed" : "simple",
     preferBefore: preferBefore ?? DEFAULT_SETTINGS.preferBefore,
     maxTravelMinutes: maxTravel ? maxTravel.value : DEFAULT_SETTINGS.maxTravelMinutes,
     minClearHours,

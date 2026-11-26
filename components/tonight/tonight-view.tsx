@@ -22,8 +22,8 @@ const SHORT_LIST = 4
 /** 장소 카드에 붙이는 버튼과 펼침 내용 */
 export interface CardExtras {
   save?: ReactNode
-  actions?: ReactNode
-  children?: ReactNode
+  /** 카드의 "이번 주" 탭 */
+  week?: ReactNode
 }
 
 interface NightCardProps {
@@ -33,7 +33,6 @@ interface NightCardProps {
   /** 이 밤 뒤로 고를 수 있는 날짜들 */
   laterDates: readonly string[]
   query: NightQuery
-  detailed: boolean
   /** 목록이나 지도에서 고른 장소. 없으면 그 밤에 가장 좋은 곳을 보여준다 */
   selected: NightPlace | null
   onSelectDate: (date: string) => void
@@ -45,7 +44,7 @@ interface NightCardProps {
  * 그 장소로 바뀐다. 화면을 새로 쌓지 않으므로 돌아가는 버튼이 없고, 1위로 돌아가려면 목록의 첫 줄을 누르면 된다.
  * 가볼 만한 곳이 없는 밤에는 그 사정을 먼저 알리고, 그래도 장소를 고르면 알림을 줄여서 카드 위에 남긴다.
  */
-export function NightCard({ night, tonightDate, laterDates, query, detailed, selected, onSelectDate, extras }: NightCardProps) {
+export function NightCard({ night, tonightDate, laterDates, query, selected, onSelectDate, extras }: NightCardProps) {
   const view = buildNightView(night)
   const name = nightName(night.date, tonightDate)
   const place = selected ?? view.top
@@ -73,12 +72,9 @@ export function NightCard({ night, tonightDate, laterDates, query, detailed, sel
           key={placeKey(place)}
           place={place}
           eyebrow={isTop ? `${name} 가장 좋은 곳` : name}
-          detailed={detailed}
           save={cardExtras.save}
-          actions={cardExtras.actions}
-        >
-          {cardExtras.children}
-        </HeroCard>
+          week={cardExtras.week}
+        />
       ) : null}
       {runs.length > 1 ? (
         <p className="calm small">맑은 시간이 여러 번 있어요: {runs.map((run) => windowText(run)).join(", ")}</p>
@@ -90,7 +86,6 @@ export function NightCard({ night, tonightDate, laterDates, query, detailed, sel
 interface NightCandidatesProps {
   night: NightRecommendation
   tonightDate: string
-  detailed: boolean
   isAuthenticated: boolean
   /** 출발 위치. 모르면 이동 시간이 없고 천문대 목록도 거리순으로 놓지 못한다 */
   origin: Coordinates | null
@@ -112,7 +107,6 @@ interface NightCandidatesProps {
 export function NightCandidates({
   night,
   tonightDate,
-  detailed,
   isAuthenticated,
   origin,
   shownKey,
@@ -159,7 +153,6 @@ export function NightCandidates({
                 key={placeKey(place)}
                 place={place}
                 rank={rank}
-                detailed={detailed}
                 selected={placeKey(place) === shownKey}
                 onOpen={onOpenPlace}
               />

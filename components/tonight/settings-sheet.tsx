@@ -31,19 +31,6 @@ export function SettingsSheet({
   return (
     <Sheet title="나에게 맞추기" onClose={onClose}>
       <div className="q">
-        <div className="ql">보기 방식</div>
-        <div className="hint">자세히를 고르면 점수, 구름량, 하늘 밝기 같은 숫자를 함께 보여줘요.</div>
-        <div className="seg" role="group" aria-label="보기 방식">
-          <button type="button" aria-pressed={settings.viewMode === "simple"} onClick={() => onChange({ viewMode: "simple" })}>
-            간단히
-          </button>
-          <button type="button" aria-pressed={settings.viewMode === "detailed"} onClick={() => onChange({ viewMode: "detailed" })}>
-            자세히
-          </button>
-        </div>
-      </div>
-
-      <div className="q">
         <div className="ql">몇 시까지 볼 수 있나요?</div>
         <div className="hint">이 시간 전에 맑은 곳을 더 높게 추천해요.</div>
         <div className="seg" role="group" aria-label="몇 시까지 볼 수 있나요?">

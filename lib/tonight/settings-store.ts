@@ -24,8 +24,7 @@ export const useSettings = create<SettingsState>()(
       name: "byeolbolil-settings",
       version: 1,
       skipHydration: true,
-      partialize: ({ viewMode, preferBefore, maxTravelMinutes, minClearHours, redScreen, origin }): Settings => ({
-        viewMode,
+      partialize: ({ preferBefore, maxTravelMinutes, minClearHours, redScreen, origin }): Settings => ({
         preferBefore,
         maxTravelMinutes,
         minClearHours,
@@ -42,6 +41,6 @@ export const useSettings = create<SettingsState>()(
 
 /** 설정 값만 골라낸다. */
 export function settingsOf(state: SettingsState): Settings {
-  const { viewMode, preferBefore, maxTravelMinutes, minClearHours, redScreen, origin } = state
-  return { viewMode, preferBefore, maxTravelMinutes, minClearHours, redScreen, origin }
+  const { preferBefore, maxTravelMinutes, minClearHours, redScreen, origin } = state
+  return { preferBefore, maxTravelMinutes, minClearHours, redScreen, origin }
 }

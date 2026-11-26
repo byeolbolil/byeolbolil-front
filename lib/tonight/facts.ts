@@ -82,25 +82,6 @@ export function levelReason(place: Pick<NightPlace, "level" | "bestWindow" | "no
   return `${window.hours}시간 맑지만 ${[first, ...rest].join(", ")}`
 }
 
-/**
- * 카드 아래의 한마디. 눈이 어둠에 익는 시간은 Kalloniatis & Luu, "Light and Dark Adaptation", Webvision을 따른다
- * (5~8분에 감도가 크게 바뀌고 40분쯤 평탄해진다).
- */
-export function tipText(place: NightPlace): string {
-  if (!place.bestWindow) return "오늘은 쉬고, 맑은 날을 기다려 보세요."
-  const parts: string[] = []
-  if (place.notes.includes("BRIGHT_MOON")) {
-    parts.push("달이 밝은 날이라 은하수는 어렵지만, 달 표면을 쌍안경으로 보면 크레이터까지 보여요.")
-  } else if (place.notes.includes("CITY_LIGHTS")) {
-    parts.push("도시 불빛이 있어도 밝은 별자리는 충분히 보여요.")
-  } else if (place.notes.includes("LIGHTS_IN_VIEW")) {
-    parts.push("불빛이 보이는 쪽을 등지고 서면 별이 더 잘 보여요.")
-  }
-  if (place.notes.includes("DEW")) parts.push("습도가 높아서 렌즈에 이슬이 맺힐 수 있어요.")
-  parts.push("도착하면 휴대폰 화면을 끄고 30분쯤 기다려 보세요. 눈이 어둠에 완전히 익는 데는 40분쯤 걸려요.")
-  return parts.join(" ")
-}
-
 export type EmptyKind = "NO_FORECAST" | "ALL_EXCLUDED" | "CLOUDY" | "POOR"
 
 export interface NightView {
