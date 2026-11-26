@@ -21,20 +21,19 @@ interface HeroCardProps {
   eyebrow: string
   /** 저장 버튼. 사진을 가리지 않게 사진 바로 아래, 등급을 설명하는 줄의 오른쪽에 둔다 */
   save?: ReactNode
-  /** "이번 주" 탭의 내용. 없으면 탭을 두지 않는다 */
-  week?: ReactNode
+  /** 첫 탭의 이름. 보고 있는 밤의 이름("오늘 밤", "내일 밤")이다 */
+  nightLabel?: string
 }
 
-type CardTab = "tonight" | "place" | "week"
+type CardTab = "tonight" | "place"
 
 /**
- * 장소 하나의 오늘 밤. 사진과 이름, 등급과 그 이유는 늘 보이고, 그 아래를 탭 셋으로 나눈다.
- * 오늘 밤 탭은 볼 시간과 밤 띠, 점수와 구름, 달, 하늘이고, 장소 탭은 그곳이 어떤 곳인지, 이번 주 탭은 일주일의 밤이다.
- * 한 화면에 모두 이어 두면 모바일에서 너무 길어서 나눴다.
+ * 장소 하나의 밤 하나. 사진과 이름, 등급과 그 이유는 늘 보이고, 그 아래를 탭 둘로 나눈다.
+ * 첫 탭은 볼 시간과 밤 띠, 점수와 구름, 달, 하늘이고, 장소 탭은 그곳이 어떤 곳인지다. 다른 밤은 카드 위의 날짜 줄로 고른다.
  * 명소는 이름 아래에 실제로 차를 대고 보는 지점을 적는다. "합천 황매산"만으로는 어디로 가야 할지 알 수 없다.
  * 사진을 구하지 못한 장소는 다른 곳의 사진을 빌려 쓰지 않고, 오늘 밤 조건으로 그린 하늘 그림을 보여준다.
  */
-export function HeroCard({ place, eyebrow, save, week }: HeroCardProps) {
+export function HeroCard({ place, eyebrow, save, nightLabel = "오늘 밤" }: HeroCardProps) {
   const [scrubbed, setScrubbed] = useState<number | null>(null)
   const [tab, setTab] = useState<CardTab>("tonight")
   const photo = spotPhoto(place)
@@ -55,9 +54,8 @@ export function HeroCard({ place, eyebrow, save, week }: HeroCardProps) {
     place.description || place.guide || place.caution || place.links?.length || place.points?.length || place.videos?.length,
   )
   const tabs: Array<{ value: CardTab; label: string }> = [
-    { value: "tonight", label: "오늘 밤" },
+    { value: "tonight", label: nightLabel },
     ...(hasAbout ? [{ value: "place" as const, label: "장소" }] : []),
-    ...(week ? [{ value: "week" as const, label: "이번 주" }] : []),
   ]
 
   return (
@@ -187,7 +185,6 @@ export function HeroCard({ place, eyebrow, save, week }: HeroCardProps) {
             videos={place.videos}
           />
         ) : null}
-        {tab === "week" ? week : null}
       </div>
     </article>
   )

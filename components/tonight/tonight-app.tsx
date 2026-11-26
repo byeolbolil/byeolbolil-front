@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { useAuthInit } from "@/components/auth/AuthProvider"
 import { useToast } from "@/hooks/use-toast"
@@ -28,18 +27,19 @@ import {
   ChevronIcon,
   CloseIcon,
   MapTabIcon,
-  MineTabIcon,
   PinIcon,
   SettingsIcon,
   TonightTabIcon,
 } from "./icons"
 import { MapPanel } from "./map/map-panel"
-import { MyPlaces } from "./my-places"
+import { MySection } from "./my-section"
 import { NightPicker } from "./night-picker"
 import { OriginSheet } from "./origin-sheet"
 import { NightError, NightSkeleton } from "./night-status"
+import { GuideSheet } from "./guide-sheet"
 import { LoginSheet } from "./login-sheet"
 import { PickSky } from "./pick-sky"
+import { PlaceView } from "./place-view"
 import { PlaceRow } from "./place-row"
 import { Rating } from "./rating"
 import { SavePlaceSheet } from "./save-place-sheet"
@@ -50,7 +50,7 @@ import { NightCandidates, NightCard, type CardExtras } from "./tonight-view"
 import { WeekOutlook } from "./week-outlook"
 import "./tonight.css"
 
-type SheetKind = "settings" | "origin" | "sources" | "save" | "week" | "login"
+type SheetKind = "settings" | "origin" | "sources" | "save" | "week" | "login" | "guide"
 
 /** 로그인 창을 열 때 하려던 일. 로그인하면 이어서 한다 */
 type AfterLogin = { kind: "saveSpot"; spotId: number; name: string } | { kind: "savePick" } | { kind: "none" }
@@ -68,7 +68,8 @@ interface Resume {
   pick: PickedPlace | null
   after: AfterLogin | null
 }
-type Tab = "tonight" | "map" | "mine"
+/** 좁은 화면에서 목록과 지도 가운데 무엇을 보는지. 넓은 화면에서는 지도가 늘 왼쪽에 있어 늘 목록이다 */
+type Tab = "tonight" | "map"
 
 /** 저장하는 좌표의 자릿수. 소수 다섯째 자리는 약 1m다 */
 const roundPosition = (value: number) => Math.round(value * 1e5) / 1e5
@@ -132,6 +133,10 @@ export function TonightApp() {
   const [detailKey, setDetailKey] = useState<string | null>(null)
   /** 고른 명소의 ID. 저장하거나 빼면 장소의 키가 바뀌므로(SPOT과 BOOKMARK) 명소 ID로도 찾는다 */
   const [detailSpotId, setDetailSpotId] = useState<number | null>(null)
+  /** 장소 화면에 띄운 장소를 열 때의 값. 그 밤의 추천에 없는 내 장소(이동 시간 한도 밖)도 열 수 있게 들고 있는다 */
+  const [detailSnapshot, setDetailSnapshot] = useState<NightPlace | null>(null)
+  /** 내 장소가 바뀐 횟수. 목록의 내 장소 묶음이 이번 주를 다시 받는다 */
+  const [myRevision, setMyRevision] = useState(0)
   /** 저장하거나 빼는 중인 장소의 키. 추천을 다시 받을 때까지 버튼을 잠근다 */
   const [savingKey, setSavingKey] = useState<string | null>(null)
   const [sheet, setSheet] = useState<SheetKind | null>(null)
@@ -150,7 +155,7 @@ export function TonightApp() {
       saved = null
     }
     if (!saved) return
-    setChosenTab(saved.tab)
+    setChosenTab(saved.tab === "map" ? "map" : "tonight")
     setSelectedDate(saved.date)
     setDetailKey(saved.detailKey)
     setDetailSpotId(saved.detailSpotId)
@@ -172,6 +177,7 @@ export function TonightApp() {
   const reloadNights = () => {
     night.reload()
     nightSummary.reload()
+    setMyRevision((value) => value + 1)
   }
 
   const tonightDate = knownTonight ?? (selectedDate === null && data ? data.date : null)
@@ -186,7 +192,8 @@ export function TonightApp() {
   const findPlace = (key: string | null) => (key ? (places.find((place) => placeKey(place) === key) ?? null) : null)
   const detailPlace =
     findPlace(detailKey) ??
-    (detailKey !== null && detailSpotId !== null ? (places.find((place) => place.spotId === detailSpotId) ?? null) : null)
+    (detailKey !== null && detailSpotId !== null ? (places.find((place) => place.spotId === detailSpotId) ?? null) : null) ??
+    (detailKey !== null && detailSnapshot && placeKey(detailSnapshot) === detailKey ? detailSnapshot : null)
   const peekPlace = findPlace(peekKey)
   // 추천을 다시 받았으면 저장 버튼을 푼다
   useEffect(() => {
@@ -227,7 +234,6 @@ export function TonightApp() {
       cameFrom.current = tab
       window.history.pushState({ ...window.history.state, bbDetail: true }, "")
     }
-    setChosenTab("tonight")
     setDetailKey(key)
     setDetailSpotId(findPlace(key)?.spotId ?? null)
   }
@@ -239,6 +245,7 @@ export function TonightApp() {
     cameFrom.current = null
     setDetailKey(null)
     setDetailSpotId(null)
+    setDetailSnapshot(null)
   }, [])
   /** 탭이나 날짜를 바꾸면서 고른 장소를 풀 때. 쌓아 둔 기록도 함께 되돌린다 */
   const skipRestore = useRef(false)
@@ -272,14 +279,18 @@ export function TonightApp() {
     setSelectedDate(date === tonightDate ? null : date)
     closeDetail()
   }
-  /** 장소를 카드에 띄우고 카드의 맨 위를 보여준다 */
+  /** 장소 화면을 연다. 지금 보던 탭 안에서 열리고, 뒤로 가면 보던 자리로 돌아온다 */
   const selectPlace = (key: string) => {
-    // 오늘 밤 탭에서 가장 좋은 곳의 줄을 다시 누르면 고르기 전의 상태다
-    if (tab === "tonight" && key === topKey) closeDetail()
-    else showDetail(key)
-    scrollPanelTo(0, true)
+    showDetail(key)
+    scrollPanelTo(0)
+  }
+  /** 장소 화면의 "목록". 열 때 쌓은 기록을 되돌려서 휴대폰의 뒤로 가기와 같게 움직인다 */
+  const backToList = () => {
+    if (window.history.state?.bbDetail) window.history.back()
+    else leaveDetail(true)
   }
   const openPlace = (place: NightPlace) => {
+    setDetailSnapshot(place)
     selectPlace(placeKey(place))
     setPeekKey(null)
   }
@@ -414,19 +425,13 @@ export function TonightApp() {
     // 이전 탭에서 내려 둔 스크롤이 남으면 새 화면의 중간부터 보인다
     scrollPanelTo(0)
   }
-  const addFromMap = () => {
-    if (isDesktop) {
-      toast({ title: "지도에서 찾거나 빈 곳을 눌러 보세요", description: "고른 위치를 내 장소로 저장할 수 있어요." })
-    } else {
-      selectTab("map")
-    }
-  }
   const openSettings = useCallback(() => setSheet("settings"), [])
   const openOrigin = useCallback(() => setSheet("origin"), [])
   const openSources = useCallback(() => setSheet("sources"), [])
+  const openGuide = useCallback(() => setSheet("guide"), [])
   const closeSheet = useCallback(() => setSheet(null), [])
 
-  /** 장소 카드에 붙이는 버튼과 자세히 보기 */
+  /** 장소 카드에 붙이는 저장 버튼 */
   const heroExtras = (place: NightPlace): CardExtras => {
     const saved = place.type === "BOOKMARK"
     const busy = savingKey === placeKey(place)
@@ -446,20 +451,6 @@ export function TonightApp() {
           {busy ? (saved ? "빼는 중" : "저장 중") : saved ? "저장됨" : "저장"}
         </button>
       ) : null,
-      week: (
-        <WeekOutlook
-          key={`${place.latitude},${place.longitude}`}
-          position={{ lat: place.latitude, lon: place.longitude }}
-          criteria={query}
-          nightActions={(date) =>
-            data && date !== data.date ? (
-              <button type="button" className="btn" onClick={() => openNight(date)}>
-                이 밤의 추천 순위 보기
-              </button>
-            ) : null
-          }
-        />
-      ),
     }
   }
 
@@ -493,18 +484,6 @@ export function TonightApp() {
       </button>
     </div>
   ) : null
-
-  const myPlaces = (
-    <MyPlaces
-      night={data}
-      criteria={query}
-      onOpenPlace={openPlace}
-      onOpenNight={openNight}
-      onLogin={() => askLogin({ kind: "none" })}
-      onAddFromMap={addFromMap}
-      onChanged={reloadNights}
-    />
-  )
 
   const mapTab = (
     <>
@@ -564,8 +543,20 @@ export function TonightApp() {
   /** 후보 목록. 오늘 밤 탭에만 있고, 넓은 화면에서는 카드 옆의 칸에, 그보다 좁으면 카드 아래에 놓인다 */
   let candidates: ReactNode = null
   const refreshing = night.loading ? " refreshing" : ""
-  if (tab === "mine") {
-    content = myPlaces
+  const placeView =
+    detailPlace && data ? (
+      <PlaceView
+        key={placeKey(detailPlace)}
+        place={detailPlace}
+        placeDate={data.date}
+        dates={dates}
+        criteria={query}
+        save={heroExtras(detailPlace).save}
+        onBack={backToList}
+      />
+    ) : null
+  if (placeView) {
+    content = placeView
   } else if (night.error) {
     content = <NightError error={night.error} onRetry={reloadNights} />
   } else if (data && tonightDate) {
@@ -579,39 +570,54 @@ export function TonightApp() {
             tonightDate={tonightDate}
             laterDates={laterDates}
             query={query}
-            selected={detailPlace}
+            selected={null}
             onSelectDate={selectDate}
             extras={heroExtras}
           />
         )}
       </div>
     )
-    if (tab === "tonight") {
-      candidates = (
-        <NightCandidates
-          night={data}
-          tonightDate={tonightDate}
-          isAuthenticated={isAuthenticated}
-          origin={origin}
-          shownKey={shownKey}
-          beside={isWide}
-          onOpenPlace={openPlace}
-          onOpenSettings={openSettings}
-          onOpenOrigin={openOrigin}
-          onLogin={() => askLogin({ kind: "none" })}
-          footer={
-            <p className="credit-line links">
-              <button type="button" className="linkish" onClick={openSources}>
-                추천 기준과 출처
-              </button>
-            </p>
-          }
-        />
-      )
-    }
   } else {
     content = <NightSkeleton />
   }
+  // 장소 화면은 좁은 화면에서 목록을 덮는 한 화면이다. 넓은 화면에서는 목록이 옆 칸에 그대로 있다
+  if (data && tonightDate && !night.error && tab === "tonight" && (!placeView || isWide)) {
+    candidates = (
+      <>
+        <MySection night={data} criteria={query} revision={myRevision} onOpen={openPlace} />
+        <NightCandidates
+        night={data}
+        tonightDate={tonightDate}
+        isAuthenticated={isAuthenticated}
+        origin={origin}
+        shownKey={shownKey}
+        beside={isWide}
+        onOpenPlace={openPlace}
+        onOpenSettings={openSettings}
+        onOpenOrigin={openOrigin}
+        onLogin={() => askLogin({ kind: "none" })}
+        footer={
+          <p className="credit-line links">
+            <button type="button" className="linkish" onClick={openSources}>
+              추천 기준과 출처
+            </button>
+          </p>
+        }
+        />
+      </>
+    )
+  }
+
+  const nightPicker =
+    dates.length > 0 && shownDate && tab === "tonight" ? (
+      <NightPicker
+        dates={dates}
+        selected={shownDate}
+        onSelect={selectDate}
+        levels={levels}
+        settled={nightSummary.summary !== null}
+      />
+    ) : null
 
   return (
     <div className="bb">
@@ -625,31 +631,22 @@ export function TonightApp() {
           <span>{originText}</span>
         </button>
         <AccountButton pending={isInitializing} onLogin={() => askLogin({ kind: "none" })} />
-        {/* 좁은 화면에서는 아래 탭에 설정이 있다 */}
-        <button type="button" className="gear only-d" aria-label="설정" onClick={openSettings}>
+        <button type="button" className="gear" aria-label="별 사진 찍기" title="별 사진 찍기" onClick={openGuide}>
+          <CameraIcon />
+        </button>
+        <button type="button" className="gear" aria-label="설정" title="설정" onClick={openSettings}>
           <SettingsIcon />
         </button>
       </header>
-      <nav className="nav" role="tablist" aria-label="화면">
+      {/* 좁은 화면에서 목록과 지도를 오간다. 넓은 화면에서는 지도가 늘 왼쪽에 있어 두지 않는다 */}
+      <nav className="nav only-m" role="tablist" aria-label="보기">
         <button type="button" role="tab" aria-selected={tab === "tonight"} onClick={() => selectTab("tonight")}>
           <TonightTabIcon />
-          오늘 밤
+          목록
         </button>
-        <button type="button" role="tab" className="only-m" aria-selected={tab === "map"} onClick={() => selectTab("map")}>
+        <button type="button" role="tab" aria-selected={tab === "map"} onClick={() => selectTab("map")}>
           <MapTabIcon />
           지도
-        </button>
-        <button type="button" role="tab" aria-selected={tab === "mine"} onClick={() => selectTab("mine")}>
-          <MineTabIcon />
-          내 장소
-        </button>
-        <Link href="/guide">
-          <CameraIcon className="ico" />
-          촬영 가이드
-        </Link>
-        <button type="button" className="only-m" onClick={openSettings}>
-          <SettingsIcon className="ico" />
-          설정
         </button>
       </nav>
       <div className="stage">
@@ -672,19 +669,13 @@ export function TonightApp() {
         {/* 오늘 밤 탭은 카드와 목록 두 칸이다. 받는 중에도 목록의 칸을 비워 두어서 카드의 너비가 바뀌지 않는다 */}
         <div className="panel" ref={panelRef} data-cols={tab === "tonight" ? "2" : "1"}>
           <main className="view" ref={cardRef}>
-            {dates.length > 0 && shownDate && tab === "tonight" ? (
-              <NightPicker
-                dates={dates}
-                selected={shownDate}
-                onSelect={selectDate}
-                levels={levels}
-                settled={nightSummary.summary !== null}
-              />
-            ) : null}
+            {/* 그 밤을 고르는 줄. 넓은 화면에서는 목록 칸 위에, 그보다 좁으면 목록 화면의 맨 위에 둔다 */}
+            {!isWide && !placeView ? nightPicker : null}
             {content}
           </main>
           {tab === "tonight" ? (
             <aside className={`view side${refreshing}`} aria-label={`${shownNightName} 후보`}>
+              {isWide ? nightPicker : null}
               {candidates}
             </aside>
           ) : null}
@@ -711,6 +702,7 @@ export function TonightApp() {
         />
       ) : null}
       {sheet === "sources" ? <SourcesSheet onClose={closeSheet} /> : null}
+      {sheet === "guide" ? <GuideSheet onClose={closeSheet} /> : null}
       {sheet === "week" && pick ? (
         <Sheet title={`${pickName}의 이번 주`} onClose={closeSheet}>
           <WeekOutlook

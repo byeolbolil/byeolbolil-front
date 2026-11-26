@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { bestNight, dayLabel, myWeekUrl, unwrapWeek, WeekApiError, weekSummary, weekUrl, type WeekNight } from "./week"
+import { recordedNight } from "./__fixtures__"
+import { bestNight, dayLabel, myWeekUrl, nightPlaceOf, unwrapWeek, WeekApiError, weekSummary, weekUrl, type WeekNight } from "./week"
 
 function night(date: string, level: WeekNight["level"], hours = 0): WeekNight {
   return {
@@ -110,5 +111,41 @@ describe("weekSummary", () => {
   it("좋은 밤이 없거나 예보가 없으면 그렇게 적는다", () => {
     expect(weekSummary([night("2026-11-25", "MAYBE", 2)], "2026-11-25")).toBe("이번 주는 별 보기 좋은 밤이 없어요")
     expect(weekSummary([], "2026-11-25")).toBe("예보를 받지 못했어요")
+  })
+})
+
+describe("내 장소를 장소 화면에 넘길 값", () => {
+  const weekPlace = (overrides = {}) => ({
+    id: 7,
+    name: "우리집 옥상",
+    address: "강원 평창",
+    latitude: 37.6,
+    longitude: 128.4,
+    skyBrightness: 2.5,
+    skyClass: "RURAL" as const,
+    skyRank: 14,
+    forecastSource: "OPEN_METEO" as const,
+    nights: [
+      { date: "2026-11-24", level: "GOOD" as const, pattern: "CLEAR_ALL_NIGHT" as const, notes: [], moonBrightness: 0.1, hours: [] },
+    ],
+    ...overrides,
+  })
+
+  it("그 밤의 추천에 들어 있으면 그 항목을 그대로 쓴다", () => {
+    const night = recordedNight()
+    const listed = { ...night.places[0], type: "BOOKMARK" as const, id: 7 }
+    const withMine = { ...night, places: [listed, ...night.places.slice(1)] }
+    expect(nightPlaceOf(weekPlace(), withMine)).toBe(listed)
+  })
+
+  it("추천에 없으면(이동 시간 한도 밖) 이번 주의 그 밤으로 만든다", () => {
+    const night = { ...recordedNight(), date: "2026-11-24" }
+    const made = nightPlaceOf(weekPlace(), night)
+    expect(made).toMatchObject({ type: "BOOKMARK", id: 7, name: "우리집 옥상", level: "GOOD", skyRank: 14, latitude: 37.6 })
+  })
+
+  it("그 밤의 예보가 없으면 별 보기 어려운 밤으로 둔다", () => {
+    const night = { ...recordedNight(), date: "2026-11-30" }
+    expect(nightPlaceOf(weekPlace(), night)).toMatchObject({ level: "NO", hours: [] })
   })
 })
