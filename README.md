@@ -129,9 +129,9 @@ scripts/
 - 바탕 지도는 OpenFreeMap의 공개 스타일(`dark`, `liberty`)이다. 가입이나 키 없이 쓸 수 있고 출처 표기가 필요하다.
   MapLibre가 지도 오른쪽 아래에 "OpenFreeMap © OpenMapTiles Data from OpenStreetMap"을 적는다.
 - 광해 지도는 백엔드 저장소의 하늘 밝기 격자(`skyglow_korea.bin.gz`)를 웹 메르카토르로 그린 이미지다. 밤 추천이
-  장소마다 읽는 값과 같고, 색의 눈금은 장소 카드의 다섯 칸 눈금(`lib/tonight/sky.ts`)과 같다. 격자를 다시 만들면
-  다음을 실행하고, 출력된 범위가 `lib/tonight/night-overlay.ts`와 다르면 그 좌표를, 범례 색이 다르면
-  `tonight.css`의 `.ramp.night`를 함께 바꾼다.
+  장소마다 읽는 값과 같다. ALR 3 아래는 칠하지 않아서 어두운 곳은 바탕 그대로 남는다. 격자를 다시 만들면
+  다음을 실행하고, 출력된 범위가 `lib/tonight/night-overlay.ts`와 다르면 그 좌표를, 범례 색이나 은하수 경계의
+  자리가 다르면 `tonight.css`의 `.ramp.night`를 함께 바꾼다.
 
   ```bash
   python scripts/render_sky_overlay.py <백엔드 저장소>/src/main/resources/skyglow/skyglow_korea.bin.gz public/map/sky-brightness.webp
