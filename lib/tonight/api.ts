@@ -5,7 +5,7 @@
  * localhost만 허용해서, 브라우저가 백엔드를 직접 부르면 Vercel 미리보기 도메인에서 막힌다.
  */
 import { knownNotes, knownSky } from "./clean"
-import type { NightQuery, NightRecommendation, NightSummary, RecommendationLevel } from "./types"
+import type { NightQuery, NightRecommendation, NightSummary, RecommendationLevel, SkyClass } from "./types"
 
 const BASE_PATH = "/api/v1/recommendations"
 
@@ -132,4 +132,30 @@ async function getBody(url: string, options: FetchNightOptions): Promise<unknown
     throw new NightApiError(response.status, message)
   }
   return body
+}
+
+/** 한 좌표의 하늘 밝기. 자료가 있는 범위(한국 둘레) 밖이면 값이 빠지고 좌표만 온다 */
+export interface SkyAt {
+  skyBrightness?: number
+  skyClass?: SkyClass
+  /** 둘레 1km가 가로등과 건물 불빛으로 밝은지 */
+  litSurroundings?: boolean
+}
+
+export function skyUrl(position: { lat: number; lon: number }): string {
+  return `${BASE_PATH}/sky?lat=${position.lat.toFixed(5)}&lon=${position.lon.toFixed(5)}`
+}
+
+export function unwrapSky(body: unknown): SkyAt {
+  if (!isRecord(body) || body.success !== true || !isRecord(body.data)) {
+    throw new NightApiError(0, "하늘 밝기 응답의 형식이 올바르지 않습니다.")
+  }
+  const sky: SkyAt = knownSky(body.data)
+  if (typeof body.data.litSurroundings === "boolean") sky.litSurroundings = body.data.litSurroundings
+  return sky
+}
+
+/** 한 좌표의 하늘 밝기를 받는다. 예보를 보지 않는 가벼운 요청이다 */
+export async function fetchSky(position: { lat: number; lon: number }, signal?: AbortSignal): Promise<SkyAt> {
+  return unwrapSky(await getBody(skyUrl(position), { signal }))
 }

@@ -15,6 +15,7 @@ import { settingsOf, useSettings } from "@/lib/tonight/settings-store"
 import { nightDates, nightName, windowText } from "@/lib/tonight/time"
 import type { NightPlace } from "@/lib/tonight/types"
 import { useAreaName } from "@/lib/tonight/use-area-name"
+import { useSkyAt } from "@/lib/tonight/use-sky-at"
 import { useGeoPosition } from "@/lib/tonight/use-geo-position"
 import { useIsDesktop, useIsWide } from "@/lib/tonight/use-is-desktop"
 import { useNight, useNightSummary } from "@/lib/tonight/use-night"
@@ -39,6 +40,7 @@ import { MyPlaces } from "./my-places"
 import { NightPicker } from "./night-picker"
 import { OriginSheet } from "./origin-sheet"
 import { NightError, NightSkeleton } from "./night-status"
+import { PickSky } from "./pick-sky"
 import { PlaceRow } from "./place-row"
 import { Rating } from "./rating"
 import { SavePlaceSheet } from "./save-place-sheet"
@@ -111,6 +113,7 @@ export function TonightApp() {
   const originText = originLabel(settings.origin, geo.position, gpsArea)
   const pickArea = useAreaName(pick?.source === "map" ? pick : null)
   const pickName = pick ? (pick.name ?? (pickArea ? `${pickArea} 근처` : "고른 위치")) : ""
+  const pickSky = useSkyAt(pick)
   /** 목록이나 지도에서 골라 카드에 띄운 장소의 키. null이면 그 밤에 가장 좋은 곳을 보여준다 */
   const [detailKey, setDetailKey] = useState<string | null>(null)
   /** 고른 명소의 ID. 저장하거나 빼면 장소의 키가 바뀌므로(SPOT과 BOOKMARK) 명소 ID로도 찾는다 */
@@ -403,9 +406,8 @@ export function TonightApp() {
       <div className="nm">{pickName}</div>
       <div className="sb">
         {joinParts([pick.address, `${pick.lat.toFixed(3)}, ${pick.lon.toFixed(3)}`])}
-        <br />
-        출발 위치로 삼거나, 저장해서 이곳의 밤도 함께 비교할 수 있어요
       </div>
+      <PickSky state={pickSky} />
       <div className="pick-actions">
         <button type="button" className="btn" onClick={startFromPick}>
           여기서 출발
