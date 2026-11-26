@@ -80,6 +80,8 @@ export interface NightPlace {
   points?: { name: string; access: string; latitude?: number; longitude?: number }[]
   /** 이 명소에서 별을 본 유튜브 영상. 찾지 못한 곳에는 없다. 쓰기 전에 safeVideos로 거른다 */
   videos?: { title: string; channel: string; url: string; thumbnailUrl: string; shortForm: boolean }[]
+  /** 이 명소에서 별을 본 인스타그램 게시물. 받아 둔 주소가 있는 곳에만 있다. 쓰기 전에 safeReels로 거른다 */
+  reels?: { title: string; account: string; url: string; embedUrl: string }[]
   level: RecommendationLevel
   pattern: NightPattern
   notes: NightNote[]

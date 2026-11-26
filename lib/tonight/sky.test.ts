@@ -6,6 +6,7 @@ import {
   naverSearchUrl,
   pointMapUrl,
   safePoints,
+  safeReels,
   safeVideos,
   searchUrl,
   youtubeSearchUrl,
@@ -168,5 +169,35 @@ describe("영상으로 미리 보기", () => {
     expect(naverClipUrl("원주 거돈사지")).toBe(
       `https://m.search.naver.com/search.naver?ssc=tab.m_clip.all&query=${query}`,
     )
+  })
+})
+
+describe("인스타그램 게시물", () => {
+  const reel = {
+    title: "황매산에서 본 은하수",
+    account: "yeomi.travel",
+    url: "https://www.instagram.com/reel/DNnVdixS3LY/",
+    embedUrl: "https://www.instagram.com/reel/DNnVdixS3LY/embed/",
+  }
+
+  it("설명이 있고 두 주소가 인스타그램의 것이며 임베드 경로인 게시물만 남긴다", () => {
+    const reels = safeReels([
+      reel,
+      { ...reel, title: " " },
+      { ...reel, url: "https://example.com/reel/DNnVdixS3LY/" },
+      { ...reel, embedUrl: "https://example.com/reel/DNnVdixS3LY/embed/" },
+      { ...reel, embedUrl: "https://www.instagram.com/accounts/login/" },
+      { ...reel, embedUrl: "http://www.instagram.com/reel/DNnVdixS3LY/embed/" },
+      { ...reel, embedUrl: undefined },
+      null,
+    ])
+
+    expect(reels).toEqual([reel])
+    expect(safeReels(undefined)).toEqual([])
+  })
+
+  it("계정 이름 앞의 @는 떼고, 계정이 없어도 게시물은 남긴다", () => {
+    expect(safeReels([{ ...reel, account: "@yeomi.travel" }])[0].account).toBe("yeomi.travel")
+    expect(safeReels([{ ...reel, account: undefined }])[0].account).toBe("")
   })
 })
