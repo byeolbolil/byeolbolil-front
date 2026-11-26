@@ -10,10 +10,12 @@ import {
   pointMapUrl,
   safeLinks,
   safePoints,
+  safeReels,
   safeVideos,
   searchUrl,
   youtubeSearchUrl,
   type PlaceLink,
+  type PlaceReel,
   type PlaceVideo,
 } from "@/lib/tonight/links"
 import { AlertIcon, CarIcon, ClockIcon, ExternalIcon, PinIcon, PlayIcon, SearchIcon } from "./icons"
@@ -33,6 +35,8 @@ interface PlaceAboutProps {
   points?: unknown
   /** 이 명소에서 별을 본 유튜브 영상. 응답에서 온 값을 그대로 넘긴다 */
   videos?: unknown
+  /** 이 명소에서 별을 본 인스타그램 게시물. 응답에서 온 값을 그대로 넘긴다 */
+  reels?: unknown
   /** 시설이면 안내 줄이 가는 법이 아니라 운영 시간과 예약 방법이다 */
   facility?: boolean
 }
@@ -50,11 +54,13 @@ export function PlaceAbout({
   links,
   points,
   videos,
+  reels,
   facility = false,
 }: PlaceAboutProps) {
   const references = safeLinks(links)
   const spots = safePoints(points)
   const clips = safeVideos(videos)
+  const posts = safeReels(reels)
   // 직접 저장한 내 장소에는 적어 둔 것이 없다. 영상 검색만 덩그러니 보이지 않게 통째로 그리지 않는다
   if (!description && !guide && !caution && references.length === 0 && spots.length === 0 && clips.length === 0) {
     return null
@@ -123,8 +129,9 @@ export function PlaceAbout({
               <p className="about-check">다녀온 사람들이 유튜브에 올린 영상이에요. 누르면 유튜브에서 열려요.</p>
             </>
           ) : null}
+          {posts.length > 0 ? <ReelList reels={posts} /> : null}
           <div className="about-video-search">
-            <span>{clips.length > 0 ? "짧은 영상 더 찾아보기" : "짧은 영상 찾아보기"}</span>
+            <span>{clips.length > 0 || posts.length > 0 ? "짧은 영상 더 찾아보기" : "짧은 영상 찾아보기"}</span>
             <a href={googleShortVideoUrl(name)} target="_blank" rel="noopener noreferrer">
               구글 짧은 동영상
             </a>
@@ -204,6 +211,49 @@ function VideoCard({ video }: { video: PlaceVideo }) {
         {video.channel ? <span className="about-video-channel">{video.channel}</span> : null}
       </a>
     </li>
+  )
+}
+
+/**
+ * 인스타그램 게시물들. 인스타그램은 미리보기 그림을 내주지 않아서 설명과 계정 이름만 적어 두고, 누르면 그 아래에
+ * 인스타그램의 임베드를 펼친다. 누르기 전에는 인스타그램에 아무것도 요청하지 않는다. 한 번에 하나만 펼친다.
+ */
+function ReelList({ reels }: { reels: PlaceReel[] }) {
+  const [open, setOpen] = useState<string | null>(null)
+  return (
+    <div className="about-reels">
+      <ul>
+        {reels.map((reel) => {
+          const shown = open === reel.url
+          return (
+            <li key={reel.url}>
+              <button type="button" aria-expanded={shown} onClick={() => setOpen(shown ? null : reel.url)}>
+                <PlayIcon />
+                <span className="about-reel-text">
+                  <span className="about-reel-title">{reel.title}</span>
+                  <span className="about-reel-account">인스타그램{reel.account ? ` · @${reel.account}` : ""}</span>
+                </span>
+                <span className="about-reel-toggle">{shown ? "접기" : "여기서 보기"}</span>
+              </button>
+              {shown ? (
+                <div className="about-reel-frame">
+                  <iframe
+                    src={reel.embedUrl}
+                    title={`${reel.title} (인스타그램)`}
+                    loading="lazy"
+                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+                  />
+                  <a href={reel.url} target="_blank" rel="noopener noreferrer">
+                    인스타그램에서 열기
+                  </a>
+                </div>
+              ) : null}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }
 
