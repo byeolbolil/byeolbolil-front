@@ -111,26 +111,25 @@ export function MapPanel({
   const legend =
     layer === "night" ? (
       <>
-        푸른 곳이 하늘이 어두운 곳이에요. 그 안에서도 불빛에서 떨어진 자리가 좋아요
         <ul className="light-key">
           <li>
             <i data-key="dark" />
-            어두운 하늘: 인공 불빛이 자연의 2배 아래
+            어두운 하늘
           </li>
           <li>
             <i data-key="line" />
-            하늘 밝기 경계: 숫자는 자연의 몇 배인지
+            밝기 경계 <small>숫자가 작을수록 어두워요</small>
           </li>
           <li>
             <i data-key="glow" />
-            은하수가 안 보이는 하늘: 10배 이상
+            은하수 안 보임
           </li>
           <li>
             <i data-key="lights" />
-            위성이 본 불빛
+            불빛
           </li>
         </ul>
-        <div className="credit">하늘 밝기: Duriscoe et al. 2018 모형으로 계산 · 불빛: VIIRS VNL 2024</div>
+        <div className="credit">지도를 누르면 그 자리의 하늘 밝기가 나와요 · 자료: VIIRS 2024</div>
       </>
     ) : layer === "cloud" ? (
       <>
