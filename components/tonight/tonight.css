@@ -2469,6 +2469,9 @@
   .psearch-credit a {
     color: inherit;
   }
+  .psearch-credit span + span::before {
+    content: " · ";
+  }
 
   /* 지도 위의 검색창. 오른쪽은 레이어 조작부 자리를 비워 둔다 */
   .map-search {

@@ -2,7 +2,8 @@
  * 지명 검색 API 클라이언트. 이름으로 좌표를 찾고, 좌표가 어느 지역인지 이름을 받는다.
  *
  * 밤 추천과 마찬가지로 같은 출처의 `/api/...`로 부른다(`api.ts`의 설명 참고). 지명 데이터는 백엔드가
- * OpenStreetMap 기반의 Photon에서 받아 온다.
+ * OpenStreetMap 기반의 Photon과 카카오 로컬에서 받아 와 섞어 준다. 시와 군, 산은 앞의 것이, 전망대와 주차장,
+ * 지번 주소는 뒤의 것이 잘 안다.
  */
 import type { Coordinates } from "./settings"
 
@@ -12,6 +13,9 @@ const BASE_PATH = "/api/v1/geocode"
 export const MIN_QUERY_LENGTH = 2
 export const MAX_QUERY_LENGTH = 50
 
+/** 검색 결과가 온 곳. 목록 아래에 출처를 적는 데 쓴다 */
+export type PlaceProvider = "OSM" | "KAKAO"
+
 /** 검색으로 찾은 장소 */
 export interface FoundPlace {
   name: string
@@ -19,6 +23,12 @@ export interface FoundPlace {
   address: string
   lat: number
   lon: number
+  provider: PlaceProvider
+}
+
+/** 결과에 섞여 있는 출처를 처음 나온 순서대로 */
+export function providersOf(places: FoundPlace[]): PlaceProvider[] {
+  return [...new Set(places.map((place) => place.provider))]
 }
 
 /** 지도에서 고른 위치. 검색으로 골랐으면 이름이 있고, 빈 곳을 눌러 골랐으면 좌표뿐이다 */
@@ -76,6 +86,8 @@ export function unwrapPlaces(body: unknown): FoundPlace[] {
       address: typeof item.address === "string" ? item.address : "",
       lat: item.latitude,
       lon: item.longitude,
+      // 출처를 적기 전의 서버는 OpenStreetMap의 결과만 줬다
+      provider: item.source === "KAKAO" ? "KAKAO" : "OSM",
     })
   }
   return places
