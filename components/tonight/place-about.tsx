@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { linkHost, safeLinks, searchUrl, type PlaceLink } from "@/lib/tonight/links"
-import { AlertIcon, CarIcon, ClockIcon, ExternalIcon, SearchIcon } from "./icons"
+import { linkHost, naverSearchUrl, pointMapUrl, safeLinks, safePoints, searchUrl, type PlaceLink } from "@/lib/tonight/links"
+import { AlertIcon, CarIcon, ClockIcon, ExternalIcon, PinIcon, SearchIcon } from "./icons"
 
 interface PlaceAboutProps {
   /** 장소 이름. 검색 링크를 만드는 데 쓴다 */
@@ -15,17 +15,21 @@ interface PlaceAboutProps {
   caution?: string
   /** 가는 길과 서는 자리를 더 자세히 적은 글. 응답에서 온 값을 그대로 넘긴다 */
   links?: unknown
+  /** 이 명소 안에서 서서 보는 자리들. 응답에서 온 값을 그대로 넘긴다 */
+  points?: unknown
   /** 시설이면 안내 줄이 가는 법이 아니라 운영 시간과 예약 방법이다 */
   facility?: boolean
 }
 
 /**
- * 장소 소개. 무엇으로 알려진 곳인지, 어디에 차를 대는지, 가기 전에 알아 둘 것, 더 읽을 글을 적는다.
+ * 장소 소개. 무엇으로 알려진 곳인지, 어디에 차를 대는지, 그 안에서 어디에 서서 보는지, 가기 전에 알아 둘 것,
+ * 더 읽을 글을 적는다. 찾아보지 않아도 되게 미리 조사한 내용을 먼저 보여 주고, 검색은 그다음에 둔다.
  * 직접 저장한 내 장소처럼 적어 둔 내용이 없으면 아무것도 그리지 않는다.
  */
-export function PlaceAbout({ name, description, guide, caution, links, facility = false }: PlaceAboutProps) {
+export function PlaceAbout({ name, description, guide, caution, links, points, facility = false }: PlaceAboutProps) {
   const references = safeLinks(links)
-  if (!description && !guide && !caution && references.length === 0) return null
+  const spots = safePoints(points)
+  if (!description && !guide && !caution && references.length === 0 && spots.length === 0) return null
   return (
     <div className="about">
       {description ? <p className="about-desc">{description}</p> : null}
@@ -51,8 +55,37 @@ export function PlaceAbout({ name, description, guide, caution, links, facility 
           ) : null}
         </ul>
       ) : null}
+      {spots.length > 0 ? (
+        <div className="about-points">
+          <b>보는 자리 {spots.length}곳</b>
+          <ol>
+            {spots.map((point) => {
+              const map = pointMapUrl(name, point)
+              return (
+                <li key={point.name}>
+                  <PinIcon />
+                  <div>
+                    <span className="about-point-name">
+                      {point.name}
+                      {map ? (
+                        <a href={map} target="_blank" rel="noopener noreferrer">
+                          지도
+                        </a>
+                      ) : null}
+                    </span>
+                    <span>{point.access}</span>
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
+        </div>
+      ) : null}
       <div className="about-more">
         <b>더 알아보기</b>
+        {facility ? null : (
+          <p className="about-check">길과 시설은 바뀔 수 있어요. 가기 전에 최근 후기로 자리와 주차를 한 번 더 확인하세요.</p>
+        )}
         <ul>
           {references.map((link) => (
             <li key={link.url}>
@@ -65,6 +98,12 @@ export function PlaceAbout({ name, description, guide, caution, links, facility 
               </a>
             </li>
           ))}
+          <li>
+            <a href={naverSearchUrl(name, facility)} target="_blank" rel="noopener noreferrer" data-kind="search">
+              <SearchIcon />
+              <span className="about-link-title">{facility ? "네이버에서 찾아보기" : "네이버에서 후기 찾아보기"}</span>
+            </a>
+          </li>
           <li>
             <a href={searchUrl(name, facility)} target="_blank" rel="noopener noreferrer" data-kind="search">
               <SearchIcon />

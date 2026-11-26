@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { knownNotes, knownSky } from "./clean"
+import { naverSearchUrl, pointMapUrl, safePoints, searchUrl } from "./links"
 import { skyBrightnessText, skyGlow, skyHint, skyName, skyScalePosition } from "./sky"
 
 describe("하늘 밝기를 말로", () => {
@@ -80,5 +81,41 @@ describe("모르는 값 걸러 내기", () => {
     expect(knownSky({ skyBrightness: 3.99, skyClass: "RURAL" })).toEqual({ skyBrightness: 3.99, skyClass: "RURAL" })
     expect(knownSky({ skyBrightness: "3.99", skyClass: "MOONLIT" })).toEqual({})
     expect(knownSky({})).toEqual({})
+  })
+})
+
+describe("보는 자리", () => {
+  it("이름과 설명이 있는 자리만 남기고, 좌표는 둘 다 숫자일 때만 받는다", () => {
+    const points = safePoints([
+      { name: "군립공원 정상 주차장", access: "차로 올라가요.", latitude: 35.48649, longitude: 127.9843 },
+      { name: "별빛언덕", access: "걸어서 20분쯤이에요." },
+      { name: "좌표가 반쪽", access: "설명", latitude: 35.1 },
+      { name: "", access: "이름 없음" },
+      { name: "설명 없음" },
+      null,
+    ])
+
+    expect(points).toEqual([
+      { name: "군립공원 정상 주차장", access: "차로 올라가요.", latitude: 35.48649, longitude: 127.9843 },
+      { name: "별빛언덕", access: "걸어서 20분쯤이에요." },
+      { name: "좌표가 반쪽", access: "설명" },
+    ])
+    expect(safePoints(undefined)).toEqual([])
+  })
+
+  it("좌표를 아는 자리만 지도를 연다", () => {
+    expect(pointMapUrl("합천 황매산", { name: "별빛언덕", access: "걸어요" })).toBeNull()
+    expect(pointMapUrl("합천 황매산", { name: "정상 주차장", access: "차로", latitude: 35.48649, longitude: 127.9843 })).toBe(
+      `https://map.kakao.com/link/map/${encodeURIComponent("합천 황매산 정상 주차장")},35.48649,127.9843`,
+    )
+  })
+
+  it("후기 검색은 구글과 네이버에서 같은 말로 찾는다", () => {
+    const query = encodeURIComponent("합천 황매산 별 보기")
+    expect(searchUrl("합천 황매산")).toBe(`https://www.google.com/search?q=${query}`)
+    expect(naverSearchUrl("합천 황매산")).toBe(`https://search.naver.com/search.naver?query=${query}`)
+    expect(naverSearchUrl("대전 시민천문대", true)).toBe(
+      `https://search.naver.com/search.naver?query=${encodeURIComponent("대전 시민천문대")}`,
+    )
   })
 })

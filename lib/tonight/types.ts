@@ -76,6 +76,8 @@ export interface NightPlace {
   caution?: string
   /** 가는 길과 서는 자리를 더 자세히 적은 글. 없는 곳이 있고, 쓰기 전에 safeLinks로 거른다 */
   links?: { title: string; url: string; imageUrl?: string }[]
+  /** 이 명소 안에서 서서 보는 자리들. 자리가 하나뿐인 곳에는 없다. 쓰기 전에 safePoints로 거른다 */
+  points?: { name: string; access: string; latitude?: number; longitude?: number }[]
   level: RecommendationLevel
   pattern: NightPattern
   notes: NightNote[]
