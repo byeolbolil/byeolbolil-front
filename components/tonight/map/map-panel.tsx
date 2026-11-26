@@ -26,8 +26,6 @@ interface MapPanelProps {
   places: readonly NightPlace[]
   selectedKey: string | null
   topKey: string | null
-  /** "오늘 밤" 같은 밤의 이름. 지도 위 안내에 적는다 */
-  nightName: string
   /** 보고 있는 밤이 시작하는 날짜. 구름 레이어가 그 밤의 구름 예보를 받는 데 쓴다 */
   nightDate: string | null
   onSelect: (key: string) => void
@@ -49,7 +47,6 @@ export function MapPanel({
   places,
   selectedKey,
   topKey,
-  nightName,
   nightDate,
   onSelect,
   pick,
@@ -108,33 +105,14 @@ export function MapPanel({
     </span>
   ) : null
 
-  // 표식의 뜻. 구름 레이어에서는 표식이 구름량을 보여 주므로 적지 않는다. 지도 위에 따로 띄우지 않고 범례에 한 줄로 둔다
-  const pinKey =
-    layer === "cloud" ? null : (
-      <span className="pin-key">
-        <em>{nightName} 별 보기</em>
-        <i data-level="STRONG" /> 아주 좋음
-        <i data-level="GOOD" /> 좋음
-        <i data-level="MAYBE" /> 아쉬움
-        <i data-level="NO" /> 어려움
-      </span>
-    )
-
   const legend =
     layer === "night" ? (
       <>
+        {/* 밝게 빛나는 곳이 불빛이라는 것은 설명 없이도 읽혀서, 뜻을 알기 어려운 푸른빛만 적는다 */}
         <ul className="light-key">
           <li>
             <i data-key="dark" />
             푸를수록 하늘이 어두워요
-          </li>
-          <li>
-            <i data-key="glow" />
-            은하수가 안 보이는 곳
-          </li>
-          <li>
-            <i data-key="lights" />
-            불빛
           </li>
         </ul>
         <div className="credit">누르면 그 자리의 하늘이 나와요 · 자료: VIIRS 2024</div>
@@ -202,10 +180,9 @@ export function MapPanel({
             onSelect={pickFound}
           />
         ) : null}
-        {legend || pinKey || mineKey ? (
+        {legend || mineKey ? (
           <div className="map-card bl">
             {legend}
-            {pinKey}
             {mineKey}
           </div>
         ) : null}
@@ -240,10 +217,9 @@ export function MapPanel({
           <span className="tl-label">{shownTime ? koreanHour(hourOf(shownTime)) : ""}</span>
         </div>
       ) : null}
-      {legend || pinKey || mineKey ? (
+      {legend || mineKey ? (
         <div className="map-legend">
           {legend}
-          {pinKey}
           {mineKey}
         </div>
       ) : null}
