@@ -98,15 +98,15 @@ lib/
     time.ts, hours.ts, place.ts, facts.ts   시각 표기, 시간 칸 고르기, 장소 표기, 카드 문구
     settings.ts             설정과 API 쿼리 사이의 변환
     sources.ts              추천 기준과 출처의 내용
-    night-overlay.ts        광해 지도 이미지의 좌표와 지도 스타일
+    night-overlay.ts        광해 지도 자료의 위치와 지도 스타일
     *.test.ts               단위 테스트
   api/, store/              인증과 북마크 클라이언트, zustand 저장소 (이전 그대로)
 public/
   sky/                      하늘 사진
-  map/sky-brightness.webp   광해 지도 이미지(하늘 밝기)
+  map/                      광해 지도 자료(하늘 밝기 그림 둘, 위성 불빛, 경계선)
   icons/, sw.js, offline.html   설치용 아이콘, 서비스 워커, 연결이 없을 때의 화면
 scripts/
-  render_sky_overlay.py     광해 지도 이미지 만들기
+  render_light_layers.py    광해 지도 자료 만들기
   render_icons.py           아이콘 만들기
   walkthrough.mjs           브라우저 점검
 ```
@@ -128,14 +128,18 @@ scripts/
 
 - 바탕 지도는 OpenFreeMap의 공개 스타일(`dark`, `liberty`)이다. 가입이나 키 없이 쓸 수 있고 출처 표기가 필요하다.
   MapLibre가 지도 오른쪽 아래에 "OpenFreeMap © OpenMapTiles Data from OpenStreetMap"을 적는다.
-- 광해 지도는 백엔드 저장소의 하늘 밝기 격자(`skyglow_korea.bin.gz`)를 웹 메르카토르로 그린 이미지다. 밤 추천이
-  장소마다 읽는 값과 같다. ALR 3 아래는 칠하지 않아서 어두운 곳은 바탕 그대로 남는다. 격자를 다시 만들면
-  다음을 실행하고, 출력된 범위가 `lib/tonight/night-overlay.ts`와 다르면 그 좌표를, 범례 색이나 은하수 경계의
-  자리가 다르면 `tonight.css`의 `.ramp.night`를 함께 바꾼다.
+- 광해 지도는 스팟을 찾는 데 쓰도록 두 가지를 겹친다. 하늘 밝기(백엔드의 `skyglow_korea.bin.gz`, 밤 추천이 장소마다
+  읽는 값)로는 어느 지역의 하늘이 어두운지를, 위성 불빛(VIIRS 2024)으로는 그 둘레에 마을이나 도로 불빛이 있는지를 본다.
+  하늘 밝기는 양 끝만 칠하고(2배 아래는 푸르게, 10배 이상은 빛무리로) 그 사이는 2, 3, 5, 10배의 경계선으로 읽는다.
+  모두 칠하면 내륙의 70%가 2~10배라 국토 전체가 뿌옇게 덮였다. 푸른 칠과 경계선은 바다 레이어 아래에 깔아 땅에만 보인다.
+  자료를 다시 만들려면 다음을 실행한다. `rasterio`와 `matplotlib`가 필요하다. 출력된 범위가 `lib/tonight/night-overlay.ts`와
+  다르면 그 좌표도 바꾼다.
 
   ```bash
-  python scripts/render_sky_overlay.py <백엔드 저장소>/src/main/resources/skyglow/skyglow_korea.bin.gz public/map/sky-brightness.webp
+  python scripts/render_light_layers.py <백엔드 저장소>/src/main/resources/skyglow/skyglow_korea.bin.gz <vnl2024_korea.tif> public/map
   ```
+
+  `vnl2024_korea.tif`는 백엔드 저장소의 `scripts/lightpollution/crop_radiance.py`가 위성 원본에서 잘라 만든다.
 
 - 구름 레이어는 구름의 모양을 그리지 않는다. 고른 시각에 각 장소의 예보 구름량으로 표식을 칠한다.
 - 하늘 사진은 재사용이 허락된 자료만 내려받아 쓴다. 작가와 라이선스는 사진 위와 "추천 기준과 출처"에 적는다.

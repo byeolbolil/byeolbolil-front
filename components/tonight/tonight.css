@@ -2003,27 +2003,44 @@
     border-radius: 3px;
     margin: 6px 0 4px;
   }
-  /* scripts/render_sky_overlay.py가 출력하는 범례 색. 지도 그림을 다시 만들면 함께 바꾼다 */
-  .ramp.night {
-    position: relative;
-    background: linear-gradient(90deg, #0b0f22 0%, #1d1c27 25%, #4a3b34 50%, #8e765f 75%, #e7ddc9 100%);
+  /* 광해 지도의 범례. 색은 scripts/render_light_layers.py와 night-map.tsx의 경계선 색에 맞춘다 */
+  .light-key {
+    list-style: none;
+    margin: 6px 0 2px;
+    padding: 0;
+    display: grid;
+    gap: 3px;
+    font-size: 11.5px;
+    color: var(--ink-2);
   }
-  /* 은하수가 보이지 않게 되는 하늘 밝기(ALR 10)의 자리. 스크립트가 출력하는 값이다 */
-  .ramp.night .edge {
-    position: absolute;
-    left: 40%;
-    top: -3px;
-    bottom: -3px;
-    width: 1.5px;
-    background: var(--ink-2);
+  .light-key li {
+    display: flex;
+    align-items: center;
+    gap: 7px;
   }
-  .rl.night {
-    position: relative;
+  .light-key i {
+    flex: none;
+    width: 16px;
+    height: 10px;
+    border-radius: 3px;
   }
-  .rl.night .edge-label {
-    position: absolute;
-    left: 40%;
-    padding-left: 4px;
+  .light-key i[data-key="dark"] {
+    background: rgba(111, 168, 255, 0.32);
+    border: 1px solid #8fb6ff;
+  }
+  .light-key i[data-key="line"] {
+    height: 0;
+    border-radius: 0;
+    border-top: 1.5px solid #8fb6ff;
+  }
+  .light-key i[data-key="glow"] {
+    height: 0;
+    border-radius: 0;
+    border-top: 1.5px dashed #e2b27a;
+    box-shadow: 0 0 8px 3px rgba(255, 184, 104, 0.35);
+  }
+  .light-key i[data-key="lights"] {
+    background: radial-gradient(circle, #ffecd0 0 2px, rgba(255, 184, 104, 0.6) 3px, transparent 6px);
   }
   .ramp.cloud {
     background: linear-gradient(90deg in oklch, var(--star), var(--cloud));
@@ -2245,7 +2262,7 @@
 }
 
 :root[data-red="1"] .bb .mapcanvas canvas,
-:root[data-red="1"] .bb .ramp.night {
+:root[data-red="1"] .bb .light-key i {
   filter: grayscale(1) sepia(1) saturate(6) hue-rotate(-40deg) brightness(0.7);
 }
 

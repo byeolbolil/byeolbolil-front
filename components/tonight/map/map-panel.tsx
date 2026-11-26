@@ -111,16 +111,26 @@ export function MapPanel({
   const legend =
     layer === "night" ? (
       <>
-        밝게 칠해진 곳일수록 하늘이 밝아 별이 덜 보여요
-        <div className="ramp night">
-          <i className="edge" />
-        </div>
-        <div className="rl night">
-          <span>어두운 하늘</span>
-          <span className="edge-label">은하수 안 보임</span>
-          <span>도시</span>
-        </div>
-        <div className="credit">하늘 밝기: VIIRS VNL 2024로 계산 (Duriscoe et al. 2018 모형)</div>
+        푸른 곳이 하늘이 어두운 곳이에요. 그 안에서도 불빛에서 떨어진 자리가 좋아요
+        <ul className="light-key">
+          <li>
+            <i data-key="dark" />
+            어두운 하늘: 인공 불빛이 자연의 2배 아래
+          </li>
+          <li>
+            <i data-key="line" />
+            하늘 밝기 경계: 숫자는 자연의 몇 배인지
+          </li>
+          <li>
+            <i data-key="glow" />
+            은하수가 안 보이는 하늘: 10배 이상
+          </li>
+          <li>
+            <i data-key="lights" />
+            위성이 본 불빛
+          </li>
+        </ul>
+        <div className="credit">하늘 밝기: Duriscoe et al. 2018 모형으로 계산 · 불빛: VIIRS VNL 2024</div>
       </>
     ) : layer === "cloud" ? (
       <>

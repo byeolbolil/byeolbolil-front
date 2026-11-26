@@ -1,24 +1,34 @@
 /**
- * 광해 지도 이미지와 지도 스타일의 위치 정보.
+ * 광해 지도에 겹치는 자료의 위치.
  *
- * 이미지는 `scripts/render_sky_overlay.py`가 백엔드의 하늘 밝기 격자(밤 추천이 장소마다 읽는 것과 같은 격자)로
- * 그린 것이고, 아래 범위를 웹 메르카토르로 그렸다. 스크립트가 마지막에 출력하는 격자의 범위와 같아야 한다.
+ * `scripts/render_light_layers.py`가 백엔드의 하늘 밝기 격자(밤 추천이 장소마다 읽는 것과 같은 격자)와 위성 불빛
+ * 원본으로 만든다. 그림 세 장은 아래 범위를 웹 메르카토르로 그렸고, 스크립트가 마지막에 출력하는 범위와 같아야 한다.
  * 다르면 밝은 곳이 지도와 어긋난다.
  */
-export const NIGHT_OVERLAY = {
-  url: "/map/sky-brightness.webp",
+export const LIGHT_MAP = {
+  /** 하늘 밝기가 자연의 2배 아래인 곳을 옅은 푸른빛으로 칠한 그림 */
+  skyDark: "/map/sky-dark.webp",
+  /** 은하수가 보이지 않는 하늘(10배 이상) 둘레의 빛무리 */
+  skyGlow: "/map/sky-glow.webp",
+  /** 위성이 본 불빛 */
+  lights: "/map/lights.webp",
+  /** 하늘 밝기 2, 3, 5, 10배의 경계선. 속성 level이 배수다 */
+  skyLines: "/map/sky-lines.geojson",
   west: 124.5,
   east: 131.0,
   south: 32.9,
   north: 38.7,
 } as const
 
+/** 하늘 밝기 경계선 가운데 장소 카드의 등급 경계와 같은 값. 나머지(3, 5)는 사이를 읽으려고 더한 눈금이다 */
+export const SKY_LINE_CLASS_BOUNDS = [2, 10] as const
+
 /** MapLibre image 소스의 좌표 순서: 왼쪽 위, 오른쪽 위, 오른쪽 아래, 왼쪽 아래. */
-export const NIGHT_OVERLAY_CORNERS: [[number, number], [number, number], [number, number], [number, number]] = [
-  [NIGHT_OVERLAY.west, NIGHT_OVERLAY.north],
-  [NIGHT_OVERLAY.east, NIGHT_OVERLAY.north],
-  [NIGHT_OVERLAY.east, NIGHT_OVERLAY.south],
-  [NIGHT_OVERLAY.west, NIGHT_OVERLAY.south],
+export const LIGHT_MAP_CORNERS: [[number, number], [number, number], [number, number], [number, number]] = [
+  [LIGHT_MAP.west, LIGHT_MAP.north],
+  [LIGHT_MAP.east, LIGHT_MAP.north],
+  [LIGHT_MAP.east, LIGHT_MAP.south],
+  [LIGHT_MAP.west, LIGHT_MAP.south],
 ]
 
 /**
