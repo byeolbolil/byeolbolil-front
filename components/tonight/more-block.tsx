@@ -1,7 +1,7 @@
 import { average, windowHours } from "@/lib/tonight/hours"
 import { travelText } from "@/lib/tonight/place"
 import { CLEAR_CLOUD_COVER_MAX, MILKY_WAY_LOST_SKY } from "@/lib/tonight/policy"
-import { skyBrightnessText, skyHint, skyName } from "@/lib/tonight/sky"
+import { skyBrightnessText, skyHint, skyName, skyRankText } from "@/lib/tonight/sky"
 import { PREFER_ALL_NIGHT } from "@/lib/tonight/settings"
 import { koreanClock } from "@/lib/tonight/time"
 import type { NightCriteria, NightPlace } from "@/lib/tonight/types"
@@ -87,9 +87,10 @@ export function MoreBlock({ place, nightDate, criteria, onOpenSources }: MoreBlo
         <li className="stack">
           <div>
             <b>{skyName(place.skyClass)}</b>
+            {place.skyRank ? <span className="rank">{skyRankText(place.skyRank)}</span> : null}
             <span>
+              {place.skyClass ? `${skyHint(place.skyClass)}. ` : ""}
               {skyBrightnessText(place.skyBrightness)}
-              {place.skyClass ? `. ${skyHint(place.skyClass)}` : ""}
             </span>
             {lightsInView ? <span>아래쪽 마을이나 도시의 불빛이 산에 가리지 않고 직접 보여요</span> : null}
           </div>

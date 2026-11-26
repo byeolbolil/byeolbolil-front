@@ -10,22 +10,31 @@ import {
   searchUrl,
   youtubeSearchUrl,
 } from "./links"
-import { skyBrightnessText, skyGlow, skyHint, skyName, skyScalePosition } from "./sky"
+import { skyBrightnessText, skyGlow, skyHint, skyName, skyRankText, skyScalePosition } from "./sky"
 
 describe("하늘 밝기를 말로", () => {
   it("등급마다 이름이 있고, 등급을 모르면 모른다고 적는다", () => {
-    expect(skyName("NATURAL")).toBe("자연 그대로의 하늘")
-    expect(skyName("DARK")).toBe("어두운 하늘")
-    expect(skyName("RURAL")).toBe("시골 하늘")
-    expect(skyName("SUBURBAN")).toBe("교외 하늘")
-    expect(skyName("URBAN")).toBe("도시 하늘")
+    expect(skyName("NATURAL")).toBe("은하수가 또렷한 하늘")
+    expect(skyName("DARK")).toBe("은하수가 잘 보이는 하늘")
+    expect(skyName("RURAL")).toBe("은하수가 보이는 하늘")
+    expect(skyName("SUBURBAN")).toBe("은하수가 안 보이는 하늘")
+    expect(skyName("URBAN")).toBe("밝은 별만 보이는 하늘")
     expect(skyName(undefined)).toBe("하늘 밝기를 모르는 곳")
   })
 
-  it("은하수가 보이는지는 시골 하늘과 교외 하늘 사이에서 갈린다", () => {
-    expect(skyHint("RURAL")).toBe("은하수가 보이지만 불빛이 번져 있어요")
-    expect(skyHint("SUBURBAN")).toBe("은하수는 보이지 않아요")
+  it("등급의 설명은 그 하늘에서 보이는 것을 말한다", () => {
+    expect(skyHint("RURAL")).toBe("머리 위에서는 보이지만 흐리고, 지평선 쪽은 불빛에 묻혀요")
+    expect(skyHint("SUBURBAN")).toBe("밝은 별과 별자리는 보여요")
     expect(skyHint(undefined)).toBe("")
+  })
+
+  it("국내 순위는 어두운 절반이면 상위로, 밝은 절반이면 더 어두운 땅의 비율로 말한다", () => {
+    expect(skyRankText(1)).toBe("국내 상위 1%의 어두운 하늘이에요")
+    expect(skyRankText(22)).toBe("국내 상위 22%의 어두운 하늘이에요")
+    expect(skyRankText(50)).toBe("국내 상위 50%의 어두운 하늘이에요")
+    expect(skyRankText(51)).toBe("국내 땅의 50%가 이곳보다 어두워요")
+    expect(skyRankText(96)).toBe("국내 땅의 95%가 이곳보다 어두워요")
+    expect(skyRankText(undefined)).toBe("")
   })
 
   it.each([

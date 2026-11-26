@@ -89,6 +89,8 @@ export interface NightPlace {
   skyBrightness?: number
   /** 하늘 밝기로 나눈 등급. `skyBrightness`가 없으면 같이 없다 */
   skyClass?: SkyClass
+  /** 하늘 밝기가 남한 땅에서 몇 번째 칸으로 어두운지(1~100, 1이 가장 어둡다). `skyBrightness`가 없으면 같이 없다 */
+  skyRank?: number
   moonBrightness: number
   /** 달의 모양과 뜨고 지는 시각. 이 값을 주기 전에 받아 둔 응답에는 없다 */
   moon?: NightMoon

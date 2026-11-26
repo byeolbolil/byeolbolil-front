@@ -58,7 +58,7 @@ export function unwrapNight(body: unknown): NightRecommendation {
   }
   const places = data.places.filter(isRecord).map((place) => {
     // 이전 응답에 있던 Bortle 등급은 받지 않는다. 하늘 밝기로 바뀌었다
-    const { bortleClass: _bortleClass, skyBrightness: _skyBrightness, skyClass: _skyClass, ...rest } = place
+    const { bortleClass: _bortleClass, skyBrightness: _skyBrightness, skyClass: _skyClass, skyRank: _skyRank, ...rest } = place
     return { ...rest, ...knownSky(place), notes: knownNotes(place.notes) }
   })
   return { ...data, places } as unknown as NightRecommendation
@@ -138,6 +138,7 @@ async function getBody(url: string, options: FetchNightOptions): Promise<unknown
 export interface SkyAt {
   skyBrightness?: number
   skyClass?: SkyClass
+  skyRank?: number
   /** 둘레 1km가 가로등과 건물 불빛으로 밝은지 */
   litSurroundings?: boolean
 }

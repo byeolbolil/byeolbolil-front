@@ -47,6 +47,8 @@ export interface WeekPlace {
   /** 하늘 전체의 인공 불빛이 자연 밤하늘 밝기의 몇 배인지. 자료가 없는 곳에는 없다 */
   skyBrightness?: number
   skyClass?: SkyClass
+  /** 남한 땅에서의 순위(1~100). 밤 추천과 같다 */
+  skyRank?: number
   forecastSource?: ForecastSource
   forecastIssuedAt?: string
   /** 날짜순. 예보가 닿지 않는 밤은 빠져 있고, 예보를 받지 못한 장소는 비어 있다 */
@@ -122,7 +124,7 @@ export function unwrapWeek(body: unknown): WeekOutlook {
           )
           .map((night) => ({ ...night, notes: knownNotes(night.notes) }))
       : []
-    const { bortleClass: _bortleClass, skyBrightness: _skyBrightness, skyClass: _skyClass, ...rest } = item
+    const { bortleClass: _bortleClass, skyBrightness: _skyBrightness, skyClass: _skyClass, skyRank: _skyRank, ...rest } = item
     places.push({ ...(rest as unknown as WeekPlace), ...knownSky(item), nights })
   }
   return {
