@@ -281,20 +281,18 @@ export function TonightApp() {
     setSelectedDate(date === tonightDate ? null : date)
     closeDetail()
   }
-  /** 장소 화면을 연다. 지금 보던 탭 안에서 열리고, 뒤로 가면 보던 자리로 돌아온다 */
+  /** 장소 화면에 그 장소를 띄운다. 그 밤의 1위를 다시 누르면 고르기 전으로 돌아간다. 뒤로 가면 보던 자리로 돌아온다 */
   const selectPlace = (key: string) => {
-    showDetail(key)
-    scrollPanelTo(0)
-  }
-  /** 장소 화면의 "목록". 열 때 쌓은 기록을 되돌려서 휴대폰의 뒤로 가기와 같게 움직인다 */
-  const backToList = () => {
-    if (window.history.state?.bbDetail) window.history.back()
-    else leaveDetail(true)
+    if (key === topKey) closeDetail()
+    else showDetail(key)
+    scrollPanelTo(0, true)
   }
   const openPlace = (place: NightPlace) => {
     setDetailSnapshot(place)
     selectPlace(placeKey(place))
     setPeekKey(null)
+    // 좁은 화면의 지도에서 열면 장소 화면이 있는 목록으로 넘어간다. 뒤로 가면 지도로 돌아온다
+    if (tab === "map") setChosenTab("tonight")
     // 다른 지역을 보고 있었어도 지도가 그 장소로 옮겨 간다
     setMapFocus({ lat: place.latitude, lon: place.longitude, at: Date.now() })
   }
@@ -547,28 +545,37 @@ export function TonightApp() {
   /** 후보 목록. 오늘 밤 탭에만 있고, 넓은 화면에서는 카드 옆의 칸에, 그보다 좁으면 카드 아래에 놓인다 */
   let candidates: ReactNode = null
   const refreshing = night.loading ? " refreshing" : ""
-  const placeView =
-    detailPlace && data ? (
-      <PlaceView
-        key={placeKey(detailPlace)}
-        place={detailPlace}
-        placeDate={data.date}
+  const nightPicker =
+    dates.length > 0 && shownDate && tab === "tonight" ? (
+      <NightPicker
+        compact
         dates={dates}
-        criteria={query}
-        save={heroExtras(detailPlace).save}
-        onBack={backToList}
+        selected={shownDate}
+        onSelect={selectDate}
+        levels={levels}
+        settled={nightSummary.summary !== null}
       />
     ) : null
-  if (placeView) {
-    content = placeView
-  } else if (night.error) {
+  /** 장소 화면에 띄우는 곳. 고른 곳이 없으면 그 밤의 1위다 */
+  const shownPlace = detailPlace ?? topPlace
+  if (night.error) {
     content = <NightError error={night.error} onRetry={reloadNights} />
   } else if (data && tonightDate) {
     content = (
       <div className={`view${refreshing}`} aria-busy={night.loading}>
         {tab === "map" ? (
           mapTab
+        ) : shownPlace ? (
+          <PlaceView
+            key={`${placeKey(shownPlace)}/${data.date}`}
+            place={shownPlace}
+            placeDate={data.date}
+            dates={dates}
+            criteria={query}
+            save={heroExtras(shownPlace).save}
+          />
         ) : (
+          // 가볼 만한 곳이 없는 밤. 그 사정과 다른 밤을 먼저 알린다
           <NightCard
             night={data}
             tonightDate={tonightDate}
@@ -585,7 +592,7 @@ export function TonightApp() {
     content = <NightSkeleton />
   }
   // 장소 화면은 좁은 화면에서 목록을 덮는 한 화면이다. 넓은 화면에서는 목록이 옆 칸에 그대로 있다
-  if (data && tonightDate && !night.error && tab === "tonight" && (!placeView || isWide)) {
+  if (data && tonightDate && !night.error && tab === "tonight") {
     candidates = (
       <>
         <MySection night={data} criteria={query} revision={myRevision} onOpen={openPlace} />
@@ -600,6 +607,7 @@ export function TonightApp() {
         onOpenSettings={openSettings}
         onOpenOrigin={openOrigin}
         onLogin={() => askLogin({ kind: "none" })}
+        picker={nightPicker}
         footer={
           <p className="credit-line links">
             <button type="button" className="linkish" onClick={openSources}>
@@ -612,16 +620,6 @@ export function TonightApp() {
     )
   }
 
-  const nightPicker =
-    dates.length > 0 && shownDate && tab === "tonight" ? (
-      <NightPicker
-        dates={dates}
-        selected={shownDate}
-        onSelect={selectDate}
-        levels={levels}
-        settled={nightSummary.summary !== null}
-      />
-    ) : null
 
   return (
     <div className="bb">
@@ -674,13 +672,10 @@ export function TonightApp() {
         {/* 오늘 밤 탭은 카드와 목록 두 칸이다. 받는 중에도 목록의 칸을 비워 두어서 카드의 너비가 바뀌지 않는다 */}
         <div className="panel" ref={panelRef} data-cols={tab === "tonight" ? "2" : "1"}>
           <main className="view" ref={cardRef}>
-            {/* 그 밤을 고르는 줄. 넓은 화면에서는 목록 칸 위에, 그보다 좁으면 목록 화면의 맨 위에 둔다 */}
-            {!isWide && !placeView ? nightPicker : null}
             {content}
           </main>
           {tab === "tonight" ? (
             <aside className={`view side${refreshing}`} aria-label={`${shownNightName} 후보`}>
-              {isWide ? nightPicker : null}
               {candidates}
             </aside>
           ) : null}
