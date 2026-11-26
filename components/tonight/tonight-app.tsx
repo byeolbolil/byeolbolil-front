@@ -447,7 +447,6 @@ export function TonightApp() {
     <>
       <div className="sec-title">
         <h2>지도에서 고르기</h2>
-        <p>이름으로 찾거나 빈 곳을 눌러요</p>
       </div>
       <MapPanel
         places={places}
