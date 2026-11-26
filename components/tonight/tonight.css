@@ -893,11 +893,11 @@
     color: var(--star);
   }
 
-  /* 장소 소개: 어떤 곳인지, 가는 법, 주의 사항 */
+  /* 장소 소개. 가기 전에 알 것, 영상, 더 찾아보기의 세 덩어리다 */
   .about {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 14px;
   }
   .about-desc {
     margin: 0;
@@ -906,94 +906,66 @@
     line-height: 1.7;
     max-width: 62ch;
   }
-  .about-desc::before {
-    content: "어떤 곳인가요";
-    display: block;
-    font-size: 12px;
-    color: var(--ink-3);
-    margin-bottom: 2px;
-  }
-  .about-list {
+
+  /* 가기 전에 알 것: 가는 법, 주의 사항, 서서 보는 자리를 한 판에 줄로 나눠 적는다 */
+  .about-facts {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    background: var(--night-2);
+    border-radius: 14px;
+    overflow: hidden;
   }
-  .about-list li {
+  .about-facts > li {
     display: flex;
     gap: 10px;
     align-items: flex-start;
-    background: var(--night-2);
-    border-radius: 12px;
-    padding: 10px 12px;
+    padding: 12px 14px;
     font-size: 13px;
     color: var(--ink-2);
     line-height: 1.6;
   }
-  .about-list svg {
+  .about-facts > li + li {
+    border-top: 1px solid color-mix(in oklch, var(--ink-3) 18%, transparent);
+  }
+  .about-facts > li > svg {
     width: 18px;
     height: 18px;
     flex: none;
     margin-top: 2px;
     color: var(--ink-3);
   }
-  .about-list b {
+  .about-facts > li > div {
+    flex: 1;
+    min-width: 0;
+  }
+  .about-facts b {
     display: block;
     color: var(--ink);
     font-weight: 600;
   }
-  .about-list span {
+  .about-facts span {
     display: block;
   }
-  .about-list li[data-kind="caution"] {
-    background: color-mix(in oklch, var(--warn) 12%, var(--night-2));
+  .about-facts > li[data-kind="caution"] {
+    background: color-mix(in oklch, var(--warn) 10%, transparent);
   }
-  .about-list li[data-kind="caution"] svg,
-  .about-list li[data-kind="caution"] b {
+  .about-facts > li[data-kind="caution"] > svg,
+  .about-facts > li[data-kind="caution"] b {
     color: var(--warn);
   }
-
   /* 보는 자리: 한 명소 안에서 서서 보는 곳들. 첫 줄이 차를 대는 곳이다 */
   .about-points {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .about-points > b {
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--ink-3);
-  }
-  .about-points ol {
     list-style: none;
-    margin: 0;
+    margin: 6px 0 2px;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
   }
   .about-points li {
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    background: var(--night-2);
-    border-radius: 12px;
-    padding: 10px 12px;
-    font-size: 13px;
-    color: var(--ink-2);
-    line-height: 1.6;
-  }
-  .about-points svg {
-    width: 18px;
-    height: 18px;
-    flex: none;
-    margin-top: 2px;
-    color: var(--star);
-  }
-  .about-points li span {
-    display: block;
+    padding-left: 10px;
+    border-left: 2px solid color-mix(in oklch, var(--star) 45%, transparent);
   }
   .about-point-name {
     color: var(--ink);
@@ -1006,40 +978,45 @@
     color: var(--sky-clear);
     text-decoration: underline;
   }
-  .about-check {
-    margin: 0;
-    font-size: 12.5px;
-    line-height: 1.6;
-    color: var(--ink-2);
-  }
 
-  /* 영상으로 미리 보기: 그곳에서 찍은 유튜브 영상. 옆으로 넘겨 본다 */
-  .about-videos {
+  /* 영상과 더 찾아보기는 같은 모양의 작은 제목으로 시작한다 */
+  .about-section {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     min-width: 0;
   }
-  /* 영상이 모두 지워져 카드가 하나도 남지 않으면 빈 줄과 그 설명을 감추고 찾아보기만 남긴다 */
-  .about-videos ul:empty,
-  .about-videos ul:empty + .about-check {
-    display: none;
+  .about-h {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
   }
-  .about-videos > b {
+  .about-h span {
     font-size: 12px;
     font-weight: 400;
     color: var(--ink-3);
   }
+
+  /* 영상으로 미리 보기: 그곳에서 찍은 유튜브 영상. 옆으로 넘겨 본다. 다음 카드가 걸쳐 보여 넘길 수 있음을 알린다 */
+  .about-videos:not(:has(li)) {
+    display: none;
+  }
   .about-videos ul {
     list-style: none;
     margin: 0;
-    padding: 0 0 4px;
+    padding: 0;
     display: flex;
     gap: 10px;
     overflow-x: auto;
     scroll-snap-type: x proximity;
     overscroll-behavior-x: contain;
-    scrollbar-width: thin;
+    scrollbar-width: none;
+  }
+  .about-videos ul::-webkit-scrollbar {
+    display: none;
   }
   .about-videos li {
     flex: none;
@@ -1108,172 +1085,30 @@
   .about-videos a:focus-visible .about-video-title {
     text-decoration: underline;
   }
-  /* 인스타그램 게시물: 그림 없이 한 줄로 적고, 누르면 아래에 임베드를 펼친다 */
-  .about-reels ul {
+
+  /* 더 찾아보기: 남이 쓴 글과 검색. 모두 새 창으로 연다 */
+  .about-links {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    overflow: visible;
+    border-top: 1px solid color-mix(in oklch, var(--ink-3) 22%, transparent);
   }
-  .about-reels li {
-    width: auto;
-  }
-  .about-reels button {
+  .about-links a {
     display: flex;
     align-items: center;
     gap: 10px;
-    width: 100%;
-    min-height: 48px;
-    padding: 8px 12px;
-    border: 0;
-    border-radius: 12px;
-    background: var(--night-2);
-    color: var(--ink-2);
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-  }
-  .about-reels button svg {
-    flex: none;
-    width: 26px;
-    height: 26px;
-    color: var(--ink);
-  }
-  .about-reel-text {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  .about-reel-title {
-    font-size: 13px;
-    color: var(--ink);
-  }
-  .about-reel-account {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 12px;
-    color: var(--ink-3);
-  }
-  .about-reel-toggle {
-    flex: none;
-    font-size: 12.5px;
-    color: var(--star);
-  }
-  .about-reel-frame {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    margin-top: 6px;
-  }
-  /* 인스타그램 임베드는 머리말, 세로 영상, 아래 버튼이 한 장이다. 너비 400에 높이 760쯤이 든다 */
-  .about-reel-frame iframe {
-    width: 100%;
-    max-width: 360px;
-    aspect-ratio: 400 / 760;
-    border: 0;
-    border-radius: 12px;
-    background: #fff;
-  }
-  .about-videos .about-reel-frame a {
-    flex-direction: row;
-    font-size: 12.5px;
-    color: var(--sky-clear);
-    text-decoration: underline;
-  }
-
-  /* 우리 화면에 싣지 못하는 영상(인스타그램, 네이버 클립)은 검색 탭으로 보낸다 */
-  .about-video-search {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-  }
-  .about-video-search span {
-    flex-basis: 100%;
-    font-size: 12.5px;
-    color: var(--ink-2);
-  }
-  .about-videos .about-video-search a {
-    flex-direction: row;
-    align-items: center;
-    min-height: 36px;
-    padding: 0 12px;
-    border-radius: 999px;
-    border: 1px solid color-mix(in oklch, var(--star) 45%, transparent);
-    font-size: 12.5px;
-    color: var(--star);
-  }
-  .about-videos .about-video-search a:hover,
-  .about-videos .about-video-search a:focus-visible {
-    background: color-mix(in oklch, var(--star) 12%, transparent);
-  }
-
-  /* 더 알아보기: 남이 쓴 글과 검색. 새 창으로 연다 */
-  .about-more {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-top: 2px;
-  }
-  .about-more > b {
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--ink-3);
-  }
-  .about-more ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  .about-more a {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 40px;
+    min-height: 44px;
     padding: 8px 2px;
     font-size: 13px;
     color: var(--ink-2);
     text-decoration: none;
     border-bottom: 1px solid color-mix(in oklch, var(--ink-3) 22%, transparent);
   }
-  .about-more li:last-child a {
-    border-bottom: 0;
-  }
-  .about-more a:hover .about-link-title,
-  .about-more a:focus-visible .about-link-title {
-    text-decoration: underline;
-    color: var(--ink);
-  }
-  .about-more svg {
-    width: 16px;
-    height: 16px;
+  .about-links svg {
+    width: 15px;
+    height: 15px;
     flex: none;
     color: var(--ink-3);
-  }
-  .about-thumb {
-    flex: none;
-    width: 72px;
-    height: 54px;
-    border-radius: 8px;
-    overflow: hidden;
-    background: var(--night-2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .about-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
   }
   .about-link-text {
     flex: 1;
@@ -1283,6 +1118,7 @@
   }
   .about-link-title {
     line-height: 1.45;
+    color: var(--ink);
   }
   .about-link-host {
     overflow: hidden;
@@ -1291,9 +1127,54 @@
     font-size: 12px;
     color: var(--ink-3);
   }
-  .about-more a[data-kind="search"],
-  .about-more a[data-kind="search"] svg {
+  .about-links a:hover .about-link-title,
+  .about-links a:focus-visible .about-link-title {
+    text-decoration: underline;
+  }
+  .about-check {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  /* 검색: 무엇을 찾는지 왼쪽에 적고 어디서 찾을지를 버튼으로 둔다 */
+  .about-search {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .about-search > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .about-search dt {
+    flex: none;
+    width: 4.6em;
+    font-size: 12.5px;
+    color: var(--ink-3);
+  }
+  .about-search dd {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .about-search a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 13px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklch, var(--star) 45%, transparent);
+    font-size: 12.5px;
     color: var(--star);
+    text-decoration: none;
+  }
+  .about-search a:hover,
+  .about-search a:focus-visible {
+    background: color-mix(in oklch, var(--star) 12%, transparent);
   }
 
   /* 천문대와 과학관. 추천 목록 아래에 접어 둔다 */

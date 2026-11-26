@@ -10,15 +10,12 @@ import {
   pointMapUrl,
   safeLinks,
   safePoints,
-  safeReels,
   safeVideos,
   searchUrl,
   youtubeSearchUrl,
-  type PlaceLink,
-  type PlaceReel,
   type PlaceVideo,
 } from "@/lib/tonight/links"
-import { AlertIcon, CarIcon, ClockIcon, ExternalIcon, PinIcon, PlayIcon, SearchIcon } from "./icons"
+import { AlertIcon, CarIcon, ClockIcon, ExternalIcon, PinIcon, PlayIcon } from "./icons"
 
 interface PlaceAboutProps {
   /** 장소 이름. 검색 링크를 만드는 데 쓴다 */
@@ -35,41 +32,28 @@ interface PlaceAboutProps {
   points?: unknown
   /** 이 명소에서 별을 본 유튜브 영상. 응답에서 온 값을 그대로 넘긴다 */
   videos?: unknown
-  /** 이 명소에서 별을 본 인스타그램 게시물. 응답에서 온 값을 그대로 넘긴다 */
-  reels?: unknown
   /** 시설이면 안내 줄이 가는 법이 아니라 운영 시간과 예약 방법이다 */
   facility?: boolean
 }
 
 /**
- * 장소 소개. 무엇으로 알려진 곳인지, 어디에 차를 대는지, 그 안에서 어디에 서서 보는지, 가기 전에 알아 둘 것,
- * 그곳에서 찍은 영상, 더 읽을 글을 적는다. 찾아보지 않아도 되게 미리 조사한 내용을 먼저 보여 주고, 검색은
- * 그다음에 둔다. 직접 저장한 내 장소처럼 적어 둔 내용이 없으면 아무것도 그리지 않는다.
+ * 장소 소개. 세 덩어리로 나눈다. 가기 전에 알 것(가는 법, 주의 사항, 그 안에서 서서 보는 자리)을 한 판에 모으고,
+ * 그곳에서 찍은 영상을 보여 주고, 마지막에 더 읽을 글과 검색을 둔다. 찾아보지 않아도 되게 미리 조사한 내용이 먼저다.
+ * 직접 저장한 내 장소처럼 적어 둔 내용이 없으면 아무것도 그리지 않는다.
  */
-export function PlaceAbout({
-  name,
-  description,
-  guide,
-  caution,
-  links,
-  points,
-  videos,
-  reels,
-  facility = false,
-}: PlaceAboutProps) {
+export function PlaceAbout({ name, description, guide, caution, links, points, videos, facility = false }: PlaceAboutProps) {
   const references = safeLinks(links)
   const spots = safePoints(points)
   const clips = safeVideos(videos)
-  const posts = safeReels(reels)
-  // 직접 저장한 내 장소에는 적어 둔 것이 없다. 영상 검색만 덩그러니 보이지 않게 통째로 그리지 않는다
+  // 직접 저장한 내 장소에는 적어 둔 것이 없다. 검색만 덩그러니 보이지 않게 통째로 그리지 않는다
   if (!description && !guide && !caution && references.length === 0 && spots.length === 0 && clips.length === 0) {
     return null
   }
   return (
     <div className="about">
       {description ? <p className="about-desc">{description}</p> : null}
-      {guide || caution ? (
-        <ul className="about-list">
+      {guide || caution || spots.length > 0 ? (
+        <ul className="about-facts">
           {guide ? (
             <li>
               {facility ? <ClockIcon /> : <CarIcon />}
@@ -88,92 +72,96 @@ export function PlaceAbout({
               </div>
             </li>
           ) : null}
+          {spots.length > 0 ? (
+            <li>
+              <PinIcon />
+              <div>
+                <b>보는 자리 {spots.length}곳</b>
+                <ol className="about-points">
+                  {spots.map((point) => {
+                    const map = pointMapUrl(name, point)
+                    return (
+                      <li key={point.name}>
+                        <span className="about-point-name">
+                          {point.name}
+                          {map ? (
+                            <a href={map} target="_blank" rel="noopener noreferrer">
+                              지도
+                            </a>
+                          ) : null}
+                        </span>
+                        <span>{point.access}</span>
+                      </li>
+                    )
+                  })}
+                </ol>
+              </div>
+            </li>
+          ) : null}
         </ul>
       ) : null}
-      {spots.length > 0 ? (
-        <div className="about-points">
-          <b>보는 자리 {spots.length}곳</b>
-          <ol>
-            {spots.map((point) => {
-              const map = pointMapUrl(name, point)
-              return (
-                <li key={point.name}>
-                  <PinIcon />
-                  <div>
-                    <span className="about-point-name">
-                      {point.name}
-                      {map ? (
-                        <a href={map} target="_blank" rel="noopener noreferrer">
-                          지도
-                        </a>
-                      ) : null}
-                    </span>
-                    <span>{point.access}</span>
-                  </div>
-                </li>
-              )
-            })}
-          </ol>
+      {!facility && clips.length > 0 ? (
+        <div className="about-section about-videos">
+          <b className="about-h">
+            영상으로 미리 보기 <span>유튜브에서 열려요</span>
+          </b>
+          <ul>
+            {clips.map((video) => (
+              <VideoCard key={video.url} video={video} />
+            ))}
+          </ul>
         </div>
       ) : null}
-      {facility ? null : (
-        <div className="about-videos">
-          <b>영상으로 미리 보기</b>
-          {clips.length > 0 ? (
-            <>
-              <ul>
-                {clips.map((video) => (
-                  <VideoCard key={video.url} video={video} />
-                ))}
-              </ul>
-              <p className="about-check">다녀온 사람들이 유튜브에 올린 영상이에요. 누르면 유튜브에서 열려요.</p>
-            </>
-          ) : null}
-          {posts.length > 0 ? <ReelList reels={posts} /> : null}
-          <div className="about-video-search">
-            <span>{clips.length > 0 || posts.length > 0 ? "짧은 영상 더 찾아보기" : "짧은 영상 찾아보기"}</span>
-            <a href={googleShortVideoUrl(name)} target="_blank" rel="noopener noreferrer">
-              구글 짧은 동영상
-            </a>
-            <a href={naverClipUrl(name)} target="_blank" rel="noopener noreferrer">
-              네이버 클립
-            </a>
-            <a href={youtubeSearchUrl(name)} target="_blank" rel="noopener noreferrer">
-              유튜브
-            </a>
-          </div>
-        </div>
-      )}
-      <div className="about-more">
-        <b>더 알아보기</b>
+      <div className="about-section about-more">
+        <b className="about-h">더 찾아보기</b>
+        {references.length > 0 ? (
+          <ul className="about-links">
+            {references.map((link) => (
+              <li key={link.url}>
+                <a href={link.url} target="_blank" rel="noopener noreferrer">
+                  <span className="about-link-text">
+                    <span className="about-link-title">{link.title}</span>
+                    <span className="about-link-host">{linkHost(link.url)}</span>
+                  </span>
+                  <ExternalIcon />
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {facility ? null : (
           <p className="about-check">길과 시설은 바뀔 수 있어요. 가기 전에 최근 후기로 자리와 주차를 한 번 더 확인하세요.</p>
         )}
-        <ul>
-          {references.map((link) => (
-            <li key={link.url}>
-              <a href={link.url} target="_blank" rel="noopener noreferrer">
-                <LinkThumb link={link} />
-                <span className="about-link-text">
-                  <span className="about-link-title">{link.title}</span>
-                  <span className="about-link-host">{linkHost(link.url)}</span>
-                </span>
+        {/* 검색은 한곳에 모은다. 우리 화면에 싣지 못하는 인스타그램 릴스와 네이버 클립은 짧은 영상 검색으로 본다 */}
+        <dl className="about-search">
+          <div>
+            <dt>{facility ? "검색" : "후기"}</dt>
+            <dd>
+              <a href={naverSearchUrl(name, facility)} target="_blank" rel="noopener noreferrer">
+                네이버
               </a>
-            </li>
-          ))}
-          <li>
-            <a href={naverSearchUrl(name, facility)} target="_blank" rel="noopener noreferrer" data-kind="search">
-              <SearchIcon />
-              <span className="about-link-title">{facility ? "네이버에서 찾아보기" : "네이버에서 후기 찾아보기"}</span>
-            </a>
-          </li>
-          <li>
-            <a href={searchUrl(name, facility)} target="_blank" rel="noopener noreferrer" data-kind="search">
-              <SearchIcon />
-              <span className="about-link-title">{facility ? "구글에서 찾아보기" : "구글에서 후기 찾아보기"}</span>
-            </a>
-          </li>
-        </ul>
+              <a href={searchUrl(name, facility)} target="_blank" rel="noopener noreferrer">
+                구글
+              </a>
+            </dd>
+          </div>
+          {facility ? null : (
+            <div>
+              <dt>짧은 영상</dt>
+              <dd>
+                <a href={googleShortVideoUrl(name)} target="_blank" rel="noopener noreferrer">
+                  구글
+                </a>
+                <a href={naverClipUrl(name)} target="_blank" rel="noopener noreferrer">
+                  네이버 클립
+                </a>
+                <a href={youtubeSearchUrl(name)} target="_blank" rel="noopener noreferrer">
+                  유튜브
+                </a>
+              </dd>
+            </div>
+          )}
+        </dl>
       </div>
     </div>
   )
@@ -211,76 +199,5 @@ function VideoCard({ video }: { video: PlaceVideo }) {
         {video.channel ? <span className="about-video-channel">{video.channel}</span> : null}
       </a>
     </li>
-  )
-}
-
-/**
- * 인스타그램 게시물들. 인스타그램은 미리보기 그림을 내주지 않아서 설명과 계정 이름만 적어 두고, 누르면 그 아래에
- * 인스타그램의 임베드를 펼친다. 누르기 전에는 인스타그램에 아무것도 요청하지 않는다. 한 번에 하나만 펼친다.
- */
-function ReelList({ reels }: { reels: PlaceReel[] }) {
-  const [open, setOpen] = useState<string | null>(null)
-  return (
-    <div className="about-reels">
-      <ul>
-        {reels.map((reel) => {
-          const shown = open === reel.url
-          return (
-            <li key={reel.url}>
-              <button type="button" aria-expanded={shown} onClick={() => setOpen(shown ? null : reel.url)}>
-                <PlayIcon />
-                <span className="about-reel-text">
-                  <span className="about-reel-title">{reel.title}</span>
-                  <span className="about-reel-account">인스타그램{reel.account ? ` · @${reel.account}` : ""}</span>
-                </span>
-                <span className="about-reel-toggle">{shown ? "접기" : "여기서 보기"}</span>
-              </button>
-              {shown ? (
-                <div className="about-reel-frame">
-                  <iframe
-                    src={reel.embedUrl}
-                    title={`${reel.title} (인스타그램)`}
-                    loading="lazy"
-                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                    sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-                  />
-                  <a href={reel.url} target="_blank" rel="noopener noreferrer">
-                    인스타그램에서 열기
-                  </a>
-                </div>
-              ) : null}
-            </li>
-          )
-        })}
-      </ul>
-    </div>
-  )
-}
-
-/**
- * 링크의 미리보기. 그 글이 대표 이미지로 내건 것을 남의 서버에서 바로 부른다. 어디서 불렀는지 알리지 않고
- * 부르고, 받지 못하면 바깥 링크 아이콘으로 바꾼다.
- */
-function LinkThumb({ link }: { link: PlaceLink }) {
-  const [failed, setFailed] = useState(false)
-  if (!link.imageUrl || failed) {
-    return (
-      <span className="about-thumb" data-empty="true">
-        <ExternalIcon />
-      </span>
-    )
-  }
-  return (
-    <span className="about-thumb">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={link.imageUrl}
-        alt=""
-        loading="lazy"
-        decoding="async"
-        referrerPolicy="no-referrer"
-        onError={() => setFailed(true)}
-      />
-    </span>
   )
 }
