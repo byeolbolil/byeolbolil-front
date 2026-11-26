@@ -2,8 +2,10 @@
 
 import { useState } from "react"
 import {
+  googleShortVideoUrl,
   linkHost,
   MISSING_VIDEO_THUMB_MAX_WIDTH,
+  naverClipUrl,
   naverSearchUrl,
   pointMapUrl,
   safeLinks,
@@ -53,6 +55,7 @@ export function PlaceAbout({
   const references = safeLinks(links)
   const spots = safePoints(points)
   const clips = safeVideos(videos)
+  // 직접 저장한 내 장소에는 적어 둔 것이 없다. 영상 검색만 덩그러니 보이지 않게 통째로 그리지 않는다
   if (!description && !guide && !caution && references.length === 0 && spots.length === 0 && clips.length === 0) {
     return null
   }
@@ -107,17 +110,33 @@ export function PlaceAbout({
           </ol>
         </div>
       ) : null}
-      {clips.length > 0 ? (
+      {facility ? null : (
         <div className="about-videos">
           <b>영상으로 미리 보기</b>
-          <ul>
-            {clips.map((video) => (
-              <VideoCard key={video.url} video={video} />
-            ))}
-          </ul>
-          <p className="about-check">다녀온 사람들이 유튜브에 올린 영상이에요. 누르면 유튜브에서 열려요.</p>
+          {clips.length > 0 ? (
+            <>
+              <ul>
+                {clips.map((video) => (
+                  <VideoCard key={video.url} video={video} />
+                ))}
+              </ul>
+              <p className="about-check">다녀온 사람들이 유튜브에 올린 영상이에요. 누르면 유튜브에서 열려요.</p>
+            </>
+          ) : null}
+          <div className="about-video-search">
+            <span>{clips.length > 0 ? "짧은 영상 더 찾아보기" : "짧은 영상 찾아보기"}</span>
+            <a href={googleShortVideoUrl(name)} target="_blank" rel="noopener noreferrer">
+              구글 짧은 동영상
+            </a>
+            <a href={naverClipUrl(name)} target="_blank" rel="noopener noreferrer">
+              네이버 클립
+            </a>
+            <a href={youtubeSearchUrl(name)} target="_blank" rel="noopener noreferrer">
+              유튜브
+            </a>
+          </div>
         </div>
-      ) : null}
+      )}
       <div className="about-more">
         <b>더 알아보기</b>
         {facility ? null : (
@@ -147,14 +166,6 @@ export function PlaceAbout({
               <span className="about-link-title">{facility ? "구글에서 찾아보기" : "구글에서 후기 찾아보기"}</span>
             </a>
           </li>
-          {facility ? null : (
-            <li>
-              <a href={youtubeSearchUrl(name)} target="_blank" rel="noopener noreferrer" data-kind="search">
-                <SearchIcon />
-                <span className="about-link-title">유튜브에서 영상 찾아보기</span>
-              </a>
-            </li>
-          )}
         </ul>
       </div>
     </div>

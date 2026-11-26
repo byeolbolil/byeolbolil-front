@@ -63,9 +63,28 @@ export function naverSearchUrl(name: string, facility = false): string {
   return `https://search.naver.com/search.naver?query=${encodeURIComponent(searchQuery(name, facility))}`
 }
 
+/** 영상을 찾을 때 쓰는 말. 후기 검색보다 짧게, 장소 이름에 "별"만 붙인다 */
+function videoQuery(name: string): string {
+  return encodeURIComponent(`${name} 별`)
+}
+
 /** 그 장소에서 별을 본 영상을 유튜브에서 찾는 주소. 골라 둔 영상이 없는 곳에서도 찾아볼 수 있게 한다 */
 export function youtubeSearchUrl(name: string): string {
-  return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} 별`)}`
+  return `https://www.youtube.com/results?search_query=${videoQuery(name)}`
+}
+
+/**
+ * 구글의 "짧은 동영상" 탭을 여는 주소. 인스타그램 릴스와 유튜브 쇼츠가 미리보기와 함께 나온다.
+ * 구글은 검색 결과를 내주는 API를 닫았고 인스타그램은 미리보기를 내주지 않아서, 우리 화면에 싣지 못하는 영상은
+ * 이 탭으로 보낸다. udm=39가 그 탭이다. 구글이 문서로 밝힌 값은 아니어서, 바뀌면 일반 검색 결과가 열린다.
+ */
+export function googleShortVideoUrl(name: string): string {
+  return `https://www.google.com/search?q=${videoQuery(name)}&udm=39`
+}
+
+/** 네이버 검색의 "클립" 탭을 여는 주소. 네이버가 검색 화면의 클립 탭에 거는 주소와 같다 */
+export function naverClipUrl(name: string): string {
+  return `https://m.search.naver.com/search.naver?ssc=tab.m_clip.all&query=${videoQuery(name)}`
 }
 
 function searchQuery(name: string, facility: boolean): string {

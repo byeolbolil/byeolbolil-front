@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest"
 import { knownNotes, knownSky } from "./clean"
-import { naverSearchUrl, pointMapUrl, safePoints, safeVideos, searchUrl, youtubeSearchUrl } from "./links"
+import {
+  googleShortVideoUrl,
+  naverClipUrl,
+  naverSearchUrl,
+  pointMapUrl,
+  safePoints,
+  safeVideos,
+  searchUrl,
+  youtubeSearchUrl,
+} from "./links"
 import { skyBrightnessText, skyGlow, skyHint, skyName, skyScalePosition } from "./sky"
 
 describe("하늘 밝기를 말로", () => {
@@ -152,9 +161,12 @@ describe("영상으로 미리 보기", () => {
     ])
   })
 
-  it("유튜브 검색은 장소 이름에 별을 붙여 찾는다", () => {
-    expect(youtubeSearchUrl("원주 거돈사지")).toBe(
-      `https://www.youtube.com/results?search_query=${encodeURIComponent("원주 거돈사지 별")}`,
+  it("영상 검색은 어디서든 장소 이름에 별을 붙여 찾는다", () => {
+    const query = encodeURIComponent("원주 거돈사지 별")
+    expect(youtubeSearchUrl("원주 거돈사지")).toBe(`https://www.youtube.com/results?search_query=${query}`)
+    expect(googleShortVideoUrl("원주 거돈사지")).toBe(`https://www.google.com/search?q=${query}&udm=39`)
+    expect(naverClipUrl("원주 거돈사지")).toBe(
+      `https://m.search.naver.com/search.naver?ssc=tab.m_clip.all&query=${query}`,
     )
   })
 })
