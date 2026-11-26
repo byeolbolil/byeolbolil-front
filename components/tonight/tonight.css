@@ -2840,16 +2840,16 @@
     width: 11px;
     height: 11px;
   }
-  /* 좋은 밤일수록 금빛이 짙다. oklch로 섞으면 남색과 금색 사이의 보라가 나와서 반투명 금색을 겹친다 */
+  /*
+   * 좋은 밤일수록 칸이 한 단계 밝은 남색이다. 금색은 별에만 쓴다. 남색 위에 금색을 겹치면 탁한 황토색이 되어서
+   * 색 대신 밝기로 구분한다. 위쪽 밤 고르기(.nights)도 칠 없이 별로 등급을 말한다
+   */
   .wk[data-level="STRONG"] {
-    background:
-      linear-gradient(oklch(0.88 0.12 86 / 0.3), oklch(0.88 0.12 86 / 0.3)),
-      var(--night-2);
+    background: var(--night-3);
   }
-  .wk[data-level="GOOD"] {
-    background:
-      linear-gradient(oklch(0.88 0.12 86 / 0.13), oklch(0.88 0.12 86 / 0.13)),
-      var(--night-2);
+  .wk[data-level="MAYBE"],
+  .wk[data-level="NO"] {
+    background: var(--night-1);
   }
   .wk[data-level="MAYBE"] .wk-mark path {
     fill: var(--ink-3);
