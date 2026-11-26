@@ -111,13 +111,16 @@ export function MapPanel({
   const legend =
     layer === "night" ? (
       <>
-        불빛이 밝은 곳일수록 별이 덜 보여요
-        <div className="ramp night" />
-        <div className="rl">
-          <span>어두움</span>
-          <span>밝음</span>
+        밝게 칠해진 곳일수록 하늘이 밝아 별이 덜 보여요
+        <div className="ramp night">
+          <i className="edge" />
         </div>
-        <div className="credit">야간광: VIIRS VNL 2024, Earth Observation Group</div>
+        <div className="rl night">
+          <span>어두운 하늘</span>
+          <span className="edge-label">은하수 안 보임</span>
+          <span>도시</span>
+        </div>
+        <div className="credit">하늘 밝기: VIIRS VNL 2024로 계산 (Duriscoe et al. 2018 모형)</div>
       </>
     ) : layer === "cloud" ? (
       <>

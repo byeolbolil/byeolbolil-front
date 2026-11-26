@@ -2003,8 +2003,27 @@
     border-radius: 3px;
     margin: 6px 0 4px;
   }
+  /* scripts/render_sky_overlay.py가 출력하는 범례 색. 지도 그림을 다시 만들면 함께 바꾼다 */
   .ramp.night {
-    background: linear-gradient(90deg, #0b0f22, #3a2c22, #b8814a, #ffe9c9);
+    position: relative;
+    background: linear-gradient(90deg, #0b0f22 0%, #111228 20%, #37263b 40%, #7d5551 60%, #cfaf73 80%, #e2dcc7 100%);
+  }
+  /* 은하수가 보이지 않게 되는 하늘 밝기(ALR 10). 다섯 칸 눈금의 세 번째 경계라서 60%에 온다 */
+  .ramp.night .edge {
+    position: absolute;
+    left: 60%;
+    top: -3px;
+    bottom: -3px;
+    width: 1.5px;
+    background: var(--ink-2);
+  }
+  .rl.night {
+    position: relative;
+  }
+  .rl.night .edge-label {
+    position: absolute;
+    left: 60%;
+    padding-left: 4px;
   }
   .ramp.cloud {
     background: linear-gradient(90deg in oklch, var(--star), var(--cloud));

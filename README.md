@@ -12,7 +12,7 @@
 |---|---|
 | 오늘 밤 | 가장 좋은 곳, 추천 시간대, 밤 시간 띠(훑으면 시간별 하늘), 후보 목록. 날짜를 바꿔 7일 뒤의 밤까지 볼 수 있다 |
 | 자세히 보기 | 추천 시간의 점수와 구름, 광해 등급, 달 밝기, 습도, 예보 출처, 시간대별 구름과 점수 그래프 |
-| 지도 | 밤 불빛, 구름, 일반 지도 레이어. 표식을 누르면 그 장소가 열리고, 빈 곳을 누르면 그 위치를 내 장소로 저장할 수 있다 |
+| 지도 | 광해(하늘 밝기), 구름, 일반 지도 레이어. 표식을 누르면 그 장소가 열리고, 빈 곳을 누르면 그 위치를 내 장소로 저장할 수 있다 |
 | 내 장소 | 저장한 장소의 오늘 밤 평가. 로그인이 필요하다 |
 | 설정 | 간단히/자세히, 몇 시까지 볼 수 있는지, 얼마나 멀리 갈 수 있는지, 출발 위치, 고급 기준 |
 | 추천 기준과 출처 | 기준값마다 근거와 상태(출처 있음, 정책, 추정, 출처 없음) |
@@ -98,15 +98,15 @@ lib/
     time.ts, hours.ts, place.ts, facts.ts   시각 표기, 시간 칸 고르기, 장소 표기, 카드 문구
     settings.ts             설정과 API 쿼리 사이의 변환
     sources.ts              추천 기준과 출처의 내용
-    night-overlay.ts        밤 불빛 이미지의 좌표와 지도 스타일
+    night-overlay.ts        광해 지도 이미지의 좌표와 지도 스타일
     *.test.ts               단위 테스트
   api/, store/              인증과 북마크 클라이언트, zustand 저장소 (이전 그대로)
 public/
   sky/                      하늘 사진
-  map/night-lights.webp     밤 불빛 이미지
+  map/sky-brightness.webp   광해 지도 이미지(하늘 밝기)
   icons/, sw.js, offline.html   설치용 아이콘, 서비스 워커, 연결이 없을 때의 화면
 scripts/
-  render_night_overlay.py   밤 불빛 이미지 만들기
+  render_sky_overlay.py     광해 지도 이미지 만들기
   render_icons.py           아이콘 만들기
   walkthrough.mjs           브라우저 점검
 ```
@@ -128,11 +128,13 @@ scripts/
 
 - 바탕 지도는 OpenFreeMap의 공개 스타일(`dark`, `liberty`)이다. 가입이나 키 없이 쓸 수 있고 출처 표기가 필요하다.
   MapLibre가 지도 오른쪽 아래에 "OpenFreeMap © OpenMapTiles Data from OpenStreetMap"을 적는다.
-- 밤 불빛은 백엔드 저장소의 `light_pollution_korea.csv`(VIIRS Nighttime Lights 2024 기반)를 웹 메르카토르로 그린
-  이미지다. 다시 만들려면 다음을 실행한다. 범위를 바꾸면 `lib/tonight/night-overlay.ts`의 좌표도 함께 바꾼다.
+- 광해 지도는 백엔드 저장소의 하늘 밝기 격자(`skyglow_korea.bin.gz`)를 웹 메르카토르로 그린 이미지다. 밤 추천이
+  장소마다 읽는 값과 같고, 색의 눈금은 장소 카드의 다섯 칸 눈금(`lib/tonight/sky.ts`)과 같다. 격자를 다시 만들면
+  다음을 실행하고, 출력된 범위가 `lib/tonight/night-overlay.ts`와 다르면 그 좌표를, 범례 색이 다르면
+  `tonight.css`의 `.ramp.night`를 함께 바꾼다.
 
   ```bash
-  python scripts/render_night_overlay.py <백엔드 저장소>/src/main/resources/light_pollution_korea.csv public/map/night-lights.webp
+  python scripts/render_sky_overlay.py <백엔드 저장소>/src/main/resources/skyglow/skyglow_korea.bin.gz public/map/sky-brightness.webp
   ```
 
 - 구름 레이어는 구름의 모양을 그리지 않는다. 고른 시각에 각 장소의 예보 구름량으로 표식을 칠한다.
@@ -151,6 +153,6 @@ scripts/
 - `/api` 응답과 페이지 HTML은 캐시하지 않는다. 예보는 시간이 지나면 틀린 정보가 되기 때문이다.
 - 연결이 끊기면 지난 추천 대신 연결이 없다는 화면(`offline.html`)을 보여준다.
 - 주소에 해시가 들어 있는 빌드 산출물(`/_next/static/`)은 캐시에서 먼저 답한다.
-- 사진, 밤 불빛 이미지, 아이콘은 캐시로 먼저 답하고 뒤에서 새로 받아 둔다.
+- 사진, 광해 지도 이미지, 아이콘은 캐시로 먼저 답하고 뒤에서 새로 받아 둔다.
 
 개발 서버에서는 서비스 워커를 등록하지 않는다.

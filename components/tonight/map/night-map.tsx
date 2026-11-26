@@ -20,7 +20,7 @@ import { levelStars, levelText } from "@/lib/tonight/wording"
 import { STAR_PATH } from "../icons"
 
 const SVG_NS = "http://www.w3.org/2000/svg"
-const OVERLAY_ID = "night-lights"
+const OVERLAY_ID = "sky-brightness"
 const CLOUD_ID = "cloud-field"
 /** 구름 그림의 가로 화소 수. 격자가 40km 간격이라 이보다 촘촘해도 더 보이는 것이 없다 */
 const CLOUD_WIDTH = 288
@@ -81,7 +81,7 @@ function localizeLabels(map: MapLibreMap) {
   }
 }
 
-/** 어두운 지도를 화면의 남색에 맞추고, 그 위에 밤 불빛 이미지를 얹는다. 지명은 불빛 위에 오도록 글자 레이어 아래에 넣는다. */
+/** 어두운 지도를 화면의 남색에 맞추고, 그 위에 광해 지도 이미지를 얹는다. 지명은 광해 위에 오도록 글자 레이어 아래에 넣는다. */
 function decorateDark(map: MapLibreMap, layer: MapLayer) {
   const paint: Array<[string, "background-color" | "fill-color" | "line-color", string]> = [
     ["background", "background-color", "#11152a"],
@@ -147,7 +147,7 @@ function createCloudPainter(grid: CloudGrid): CloudPainter | null {
   return { canvas, context, image, sampler, grid, shown: null, frame: null }
 }
 
-/** 지도 스타일에 구름 그림을 얹는다. 밤 불빛 위, 지명 아래에 둔다. 스타일을 갈아 끼우면 다시 불러야 한다 */
+/** 지도 스타일에 구름 그림을 얹는다. 광해 위, 지명 아래에 둔다. 스타일을 갈아 끼우면 다시 불러야 한다 */
 function attachCloudLayer(map: MapLibreMap, painter: CloudPainter) {
   if (!map.getSource(CLOUD_ID)) {
     map.addSource(CLOUD_ID, {
@@ -189,10 +189,10 @@ function drawCloud(map: MapLibreMap, painter: CloudPainter, field: Float32Array)
   map.triggerRepaint()
 }
 
-/** 구름 레이어에서는 표식이 잘 보이도록 불빛을 흐리게 둔다. */
+/** 구름 레이어에서는 표식이 잘 보이도록 광해를 흐리게 둔다. */
 function tuneOverlay(map: MapLibreMap, layer: MapLayer) {
   if (!map.getLayer(OVERLAY_ID)) return
-  // 불빛은 전국을 한눈에 볼 때를 기준으로 번지게 그려서, 가까이 당기면 지명이 묻히지 않도록 옅게 한다
+  // 도시 쪽은 거의 덮을 만큼 진하게 그려서, 가까이 당기면 지명과 길이 묻히지 않도록 옅게 한다
   const strength = layer === "cloud" ? 0.4 : 1
   map.setPaintProperty(OVERLAY_ID, "raster-opacity", ["interpolate", ["linear"], ["zoom"], 7, strength, 11, strength * 0.55])
   map.setPaintProperty(OVERLAY_ID, "raster-saturation", layer === "cloud" ? -0.6 : 0)
@@ -289,7 +289,7 @@ function paintMarker(
 
 /**
  * MapLibre 지도. 추천 장소를 표식으로 올리고 레이어에 따라 모양을 바꾼다.
- * 밤 불빛은 VIIRS 값으로 직접 그린 이미지, 구름은 장소별 시간 예보로 칠한 표식, 일반 지도는 기본 지도만이다.
+ * 광해는 하늘 밝기 격자로 그린 이미지, 구름은 격자 예보로 그린 구름장과 장소별 시간 예보로 칠한 표식, 일반 지도는 기본 지도만이다.
  */
 export default function NightMap({
   places,
@@ -369,7 +369,7 @@ export default function NightMap({
     }
   }, [])
 
-  // 레이어 전환. 일반 지도와 어두운 지도는 스타일이 달라서 갈아 끼우고, 밤 불빛과 구름 사이는 불빛의 세기만 바꾼다
+  // 레이어 전환. 일반 지도와 어두운 지도는 스타일이 달라서 갈아 끼우고, 광해와 구름 사이는 광해의 세기만 바꾼다
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
