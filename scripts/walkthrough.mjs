@@ -93,18 +93,40 @@ async function walk(browser, kind) {
   console.log(`  가장 좋은 곳: ${flat(await page.locator(".bb .tonight .sky-text").first().innerText())}`)
   console.log(`  예보 출처: ${await page.locator(".bb .credit-line").first().innerText()}`)
   check(requests[0]?.includes("lat=37.55&lon=126.91"), `첫 요청에 출발지가 들어 있다: ${requests[0]}`)
-  // 밤 고르기: 칸마다 날짜가 있고, 밤마다의 등급이 도착하면 오늘 밤의 표시가 목록의 첫 장소와 같은 등급이다
+  // 목록의 밤 고르기(칩): 밤마다의 등급이 도착하면 오늘 밤의 표시가 목록의 첫 장소와 같은 등급이다
   await page
-    .waitForFunction(() => document.querySelectorAll('.bb .nights button:not([data-level="NONE"])').length > 1, null, { timeout: 30_000 })
+    .waitForFunction(() => document.querySelectorAll('.bb .night-chips button:not([data-level="NONE"])').length > 1, null, { timeout: 30_000 })
     .catch(() => {})
-  const nightButtons = await page.locator(".bb .nights button").evaluateAll((items) =>
-    items.map((item) => ({ date: item.querySelector(".nt-date")?.textContent ?? "", level: item.getAttribute("data-level") })),
+  const nightButtons = await page.locator(".bb .night-chips button").evaluateAll((items) =>
+    items.map((item) => ({ level: item.getAttribute("data-level") })),
   )
   const firstRating = await page.locator(".bb .side .row .rating").first().getAttribute("title")
-  check(
-    nightButtons.length === 7 && nightButtons.every((night) => /^\d{1,2}\/\d{1,2}$/.test(night.date)),
-    "밤 고르기의 일곱 칸에 날짜가 적혀 있다",
-  )
+  check(nightButtons.length === 7, "목록 위에 밤 일곱 개를 고르는 칩이 있다")
+  // 첫 화면이 곧 1위 장소의 장소 화면이다. 한 번 더 누르지 않아도 그 장소의 일곱 밤이 보인다
+  await page
+    .waitForFunction(() => document.querySelectorAll('.bb .place-view .nights button:not([data-level="NONE"])').length > 1, null, { timeout: 30_000 })
+    .catch(() => {})
+  // 가볼 만한 곳이 없는 밤에는 장소 대신 그 사정과 다른 밤을 알린다
+  if ((await page.locator(".bb .place-view").count()) > 0) {
+    check(
+      (await page.locator('.bb .place-view .nights button:not([data-level="NONE"])').count()) > 1,
+      "첫 화면에서 바로 1위 장소의 일곱 밤이 보인다",
+    )
+  } else {
+    check((await page.locator(".bb main .tonight").count()) > 0, "가볼 만한 곳이 없는 밤에는 그 사정을 먼저 알린다")
+  }
+  // 좋은 밤의 칩을 고르면 그 밤의 1위가 바로 장소 화면으로 뜬다
+  const goodChip = page.locator('.bb .night-chips button[data-level="STRONG"], .bb .night-chips button[data-level="GOOD"]').first()
+  if (await goodChip.count()) {
+    await goodChip.click()
+    await page.waitForSelector(".bb .place-view", { timeout: 30_000 })
+    await page.waitForTimeout(1500)
+    const firstRow = (await page.locator(".bb .side .row .row-name").first().innerText()).split("\n")[0].trim()
+    check((await heroName()) === firstRow, `다른 밤을 고르면 그 밤의 1위 "${firstRow}"가 바로 장소 화면으로 뜬다`)
+    await shot("good-night")
+    await page.locator(".bb .night-chips button").first().click()
+    await page.waitForTimeout(1500)
+  }
   check(nightButtons.filter((night) => night.level !== "NONE").length > 1, `밤마다 등급이 그려진다: ${nightButtons.map((night) => night.level).join(" ")}`)
   check(LEVEL_TEXT[nightButtons[0]?.level] === firstRating, `오늘 밤의 표시가 목록의 첫 장소와 같다: ${nightButtons[0]?.level}, "${firstRating}"`)
   await shot("home")
@@ -118,7 +140,7 @@ async function walk(browser, kind) {
   await page.waitForTimeout(1200)
   check((await heroName()) === rowName, `목록에서 고른 "${rowName}"의 장소 화면이 열린다`)
   if (kind === "desktop") check((await row.getAttribute("aria-current")) === "true", "고른 줄이 옆 칸의 목록에 표시된다")
-  else check((await page.locator(".bb .side .row").count()) === 0, "좁은 화면에서는 장소 화면이 목록을 덮는다")
+  else check((await page.locator(".bb .side .row").count()) > 0, "좁은 화면에서는 목록이 장소 화면 아래에 그대로 있다")
   // 다른 밤을 눌러도 장소는 그대로다
   const placeNights = page.locator(".bb .place-view .nights button")
   await page

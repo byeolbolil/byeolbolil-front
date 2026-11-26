@@ -95,6 +95,8 @@ interface NightCandidatesProps {
   onOpenOrigin?: () => void
   /** 로그인 창을 연다 */
   onLogin: () => void
+  /** 목록 제목 아래에 두는 밤 고르기 */
+  picker?: ReactNode
   /** 목록 아래에 덧붙이는 내용 */
   footer?: ReactNode
 }
@@ -114,6 +116,7 @@ export function NightCandidates({
   onOpenSettings,
   onOpenOrigin,
   onLogin,
+  picker,
   footer,
 }: NightCandidatesProps) {
   const [showAll, setShowAll] = useState(false)
@@ -147,6 +150,7 @@ export function NightCandidates({
           <div className="sec-title stack">
             <h2>{view.top ? `${name} 후보 ${ranked.length}곳` : "그나마 볼 수 있는 곳"}</h2>
           </div>
+          {picker}
           <div className="rows" ref={rowsRef}>
             {shown.map(({ place, rank }) => (
               <PlaceRow
@@ -164,7 +168,9 @@ export function NightCandidates({
             </button>
           ) : null}
         </section>
-      ) : null}
+      ) : (
+        picker
+      )}
 
       {daysBetween(tonightDate, night.date) > 0 ? <p className="calm small">멀리 볼수록 예보가 바뀌기 쉬워요.</p> : null}
       {night.excludedByTravelCount > 0 ? (

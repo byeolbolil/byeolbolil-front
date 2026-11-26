@@ -6,7 +6,6 @@ import type { NightPlace, NightQuery, RecommendationLevel } from "@/lib/tonight/
 import { useWeek } from "@/lib/tonight/use-week"
 import type { WeekNight, WeekPlace } from "@/lib/tonight/week"
 import { HeroCard } from "./hero-card"
-import { ChevronIcon } from "./icons"
 import { NightPicker } from "./night-picker"
 
 interface PlaceViewProps {
@@ -17,18 +16,16 @@ interface PlaceViewProps {
   /** 오늘 밤부터 7일 */
   dates: readonly string[]
   criteria: Pick<NightQuery, "minClearHours" | "preferBefore">
-  /** 저장 버튼 */
+  /** 북마크 버튼 */
   save?: ReactNode
-  /** 목록으로 돌아간다 */
-  onBack: () => void
 }
 
 /**
- * 장소 하나의 화면. 위의 날짜 줄은 이 장소의 일곱 밤이고, 날짜를 눌러도 장소는 그대로다.
- * 목록 화면의 날짜 줄(그 밤에 전국에서 가장 좋은 곳의 등급)과 뜻이 다르므로 화면을 나눴다.
+ * 장소 하나의 화면. 첫 화면은 그 밤의 1위 장소이고, 목록에서 다른 곳을 누르면 그 자리에서 장소만 바뀐다.
+ * 위의 날짜 칸은 이 장소의 일곱 밤이고, 날짜를 눌러도 장소는 그대로다. 후보 목록의 밤은 목록 위의 작은 칩으로 고른다.
  * 고른 밤의 값은 이 장소의 이번 주 응답에서 가져온다. 처음 고른 밤은 목록에서 받은 값을 그대로 쓴다.
  */
-export function PlaceView({ place, placeDate, dates, criteria, save, onBack }: PlaceViewProps) {
+export function PlaceView({ place, placeDate, dates, criteria, save }: PlaceViewProps) {
   const [date, setDate] = useState(placeDate)
   const week = useWeek({ lat: place.latitude, lon: place.longitude }, criteria)
   const weekPlace = week.week?.places[0]
@@ -45,10 +42,6 @@ export function PlaceView({ place, placeDate, dates, criteria, save, onBack }: P
 
   return (
     <div className="place-view">
-      <button type="button" className="back" onClick={onBack}>
-        <ChevronIcon />
-        목록
-      </button>
       {dates.length > 0 ? (
         <NightPicker dates={dates} selected={date} onSelect={setDate} levels={levels} settled={week.status !== "loading"} />
       ) : null}

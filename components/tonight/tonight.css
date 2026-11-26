@@ -3072,23 +3072,6 @@
   flex-direction: column;
   gap: 12px;
 }
-.bb .place-view .back {
-  align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  border: 0;
-  background: none;
-  padding: 4px 6px 4px 0;
-  color: var(--ink-2);
-  font-size: 14px;
-  cursor: pointer;
-}
-.bb .place-view .back svg {
-  width: 18px;
-  height: 18px;
-  transform: rotate(90deg);
-}
 
 /* 넓은 화면에서는 지도가 늘 왼쪽에 있어서 목록과 지도를 오가는 줄을 두지 않는다 */
 @media (min-width: 1080px) {
@@ -3278,4 +3261,56 @@
   .bb .top .brand {
     margin-right: 10px;
   }
+}
+
+/* 후보 목록의 밤 고르기. 장소 화면의 큰 날짜 칸과 모양을 달리한 한 줄짜리 칩이다 */
+.bb .night-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 2px 0 10px;
+}
+.bb .night-chips::-webkit-scrollbar {
+  display: none;
+}
+.bb .night-chips button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--hair);
+  background: none;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.bb .night-chips button[aria-pressed="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--night-0);
+  font-weight: 600;
+}
+.bb .night-chips .nt-mark {
+  display: inline-flex;
+  color: var(--star);
+}
+.bb .night-chips button[aria-pressed="true"] .nt-mark {
+  color: oklch(0.55 0.13 75);
+}
+.bb .night-chips .nt-mark svg {
+  width: 9px;
+  height: 9px;
+}
+.bb .night-chips [data-level="MAYBE"] .nt-mark path {
+  fill: var(--ink-3);
+}
+.bb .night-chips [data-level="NO"] .nt-mark {
+  color: var(--cloud);
+}
+.bb .night-chips [data-level="NO"] .nt-mark svg {
+  width: 13px;
+  height: 13px;
 }
