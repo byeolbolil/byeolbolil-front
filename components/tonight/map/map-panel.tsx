@@ -114,15 +114,11 @@ export function MapPanel({
         <ul className="light-key">
           <li>
             <i data-key="dark" />
-            어두운 하늘
-          </li>
-          <li>
-            <i data-key="line" />
-            밝기 경계 <small>숫자가 작을수록 어두워요</small>
+            푸를수록 하늘이 어두워요
           </li>
           <li>
             <i data-key="glow" />
-            은하수 안 보임
+            은하수가 안 보이는 곳
           </li>
           <li>
             <i data-key="lights" />
