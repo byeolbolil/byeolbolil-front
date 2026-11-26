@@ -191,7 +191,7 @@ export function HumidityDrop({ humidity }: { humidity: number | null }) {
 }
 
 /**
- * 하늘이 얼마나 어두운지. 자연 그대로의 하늘부터 도시 하늘까지 다섯 등급을 한 칸씩 놓고, 이곳의 하늘 밝기를 바늘로 짚는다.
+ * 하늘이 얼마나 어두운지. 은하수가 또렷한 하늘부터 밝은 별만 보이는 하늘까지 다섯 등급을 한 칸씩 놓고, 이곳의 하늘 밝기를 바늘로 짚는다.
  * 칸 안에서도 밝을수록 오른쪽에 온다. 칸의 색은 등급이 오를수록 밝아지는 그림일 뿐이고 실제 밝기에 맞춘 것은 아니다.
  */
 export function DarknessScale({ skyBrightness, skyClass }: { skyBrightness?: number; skyClass?: SkyClass }) {

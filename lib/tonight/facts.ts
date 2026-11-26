@@ -6,7 +6,7 @@ import { average, moonSummary, windowHours } from "./hours"
 import { moonTimesText } from "./moon"
 import { hourOf, koreanHour } from "./time"
 import type { ForecastSource, NightPlace, NightRecommendation, NightSummary, RecommendationLevel } from "./types"
-import { skyBrightnessText, skyName } from "./sky"
+import { skyBrightnessText, skyName, skyRankText } from "./sky"
 import { cloudHeadline, isWorthGoing, patternText } from "./wording"
 
 export interface QuickFact {
@@ -50,14 +50,14 @@ function moonHeadline(place: NightPlace): QuickFact | null {
 }
 
 /** 하늘이 얼마나 어두운 곳인지. 오늘 밤 그 하늘을 더 가리는 것이 있으면 그쪽을 먼저 말한다 */
-export function skyFact(place: Pick<NightPlace, "notes" | "skyBrightness" | "skyClass">): QuickFact {
+export function skyFact(place: Pick<NightPlace, "notes" | "skyBrightness" | "skyClass" | "skyRank">): QuickFact {
   return { title: skyName(place.skyClass), detail: skyDetail(place) }
 }
 
-function skyDetail(place: Pick<NightPlace, "notes" | "skyBrightness">): string {
+function skyDetail(place: Pick<NightPlace, "notes" | "skyBrightness" | "skyRank">): string {
   if (place.notes.includes("BRIGHT_MOON")) return "달빛 때문에 오늘은 별이 줄어요"
   if (place.notes.includes("LIGHTS_IN_VIEW")) return "아래쪽 마을이나 도시의 불빛이 직접 보여요"
-  return skyBrightnessText(place.skyBrightness)
+  return place.skyRank ? skyRankText(place.skyRank) : skyBrightnessText(place.skyBrightness)
 }
 
 /**

@@ -13,14 +13,17 @@ export function knownNotes(value: unknown): NightNote[] {
   return value.filter((note): note is NightNote => typeof note === "string" && NOTES.includes(note))
 }
 
-/** 하늘 밝기와 등급. 숫자가 아니거나 모르는 등급이면 없는 것으로 본다 */
-export function knownSky(item: Record<string, unknown>): { skyBrightness?: number; skyClass?: SkyClass } {
-  const sky: { skyBrightness?: number; skyClass?: SkyClass } = {}
+/** 하늘 밝기와 등급, 국내 순위. 숫자가 아니거나 모르는 등급, 범위 밖의 순위면 없는 것으로 본다 */
+export function knownSky(item: Record<string, unknown>): { skyBrightness?: number; skyClass?: SkyClass; skyRank?: number } {
+  const sky: { skyBrightness?: number; skyClass?: SkyClass; skyRank?: number } = {}
   if (typeof item.skyBrightness === "number" && Number.isFinite(item.skyBrightness)) {
     sky.skyBrightness = item.skyBrightness
   }
   if (typeof item.skyClass === "string" && SKY_CLASSES.includes(item.skyClass)) {
     sky.skyClass = item.skyClass as SkyClass
+  }
+  if (typeof item.skyRank === "number" && Number.isInteger(item.skyRank) && item.skyRank >= 1 && item.skyRank <= 100) {
+    sky.skyRank = item.skyRank
   }
   return sky
 }

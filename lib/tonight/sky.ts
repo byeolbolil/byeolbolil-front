@@ -18,21 +18,25 @@ const BOUNDS = [0.33, 2, 10, 50] as const
 const SCALE_MIN = 0.05
 const SCALE_MAX = 250
 
-/** 등급 이름. 별볼일이 붙인 이름이다 */
+/**
+ * 등급 이름. 그 하늘에서 은하수가 어떻게 보이는지로 붙인다. 아래 세 등급은 Duriscoe et al. 2018 표 3이 묶은 Bortle 등급
+ * (1~3, 4, 5)의 설명을, 위 두 등급은 Falchi et al. 2016의 은하수 가시 한계와 "눈이 어둠에 적응하지 못하는 밝기"를 따른다.
+ * 백엔드 저장소 docs/SCORING.md "광해"에 있다.
+ */
 const SKY_NAME: Record<SkyClass, string> = {
-  NATURAL: "자연 그대로의 하늘",
-  DARK: "어두운 하늘",
-  RURAL: "시골 하늘",
-  SUBURBAN: "교외 하늘",
-  URBAN: "도시 하늘",
+  NATURAL: "은하수가 또렷한 하늘",
+  DARK: "은하수가 잘 보이는 하늘",
+  RURAL: "은하수가 보이는 하늘",
+  SUBURBAN: "은하수가 안 보이는 하늘",
+  URBAN: "밝은 별만 보이는 하늘",
 }
 
 const SKY_HINT: Record<SkyClass, string> = {
-  NATURAL: "인공 불빛이 거의 닿지 않아요",
-  DARK: "지평선 쪽에만 불빛이 비쳐요",
-  RURAL: "은하수가 보이지만 불빛이 번져 있어요",
-  SUBURBAN: "은하수는 보이지 않아요",
-  URBAN: "밝은 별만 보여요",
+  NATURAL: "인공 불빛이 거의 닿지 않아 은하수의 무늬까지 보여요",
+  DARK: "지평선 몇 군데에만 불빛이 비쳐요",
+  RURAL: "머리 위에서는 보이지만 흐리고, 지평선 쪽은 불빛에 묻혀요",
+  SUBURBAN: "밝은 별과 별자리는 보여요",
+  URBAN: "눈이 어둠에 적응하지 못할 만큼 밝아요",
 }
 
 export function skyName(skyClass: SkyClass | undefined): string {
@@ -42,6 +46,16 @@ export function skyName(skyClass: SkyClass | undefined): string {
 /** 그 등급의 하늘에서 무엇이 보이는지 한마디 */
 export function skyHint(skyClass: SkyClass | undefined): string {
   return skyClass ? SKY_HINT[skyClass] : ""
+}
+
+/**
+ * 국내에서 얼마나 어두운 편인지. 등급이 미국 국립공원 기준이라 한국은 거의 두 등급에 몰리므로 순위로 따로 말한다.
+ * 순위는 서버가 남한 땅을 하늘이 어두운 순서로 백 칸으로 나눠 준 값이다.
+ */
+export function skyRankText(skyRank: number | undefined): string {
+  if (skyRank === undefined) return ""
+  if (skyRank <= 50) return `국내 상위 ${skyRank}%의 어두운 하늘이에요`
+  return `국내 땅의 ${skyRank - 1}%가 이곳보다 어두워요`
 }
 
 /** "인공 불빛이 자연 밤하늘의 약 4배예요". 모형으로 계산한 값이라 어림으로 말한다 */

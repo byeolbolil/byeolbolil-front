@@ -108,6 +108,18 @@ export function MapPanel({
     </span>
   ) : null
 
+  // 표식의 뜻. 구름 레이어에서는 표식이 구름량을 보여 주므로 적지 않는다. 지도 위에 따로 띄우지 않고 범례에 한 줄로 둔다
+  const pinKey =
+    layer === "cloud" ? null : (
+      <span className="pin-key">
+        <em>{nightName} 별 보기</em>
+        <i data-level="STRONG" /> 아주 좋음
+        <i data-level="GOOD" /> 좋음
+        <i data-level="MAYBE" /> 아쉬움
+        <i data-level="NO" /> 어려움
+      </span>
+    )
+
   const legend =
     layer === "night" ? (
       <>
@@ -125,7 +137,7 @@ export function MapPanel({
             불빛
           </li>
         </ul>
-        <div className="credit">지도를 누르면 그 자리의 하늘 밝기가 나와요 · 자료: VIIRS 2024</div>
+        <div className="credit">누르면 그 자리의 하늘이 나와요 · 자료: VIIRS 2024</div>
       </>
     ) : layer === "cloud" ? (
       <>
@@ -190,17 +202,13 @@ export function MapPanel({
             onSelect={pickFound}
           />
         ) : null}
-        <div className="map-card tl">
-          <b>{nightName} 별 보기 좋은 곳</b>
-          <span className="pin-key">
-            <i data-level="STRONG" /> 아주 좋음
-            <i data-level="GOOD" /> 좋음
-            <i data-level="MAYBE" /> 아쉬움
-            <i data-level="NO" /> 어려움
-          </span>
-          {mineKey}
-        </div>
-        {legend ? <div className="map-card bl">{legend}</div> : null}
+        {legend || pinKey || mineKey ? (
+          <div className="map-card bl">
+            {legend}
+            {pinKey}
+            {mineKey}
+          </div>
+        ) : null}
         {children}
       </NightMap>
       {layer === "cloud" && timeline.length > 0 ? (
@@ -232,9 +240,10 @@ export function MapPanel({
           <span className="tl-label">{shownTime ? koreanHour(hourOf(shownTime)) : ""}</span>
         </div>
       ) : null}
-      {legend || mineKey ? (
+      {legend || pinKey || mineKey ? (
         <div className="map-legend">
           {legend}
+          {pinKey}
           {mineKey}
         </div>
       ) : null}

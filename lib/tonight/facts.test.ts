@@ -107,7 +107,7 @@ describe("짧은 설명", () => {
     expect(windowCloudAverage(place)).toBe(0)
     expect(cloudFact(place)).toEqual({ title: "구름 거의 없음", detail: "밤새 맑아요" })
     expect(moonFact(place)).toEqual({ title: "달이 밝아요", detail: "희미한 별은 잘 안 보여요" })
-    expect(skyFact(place)).toEqual({ title: "어두운 하늘", detail: "달빛 때문에 오늘은 별이 줄어요" })
+    expect(skyFact(place)).toEqual({ title: "은하수가 잘 보이는 하늘", detail: "달빛 때문에 오늘은 별이 줄어요" })
   })
 
   it("기록 응답: 밤새 흐린 곳은 추천 시간이 없다", () => {
@@ -116,16 +116,23 @@ describe("짧은 설명", () => {
     expect(cloudFact(place)).toEqual({ title: "구름이 두꺼워요", detail: "밤새 흐려요" })
   })
 
-  it("달이 밝지 않으면 하늘 밝기를 적는다", () => {
+  it("달이 밝지 않으면 국내 순위를 적는다", () => {
+    expect(skyFact(makePlace({ skyBrightness: 3.99, skyClass: "RURAL", skyRank: 34 }))).toEqual({
+      title: "은하수가 보이는 하늘",
+      detail: "국내 상위 34%의 어두운 하늘이에요",
+    })
+  })
+
+  it("국내 순위가 없으면 하늘 밝기를 적는다", () => {
     expect(skyFact(makePlace({ skyBrightness: 3.99, skyClass: "RURAL" }))).toEqual({
-      title: "시골 하늘",
+      title: "은하수가 보이는 하늘",
       detail: "인공 불빛이 자연 밤하늘의 약 4배예요",
     })
   })
 
   it("아래쪽 불빛이 직접 보이는 곳은 그것을 먼저 말한다", () => {
     expect(skyFact(makePlace({ skyBrightness: 5.93, skyClass: "RURAL", notes: ["LIGHTS_IN_VIEW"] }))).toEqual({
-      title: "시골 하늘",
+      title: "은하수가 보이는 하늘",
       detail: "아래쪽 마을이나 도시의 불빛이 직접 보여요",
     })
   })

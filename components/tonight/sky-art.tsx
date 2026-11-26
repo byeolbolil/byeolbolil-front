@@ -54,7 +54,7 @@ export function SkyArt({ place, hour }: SkyArtProps) {
   const moon = moonUp ? Math.min(1, Math.max(0, place.moonBrightness)) : 0
   const daylight = hour ? !hour.dark : false
 
-  // 자연 그대로의 하늘에서 가장 많고 도시에서 가장 적다. 달빛이 밝으면 더 준다
+  // 가장 어두운 하늘에서 가장 많고 도시에서 가장 적다. 달빛이 밝으면 더 준다
   const glow = skyGlow(place.skyBrightness)
   const starCount = Math.round((150 - 125 * glow) * (1 - 0.55 * moon))
   const stars = Array.from({ length: 150 }, () => ({

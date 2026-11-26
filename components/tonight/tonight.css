@@ -1990,13 +1990,11 @@
     font-size: 12px;
     color: var(--ink-2);
   }
-  .map-card.tl {
-    top: 14px;
-    left: 14px;
-  }
   .map-card.bl {
     bottom: 14px;
     left: 14px;
+    /* 오른쪽 아래의 레이어 버튼을 가리지 않게 한다 */
+    max-width: min(290px, calc(100% - 230px));
   }
   .ramp {
     height: 6px;
@@ -2198,9 +2196,6 @@
   }
 
   @media (max-width: 720px) {
-    .map-card.tl {
-      display: none;
-    }
     /* 좁은 화면에서는 지도 위가 좁아서 범례를 지도 아래에 둔다 */
     .map-card.bl {
       display: none;
@@ -2480,9 +2475,6 @@
   .map-search .psearch-drop {
     box-shadow: 0 10px 30px oklch(0.05 0.02 268 / 0.6);
   }
-  .map-card.tl {
-    top: 62px;
-  }
 
   /* 지도 위의 출발 위치 */
   .origin {
@@ -2556,9 +2548,6 @@
   }
   .bb .map-search .psearch-box input {
     font-size: 14px;
-  }
-  .bb .map-card.tl {
-    top: 66px;
   }
 }
 
@@ -2704,6 +2693,15 @@
     margin-left: 6px;
   }
   .pin-key i:first-child {
+    margin-left: 0;
+  }
+  /* 표식 줄의 제목은 한 줄을 따로 쓴다 */
+  .pin-key em {
+    flex-basis: 100%;
+    font-style: normal;
+    color: var(--ink-3);
+  }
+  .pin-key em + i {
     margin-left: 0;
   }
   .pin-key i[data-level="STRONG"] {
@@ -3253,6 +3251,9 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: 2px 8px;
+}
+.bb .rank {
+  color: var(--star);
 }
 .pick-sky-head b {
   color: var(--ink);
