@@ -87,7 +87,7 @@ export function HeroCard({ place, eyebrow, save, nightLabel = "오늘 밤" }: He
             </div>
           ) : null}
           <div className="sub">
-            {joinParts([regionOf(place.address), travelText(place.travel), place.type === "BOOKMARK" && "내 장소"])}
+            {joinParts([regionOf(place.address), travelText(place.travel), place.type === "BOOKMARK" && "북마크"])}
           </div>
         </div>
       </div>

@@ -36,6 +36,8 @@ interface MapPanelProps {
   origin?: Coordinates | null
   /** 지도 위에 얹는 카드(모바일의 장소 미리보기) */
   children?: ReactNode
+  /** 바깥에서 지도를 옮겨 보여 줄 곳. 목록에서 장소를 누르면 그쪽으로 간다. `at`이 바뀌면 같은 곳이라도 다시 옮긴다 */
+  focusTo?: (Coordinates & { at: number }) | null
 }
 
 /**
@@ -52,6 +54,7 @@ export function MapPanel({
   pick,
   onPick,
   origin,
+  focusTo = null,
   children,
 }: MapPanelProps) {
   const [layer, setLayer] = useState<MapLayer>("night")
@@ -101,7 +104,7 @@ export function MapPanel({
   // 내 장소가 지도에 있을 때만 표식의 뜻을 적는다. 좁은 화면에서는 지도 아래 안내에 함께 나온다
   const mineKey = places.some((place) => place.type === "BOOKMARK") ? (
     <span className="pin-key mine-key">
-      <i data-mine="1" /> 네모난 하늘색 책갈피는 내 장소
+      <i data-mine="1" /> 네모난 하늘색 표식은 북마크
     </span>
   ) : null
 
@@ -152,7 +155,7 @@ export function MapPanel({
         pick={pick}
         onPick={onPick ? (position) => onPick({ source: "map", ...position }) : undefined}
         origin={origin}
-        focus={focus}
+        focus={focusTo && (!focus || focusTo.at > focus.at) ? focusTo : focus}
         controls={
           <div className="seg" role="group" aria-label="지도 레이어">
             {MAP_LAYERS.map((option) => (

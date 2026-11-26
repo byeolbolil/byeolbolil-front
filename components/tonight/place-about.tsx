@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import {
   googleShortVideoUrl,
   linkHost,
@@ -15,7 +15,7 @@ import {
   youtubeSearchUrl,
   type PlaceVideo,
 } from "@/lib/tonight/links"
-import { AlertIcon, CarIcon, ClockIcon, ExternalIcon, PinIcon, PlayIcon } from "./icons"
+import { AlertIcon, CarIcon, ChevronIcon, ClockIcon, ExternalIcon, PinIcon, PlayIcon } from "./icons"
 
 interface PlaceAboutProps {
   /** 장소 이름. 검색 링크를 만드는 데 쓴다 */
@@ -102,14 +102,12 @@ export function PlaceAbout({ name, description, guide, caution, links, points, v
       ) : null}
       {!facility && clips.length > 0 ? (
         <div className="about-section about-videos">
-          <b className="about-h">
-            영상으로 미리 보기 <span>유튜브에서 열려요</span>
-          </b>
-          <ul>
+          <b className="about-h">영상으로 미리 보기</b>
+          <VideoRow>
             {clips.map((video) => (
               <VideoCard key={video.url} video={video} />
             ))}
-          </ul>
+          </VideoRow>
         </div>
       ) : null}
       <div className="about-section about-more">
@@ -199,5 +197,48 @@ function VideoCard({ video }: { video: PlaceVideo }) {
         {video.channel ? <span className="about-video-channel">{video.channel}</span> : null}
       </a>
     </li>
+  )
+}
+
+/**
+ * 옆으로 넘기는 영상 줄. 손가락으로는 밀어서 넘기고, 마우스로는 양옆의 화살표로 넘긴다. 마우스 휠은 페이지를 내리는 데
+ * 쓰이므로 가로로 바꾸지 않는다.
+ */
+function VideoRow({ children }: { children: ReactNode }) {
+  const listRef = useRef<HTMLUListElement>(null)
+  const [edges, setEdges] = useState({ start: true, end: true })
+
+  const measure = useCallback(() => {
+    const list = listRef.current
+    if (!list) return
+    setEdges({ start: list.scrollLeft <= 2, end: list.scrollLeft + list.clientWidth >= list.scrollWidth - 2 })
+  }, [])
+  useEffect(() => {
+    measure()
+    window.addEventListener("resize", measure)
+    return () => window.removeEventListener("resize", measure)
+  }, [measure])
+
+  const page = (direction: 1 | -1) => {
+    const list = listRef.current
+    if (list) list.scrollBy({ left: direction * list.clientWidth * 0.8, behavior: "smooth" })
+  }
+
+  return (
+    <div className="video-row">
+      <ul ref={listRef} onScroll={measure}>
+        {children}
+      </ul>
+      {edges.start ? null : (
+        <button type="button" className="video-arrow prev" aria-label="앞 영상" onClick={() => page(-1)}>
+          <ChevronIcon />
+        </button>
+      )}
+      {edges.end ? null : (
+        <button type="button" className="video-arrow next" aria-label="다음 영상" onClick={() => page(1)}>
+          <ChevronIcon />
+        </button>
+      )}
+    </div>
   )
 }

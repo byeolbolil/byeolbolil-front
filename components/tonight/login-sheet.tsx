@@ -89,7 +89,7 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
   return (
     <Sheet title={mode === "login" ? "로그인" : "가입하기"} onClose={onClose}>
       <div className="login">
-        {reason === "save" ? <p className="login-why">로그인하면 바로 저장돼요</p> : null}
+        {reason === "save" ? <p className="login-why">로그인하면 바로 북마크돼요</p> : null}
         <div className="login-social">
           {PROVIDERS.map((provider) => (
             <button

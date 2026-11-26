@@ -32,7 +32,7 @@ export function MySection({ night, criteria, revision, onOpen }: MySectionProps)
   return (
     <section className="sec my-section">
       <div className="sec-title">
-        <h2>내 장소</h2>
+        <h2>북마크</h2>
       </div>
       <div className="my-rows">
         {places.map((place) => {
@@ -46,7 +46,7 @@ export function MySection({ night, criteria, revision, onOpen }: MySectionProps)
             >
               <span className="my-name">
                 <BookmarkIcon filled />
-                {place.name ?? "저장한 장소"}
+                {place.name ?? "북마크한 곳"}
               </span>
               <Rating level={shown.level} compact />
               <span className="my-week" aria-hidden="true">
