@@ -470,12 +470,6 @@
   .band-tip b {
     font-weight: 700;
   }
-  .band-hint {
-    font-size: 11.5px;
-    color: var(--ink-3);
-    text-align: right;
-    margin-top: 2px;
-  }
 
   .quick {
     list-style: none;

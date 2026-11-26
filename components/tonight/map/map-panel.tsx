@@ -115,7 +115,7 @@ export function MapPanel({
             푸를수록 하늘이 어두워요
           </li>
         </ul>
-        <div className="credit">누르면 그 자리의 하늘이 나와요 · 자료: VIIRS 2024</div>
+        <div className="credit">자료: VIIRS 2024</div>
       </>
     ) : layer === "cloud" ? (
       <>

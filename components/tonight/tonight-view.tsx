@@ -152,9 +152,6 @@ export function NightCandidates({
         <section className="sec">
           <div className="sec-title stack">
             <h2>{view.top ? `${name} 후보 ${ranked.length}곳` : "그나마 볼 수 있는 곳"}</h2>
-            <p>
-              {isAuthenticated ? "내 장소와 밤에 갈 수 있는 관측지를" : "밤에 갈 수 있는 관측지를"} 별 보기 좋은 순서로 놓았어요
-            </p>
           </div>
           <div className="rows" ref={rowsRef}>
             {shown.map(({ place, rank }) => (

@@ -217,7 +217,6 @@ export function NightBand({ place, showScore, onScrub }: NightBandProps) {
           })}
         </div>
       </div>
-      <div className="band-hint">시간 띠를 훑어 보면 시간별 하늘이 보여요</div>
     </div>
   )
 }
