@@ -1,7 +1,7 @@
 "use client"
 
 import { useId, useRef, useState, type KeyboardEvent } from "react"
-import { cleanQuery, MAX_QUERY_LENGTH, type FoundPlace } from "@/lib/tonight/geocode"
+import { cleanQuery, MAX_QUERY_LENGTH, providersOf, type FoundPlace } from "@/lib/tonight/geocode"
 import { usePlaceSearch } from "@/lib/tonight/use-place-search"
 import { CloseIcon, SearchIcon } from "./icons"
 
@@ -29,6 +29,7 @@ export function PlaceSearch({ label, placeholder, onSelect, emptyHint, className
   const typed = cleanQuery(query) !== null
   const showList = open && typed
   const activeIndex = Math.min(active, places.length - 1)
+  const providers = providersOf(places)
 
   const choose = (place: FoundPlace) => {
     onSelect(place)
@@ -135,12 +136,18 @@ export function PlaceSearch({ label, placeholder, onSelect, emptyHint, className
               {note}
             </p>
           ) : null}
+          {/* 결과가 온 곳을 적는다. 아직 결과가 없을 때는 늘 묻는 OpenStreetMap을 적어 둔다 */}
           <p className="psearch-credit">
-            지명 ©{" "}
-            <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">
-              OpenStreetMap
-            </a>{" "}
-            contributors
+            {providers.includes("KAKAO") ? <span>장소 검색 카카오</span> : null}
+            {providers.includes("OSM") || providers.length === 0 ? (
+              <span>
+                지명 ©{" "}
+                <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">
+                  OpenStreetMap
+                </a>{" "}
+                contributors
+              </span>
+            ) : null}
           </p>
         </div>
       ) : null}

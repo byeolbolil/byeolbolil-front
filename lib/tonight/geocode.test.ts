@@ -1,12 +1,22 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { cleanQuery, fetchAreaName, GeocodeError, reverseUrl, searchPlaces, searchUrl, unwrapAreaName, unwrapPlaces } from "./geocode"
+import {
+  cleanQuery,
+  fetchAreaName,
+  GeocodeError,
+  providersOf,
+  reverseUrl,
+  searchPlaces,
+  searchUrl,
+  unwrapAreaName,
+  unwrapPlaces,
+} from "./geocode"
 
 const envelope = (data: unknown) => ({ success: true, status: 200, message: "요청이 성공적으로 처리되었습니다.", data })
 
 /** 백엔드 GeocodeApiTest가 고정한 응답의 앞 두 항목 */
 const hwaaksan = envelope([
-  { name: "화악산", address: "경기도 가평군 북면", latitude: 37.9946674, longitude: 127.5034314 },
-  { name: "화악산", address: "경상북도 청도군 청도읍", latitude: 35.5932802, longitude: 128.6915855 },
+  { name: "화악산", address: "경기도 가평군 북면", latitude: 37.9946674, longitude: 127.5034314, source: "OSM" },
+  { name: "화악산", address: "경상북도 청도군 청도읍", latitude: 35.5932802, longitude: 128.6915855, source: "OSM" },
 ])
 
 function respondWith(status: number, body: unknown) {
@@ -49,9 +59,22 @@ describe("요청 주소", () => {
 describe("응답 꺼내기", () => {
   it("공통 봉투에서 장소를 꺼내고 좌표 이름을 lat, lon으로 바꾼다", () => {
     expect(unwrapPlaces(hwaaksan)).toEqual([
-      { name: "화악산", address: "경기도 가평군 북면", lat: 37.9946674, lon: 127.5034314 },
-      { name: "화악산", address: "경상북도 청도군 청도읍", lat: 35.5932802, lon: 128.6915855 },
+      { name: "화악산", address: "경기도 가평군 북면", lat: 37.9946674, lon: 127.5034314, provider: "OSM" },
+      { name: "화악산", address: "경상북도 청도군 청도읍", lat: 35.5932802, lon: 128.6915855, provider: "OSM" },
     ])
+  })
+
+  it("카카오에서 온 결과는 출처를 따로 적고, 출처가 없거나 모르는 값이면 OpenStreetMap으로 본다", () => {
+    const places = unwrapPlaces(
+      envelope([
+        { name: "정천면망향의광장", address: "전북특별자치도 진안군 정천면 모정리", latitude: 35.90085, longitude: 127.4836018, source: "KAKAO" },
+        { name: "화악산", address: "", latitude: 37.99, longitude: 127.5 },
+        { name: "양평군", address: "", latitude: 37.49, longitude: 127.48, source: "ELSEWHERE" },
+      ]),
+    )
+    expect(places.map((place) => place.provider)).toEqual(["KAKAO", "OSM", "OSM"])
+    expect(providersOf(places)).toEqual(["KAKAO", "OSM"])
+    expect(providersOf([])).toEqual([])
   })
 
   it("찾은 곳이 없으면 빈 배열이다", () => {
@@ -66,7 +89,7 @@ describe("응답 꺼내기", () => {
         { name: "양평군", latitude: 37.4916, longitude: 127.4875 },
       ]),
     )
-    expect(places).toEqual([{ name: "양평군", address: "", lat: 37.4916, lon: 127.4875 }])
+    expect(places).toEqual([{ name: "양평군", address: "", lat: 37.4916, lon: 127.4875, provider: "OSM" }])
   })
 
   it("봉투의 모양이 다르면 받지 않는다", () => {
