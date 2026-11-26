@@ -44,7 +44,7 @@ export function PlaceRow({ place, selected = false, rank, onOpen }: PlaceRowProp
           {place.name}
           {place.type === "BOOKMARK" ? (
             <span className="mine">
-              <BookmarkIcon filled />내 장소
+              <BookmarkIcon filled />북마크
             </span>
           ) : null}
         </div>

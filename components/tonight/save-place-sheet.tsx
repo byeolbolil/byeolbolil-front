@@ -31,7 +31,7 @@ export function SavePlaceSheet({ position, defaultName, area, onSave, onClose }:
   }
 
   return (
-    <Sheet title="내 장소로 저장" onClose={onClose}>
+    <Sheet title="북마크하기" onClose={onClose}>
       <form className="q" onSubmit={submit}>
         <label className="ql" htmlFor="place-name">
           이 장소를 뭐라고 부를까요?
@@ -50,7 +50,7 @@ export function SavePlaceSheet({ position, defaultName, area, onSave, onClose }:
         />
         <div className="actions">
           <button type="submit" className="btn primary" disabled={!trimmed || saving}>
-            {saving ? "저장하는 중" : "저장"}
+            {saving ? "북마크하는 중" : "북마크"}
           </button>
           <button type="button" className="btn" onClick={onClose}>
             취소

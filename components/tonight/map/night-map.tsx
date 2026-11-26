@@ -315,7 +315,7 @@ function paintMarker(
     // 내 장소는 별 대신 책갈피를 그린다. 별 보기 어려운 밤에도 어디에 저장해 뒀는지는 보여야 한다
     if (mine) mark.appendChild(glyphSvg(BOOKMARK_PATH))
     else if (stars > 0) mark.appendChild(starSvg(1))
-    element.setAttribute("aria-label", `${mine ? "내 장소 " : ""}${place.name}, ${levelText(place.level)}`)
+    element.setAttribute("aria-label", `${mine ? "북마크 " : ""}${place.name}, ${levelText(place.level)}`)
   }
   element.dataset.level = state.layer === "cloud" ? "" : place.level
   element.dataset.mine = mine ? "1" : "0"

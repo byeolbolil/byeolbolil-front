@@ -766,6 +766,9 @@
   .about-videos:not(:has(li)) {
     display: none;
   }
+  .about-videos .video-row {
+    position: relative;
+  }
   .about-videos ul {
     list-style: none;
     margin: 0;
@@ -3221,4 +3224,58 @@
   margin: 8px 0 0;
   font-size: 13px;
   color: var(--ink-3);
+}
+
+/* 영상 줄의 화살표. 마우스로 쓰는 화면에서만 보인다 */
+.bb .video-arrow {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .bb .video-arrow {
+    position: absolute;
+    top: calc(172px * 9 / 16 / 2 - 16px);
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--hair);
+    border-radius: 50%;
+    background: color-mix(in oklch, var(--night-0) 85%, transparent);
+    color: var(--ink);
+    cursor: pointer;
+    box-shadow: 0 2px 10px oklch(0.05 0.02 268 / 0.5);
+  }
+  .bb .video-arrow.prev {
+    left: -6px;
+  }
+  .bb .video-arrow.next {
+    right: -6px;
+  }
+  .bb .video-arrow svg {
+    width: 18px;
+    height: 18px;
+  }
+  .bb .video-arrow.prev svg {
+    transform: rotate(90deg);
+  }
+  .bb .video-arrow.next svg {
+    transform: rotate(-90deg);
+  }
+}
+
+/* PC의 머리. 탭 줄이 없어진 자리만큼 아래를 띄우고, 양옆과 버튼 사이에 숨 쉴 틈을 둔다 */
+@media (min-width: 1080px) {
+  .bb {
+    padding-left: max(28px, env(safe-area-inset-left, 0px));
+    padding-right: max(28px, env(safe-area-inset-right, 0px));
+  }
+  .bb .top {
+    gap: 14px;
+    padding-block: 20px 22px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--hair);
+  }
+  .bb .top .brand {
+    margin-right: 10px;
+  }
 }

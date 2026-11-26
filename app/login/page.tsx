@@ -246,7 +246,7 @@ export default function LoginPage() {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">별볼일</CardTitle>
             <CardDescription className="text-center">
-              로그인하면 내 장소를 저장하고 그곳의 밤도 함께 볼 수 있어요
+              로그인하면 장소를 북마크하고 그곳의 밤도 함께 볼 수 있어요
             </CardDescription>
           </CardHeader>
           <CardContent>

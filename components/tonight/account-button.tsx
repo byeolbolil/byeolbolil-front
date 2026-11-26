@@ -53,7 +53,7 @@ export function AccountButton({ pending, onLogin }: AccountButtonProps) {
   const logout = async () => {
     setOpen(false)
     await authApi.logout()
-    toast({ title: "로그아웃했어요", description: "내 장소는 다시 로그인하면 볼 수 있어요." })
+    toast({ title: "로그아웃했어요", description: "북마크는 다시 로그인하면 볼 수 있어요." })
   }
 
   return (

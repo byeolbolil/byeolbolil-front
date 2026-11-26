@@ -168,11 +168,11 @@ async function walk(browser, kind) {
   }
   await tabs.getByRole("tab").first().click()
 
-  // 로그인하지 않고 저장을 누르면 페이지를 옮기지 않고 로그인 창이 뜬다
+  // 로그인하지 않고 북마크를 누르면 페이지를 옮기지 않고 로그인 창이 뜬다
   const urlBefore = page.url()
   await page.locator(".bb .save-pill").first().click()
   await page.waitForSelector(".bb .login", { timeout: 5000 })
-  check(page.url() === urlBefore, "저장을 누르면 보던 화면 위에 로그인 창이 뜬다")
+  check(page.url() === urlBefore, "북마크를 누르면 보던 화면 위에 로그인 창이 뜬다")
   await shot("login")
   await page.keyboard.press("Escape")
 

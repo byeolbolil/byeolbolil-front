@@ -192,7 +192,7 @@ export function NightCandidates({
           <button type="button" className="linkish" onClick={onLogin}>
             로그인
           </button>
-          하면 내가 저장한 장소도 함께 비교해 드려요.
+          하면 북마크한 곳도 함께 비교해 드려요.
         </p>
       ) : null}
       <FacilityList origin={origin} />

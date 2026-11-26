@@ -8,7 +8,7 @@ import { authStore } from "@/lib/store/authStore"
 import { buildNightView, nightLevels } from "@/lib/tonight/facts"
 import type { PickedPlace } from "@/lib/tonight/geocode"
 import { joinParts, placeKey, travelText } from "@/lib/tonight/place"
-import { ORIGIN_NAME_MAX, originLabel, resolveOrigin, roundCoordinate, toNightQuery } from "@/lib/tonight/settings"
+import { ORIGIN_NAME_MAX, originLabel, resolveOrigin, roundCoordinate, toNightQuery, type Coordinates } from "@/lib/tonight/settings"
 import { settingsOf, useSettings } from "@/lib/tonight/settings-store"
 import { nightDates, nightName, windowText } from "@/lib/tonight/time"
 import type { NightPlace } from "@/lib/tonight/types"
@@ -135,6 +135,8 @@ export function TonightApp() {
   const [detailSpotId, setDetailSpotId] = useState<number | null>(null)
   /** 장소 화면에 띄운 장소를 열 때의 값. 그 밤의 추천에 없는 내 장소(이동 시간 한도 밖)도 열 수 있게 들고 있는다 */
   const [detailSnapshot, setDetailSnapshot] = useState<NightPlace | null>(null)
+  /** 넓은 화면의 지도를 옮겨 보여 줄 곳. 목록에서 장소를 누르면 그쪽으로 간다 */
+  const [mapFocus, setMapFocus] = useState<(Coordinates & { at: number }) | null>(null)
   /** 내 장소가 바뀐 횟수. 목록의 내 장소 묶음이 이번 주를 다시 받는다 */
   const [myRevision, setMyRevision] = useState(0)
   /** 저장하거나 빼는 중인 장소의 키. 추천을 다시 받을 때까지 버튼을 잠근다 */
@@ -293,6 +295,8 @@ export function TonightApp() {
     setDetailSnapshot(place)
     selectPlace(placeKey(place))
     setPeekKey(null)
+    // 다른 지역을 보고 있었어도 지도가 그 장소로 옮겨 간다
+    setMapFocus({ lat: place.latitude, lon: place.longitude, at: Date.now() })
   }
   /** PC의 지도에서 표식을 누르면 오른쪽의 카드에 그 장소를 띄운다 */
   const openFromMap = (key: string) => {
@@ -331,12 +335,12 @@ export function TonightApp() {
     try {
       if (place.type === "BOOKMARK") {
         await bookmarksApi.deleteBookmark(place.id)
-        toast({ title: "내 장소에서 뺐어요", description: place.name })
+        toast({ title: "북마크에서 뺐어요", description: place.name })
         // 직접 고른 위치는 빼면 추천에서 사라진다. 카드를 가장 좋은 곳으로 돌린다
         if (place.spotId === undefined) closeDetail()
       } else {
         await bookmarksApi.addBookmark({ type: "SPOT", spotId: place.spotId, name: place.name })
-        toast({ title: "내 장소에 저장했어요", description: "내 장소 탭에서 이번 주를 한눈에 볼 수 있어요." })
+        toast({ title: "북마크했어요", description: place.name })
       }
       reloadNights()
     } catch {
@@ -354,12 +358,12 @@ export function TonightApp() {
     if (after?.kind === "saveSpot") {
       try {
         await bookmarksApi.addBookmark({ type: "SPOT", spotId: after.spotId, name: after.name })
-        toast({ title: "내 장소에 저장했어요", description: after.name })
+        toast({ title: "북마크했어요", description: after.name })
       } catch (error) {
         const status = (error as { response?: { status?: number } }).response?.status
         toast(
           status === 409
-            ? { title: "이미 내 장소에 있어요", description: after.name }
+            ? { title: "이미 북마크한 곳이에요", description: after.name }
             : { title: "저장하지 못했어요", description: "잠시 뒤에 다시 시도해 주세요.", variant: "destructive" },
         )
       }
@@ -410,7 +414,7 @@ export function TonightApp() {
         latitude: roundPosition(pick.lat),
         longitude: roundPosition(pick.lon),
       })
-      toast({ title: "내 장소에 저장했어요", description: name })
+      toast({ title: "북마크했어요", description: name })
       setPick(null)
       reloadNights()
       return true
@@ -443,12 +447,12 @@ export function TonightApp() {
           type="button"
           className="save-pill"
           aria-pressed={saved}
-          aria-label={saved ? "내 장소에 저장됨. 누르면 빼요" : "내 장소에 저장"}
+          aria-label={saved ? "북마크됨. 누르면 빼요" : "북마크"}
           disabled={busy}
           onClick={() => void toggleSaved(place)}
         >
           <BookmarkIcon filled={saved} />
-          {busy ? (saved ? "빼는 중" : "저장 중") : saved ? "저장됨" : "저장"}
+          {busy ? (saved ? "빼는 중" : "북마크하는 중") : "북마크"}
         </button>
       ) : null,
     }
@@ -467,11 +471,11 @@ export function TonightApp() {
         </button>
         {isAuthenticated ? (
           <button type="button" className="btn primary" onClick={() => setSheet("save")}>
-            내 장소로 저장
+            북마크
           </button>
         ) : (
           <button type="button" className="btn primary" onClick={() => askLogin({ kind: "savePick" })}>
-            로그인하고 저장
+            로그인하고 북마크
           </button>
         )}
         <button type="button" className="btn wide" onClick={() => setSheet("week")}>
@@ -661,6 +665,7 @@ export function TonightApp() {
               pick={pick}
               onPick={pickOnMap}
               origin={origin}
+              focusTo={mapFocus}
             >
               {pickCard}
             </MapPanel>

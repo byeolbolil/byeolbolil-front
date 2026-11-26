@@ -231,7 +231,7 @@ export function nightPlaceOf(place: WeekPlace, night: NightRecommendation): Nigh
     type: "BOOKMARK",
     id: place.id ?? 0,
     spotId: place.spotId,
-    name: place.name ?? "저장한 장소",
+    name: place.name ?? "북마크한 곳",
     address: place.address,
     latitude: place.latitude,
     longitude: place.longitude,
