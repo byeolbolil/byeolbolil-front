@@ -110,13 +110,28 @@ async function walk(browser, kind) {
   await shot("home")
   await shot("home-full", { fullPage: true })
 
-  // 2. 다른 후보 고르기
+  // 2. 다른 후보 고르기: 장소 화면이 열리고, 그 위의 날짜 줄은 이 장소의 일곱 밤이다
   const row = page.locator(".bb .row").nth(1)
   const rowName = (await row.locator(".row-name").innerText()).split("\n")[0].trim()
   await row.click()
+  await page.waitForSelector(".bb .place-view")
   await page.waitForTimeout(1200)
-  check((await heroName()) === rowName, `목록에서 고른 "${rowName}"이 카드에 뜬다`)
-  check((await row.getAttribute("aria-current")) === "true", "고른 줄이 목록에 표시된다")
+  check((await heroName()) === rowName, `목록에서 고른 "${rowName}"의 장소 화면이 열린다`)
+  if (kind === "desktop") check((await row.getAttribute("aria-current")) === "true", "고른 줄이 옆 칸의 목록에 표시된다")
+  else check((await page.locator(".bb .side .row").count()) === 0, "좁은 화면에서는 장소 화면이 목록을 덮는다")
+  // 다른 밤을 눌러도 장소는 그대로다
+  const placeNights = page.locator(".bb .place-view .nights button")
+  await page
+    .waitForFunction(() => document.querySelectorAll('.bb .place-view .nights button:not([data-level="NONE"])').length > 2, null, { timeout: 30_000 })
+    .catch(() => {})
+  await placeNights.nth(2).click()
+  await page.waitForTimeout(800)
+  check((await heroName()) === rowName, `장소 화면에서 다른 밤을 눌러도 "${rowName}" 그대로다`)
+  const cardTab = flat(await page.locator(".bb .place-view .card-tabs [role=tab]").first().innerText())
+  check(cardTab !== "오늘 밤", `카드의 첫 탭이 고른 밤의 이름이다: ${cardTab}`)
+  await shot("place-other-night")
+  await placeNights.first().click()
+  await page.waitForTimeout(600)
   if (kind === "desktop") {
     const selected = await page.locator(".bb .pin.sel").getAttribute("aria-label")
     check(selected?.startsWith(rowName), `목록에서 고른 장소가 지도에서도 선택된다: ${selected}`)
@@ -125,7 +140,9 @@ async function walk(browser, kind) {
 
   // 3. 밤 띠 훑기
   const band = page.locator(".bb .band").first()
-  await band.scrollIntoViewIfNeeded()
+  // 화면 아래의 탭 줄에 가리지 않게 가운데로 옮긴다
+  await band.evaluate((element) => element.scrollIntoView({ block: "center" }))
+  await page.waitForTimeout(300)
   const bandBox = await band.boundingBox()
   const bandX = bandBox.x + bandBox.width * 0.62
   const bandY = bandBox.y + bandBox.height * 0.45
@@ -149,11 +166,7 @@ async function walk(browser, kind) {
     await page.waitForTimeout(300)
     await shot("card-place")
   }
-  await tabs.getByRole("tab", { name: "이번 주" }).click()
-  await page.waitForSelector(".bb .tonight .week-body", { timeout: 30000 })
-  check(true, "이번 주 탭에서 일주일이 열린다")
-  await shot("card-week")
-  await tabs.getByRole("tab", { name: "오늘 밤" }).click()
+  await tabs.getByRole("tab").first().click()
 
   // 로그인하지 않고 저장을 누르면 페이지를 옮기지 않고 로그인 창이 뜬다
   const urlBefore = page.url()

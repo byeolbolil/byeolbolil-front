@@ -21,8 +21,6 @@ const SHORT_LIST = 4
 /** 장소 카드에 붙이는 버튼과 펼침 내용 */
 export interface CardExtras {
   save?: ReactNode
-  /** 카드의 "이번 주" 탭 */
-  week?: ReactNode
 }
 
 interface NightCardProps {
@@ -72,7 +70,7 @@ export function NightCard({ night, tonightDate, laterDates, query, selected, onS
           place={place}
           eyebrow={isTop ? `${name} 가장 좋은 곳` : name}
           save={cardExtras.save}
-          week={cardExtras.week}
+          nightLabel={name}
         />
       ) : null}
       {runs.length > 1 ? (
