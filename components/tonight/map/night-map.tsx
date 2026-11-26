@@ -24,7 +24,6 @@ import {
   LIGHT_MAP,
   LIGHT_MAP_CORNERS,
   MAP_STYLES,
-  SKY_LINE_CLASS_BOUNDS,
   type MapLayer,
 } from "@/lib/tonight/night-overlay"
 import { placeKey } from "@/lib/tonight/place"
@@ -34,10 +33,8 @@ import { levelStars, levelText } from "@/lib/tonight/wording"
 import { STAR_PATH } from "../icons"
 
 const SVG_NS = "http://www.w3.org/2000/svg"
-/** 광해 지도의 레이어. 어두운 하늘과 경계선은 바다 아래에 깔고, 빛무리와 불빛은 도로 위에 얹는다 */
+/** 광해 지도의 레이어. 어두운 하늘은 바다 아래에 깔고, 빛무리와 불빛은 도로 위에 얹는다 */
 const SKY_DARK_ID = "sky-dark"
-const SKY_LINES_ID = "sky-lines"
-const SKY_LINE_LABELS_ID = "sky-line-labels"
 const SKY_GLOW_ID = "sky-glow"
 const LIGHTS_ID = "lights"
 const CLOUD_ID = "cloud-field"
@@ -126,12 +123,12 @@ function decorateDark(map: MapLibreMap, layer: MapLayer) {
 }
 
 /**
- * 광해 지도를 얹는다. 하늘 밝기는 양 끝만 칠한다(어두운 곳은 푸르게, 은하수가 안 보이는 도시 둘레는 빛무리로).
- * 그 사이는 경계선으로 읽고, 불빛이 나오는 자리는 위성 불빛으로 따로 보여 준다.
+ * 광해 지도를 얹는다. 하늘 밝기는 양 끝만 칠한다. 어두운 곳은 푸르게(어두울수록 진하게), 은하수가 안 보이는 도시 둘레는
+ * 빛무리로 그린다. 불빛이 나오는 자리는 위성 불빛으로 따로 보여 준다.
  */
 function attachLightMap(map: MapLibreMap) {
   const layers = map.getStyle().layers
-  // 바다를 칠하는 레이어 아래에 넣으면 바다 위의 칠과 선이 가려져 땅에만 남는다
+  // 바다를 칠하는 레이어 아래에 넣으면 바다 위의 푸른빛이 가려져 땅에만 남는다
   const water = layers.find((styleLayer) => styleLayer.id === "water")?.id
   // 도로와 경계선까지 덮고 지명만 위에 남긴다. 글자 레이어가 선 레이어 사이에 섞여 있어서 마지막 선 레이어 다음을 찾는다
   let lastShape = -1
@@ -139,66 +136,16 @@ function attachLightMap(map: MapLibreMap) {
     if (styleLayer.type !== "symbol") lastShape = index
   })
   const aboveShapes = layers[lastShape + 1]?.id
-  // 경계선 글자는 지도의 다른 글자와 같은 글꼴로 적는다. 스타일의 글꼴 서버에 한글이 있다
-  const labelFont = layers
-    .filter((styleLayer) => styleLayer.type === "symbol" && styleLayer.id.startsWith("place_"))
-    .map((styleLayer) => map.getLayoutProperty(styleLayer.id, "text-font"))
-    .find((font) => Array.isArray(font)) as string[] | undefined
 
-  const image = (id: string, url: string) => {
+  const raster = (id: string, url: string, before: string | undefined) => {
     if (!map.getSource(id)) map.addSource(id, { type: "image", url, coordinates: LIGHT_MAP_CORNERS })
-  }
-  image(SKY_DARK_ID, LIGHT_MAP.skyDark)
-  image(SKY_GLOW_ID, LIGHT_MAP.skyGlow)
-  image(LIGHTS_ID, LIGHT_MAP.lights)
-  if (!map.getSource(SKY_LINES_ID)) map.addSource(SKY_LINES_ID, { type: "geojson", data: LIGHT_MAP.skyLines })
-
-  const raster = (id: string, before: string | undefined) => {
     if (!map.getLayer(id)) {
       map.addLayer({ id, type: "raster", source: id, paint: { "raster-fade-duration": 0 } }, before)
     }
   }
-  raster(SKY_DARK_ID, water ?? aboveShapes)
-  if (!map.getLayer(SKY_LINES_ID)) {
-    const classBound: ExpressionSpecification = ["in", ["get", "level"], ["literal", [...SKY_LINE_CLASS_BOUNDS]]]
-    map.addLayer(
-      {
-        id: SKY_LINES_ID,
-        type: "line",
-        source: SKY_LINES_ID,
-        layout: { "line-join": "round" },
-        paint: {
-          // 등급의 경계(2배, 10배)는 굵고 진하게, 그 사이의 눈금(3배, 5배)은 가늘고 옅게
-          "line-color": ["case", ["==", ["get", "level"], 10], "#e2b27a", "#8fb6ff"],
-          "line-width": ["case", classBound, 1.4, 0.8],
-          "line-dasharray": ["case", ["==", ["get", "level"], 10], ["literal", [3, 2]], ["literal", [1, 0]]],
-        },
-      },
-      water ?? aboveShapes,
-    )
-  }
-  raster(SKY_GLOW_ID, aboveShapes)
-  raster(LIGHTS_ID, aboveShapes)
-  if (!map.getLayer(SKY_LINE_LABELS_ID)) {
-    map.addLayer({
-      id: SKY_LINE_LABELS_ID,
-      type: "symbol",
-      source: SKY_LINES_ID,
-      minzoom: 7,
-      layout: {
-        "symbol-placement": "line",
-        "symbol-spacing": 320,
-        "text-field": ["concat", ["to-string", ["get", "level"]], "배"],
-        "text-size": 10.5,
-        ...(labelFont ? { "text-font": labelFont } : {}),
-      },
-      paint: {
-        "text-color": ["case", ["==", ["get", "level"], 10], "#e8c79f", "#a9c6ff"],
-        "text-halo-color": "rgba(8, 11, 26, 0.9)",
-        "text-halo-width": 1.2,
-      },
-    })
-  }
+  raster(SKY_DARK_ID, LIGHT_MAP.skyDark, water ?? aboveShapes)
+  raster(SKY_GLOW_ID, LIGHT_MAP.skyGlow, aboveShapes)
+  raster(LIGHTS_ID, LIGHT_MAP.lights, aboveShapes)
 }
 
 /** 구름장을 그리는 캔버스와, 지금 지도에 보이는 값 */
@@ -288,8 +235,6 @@ function tuneOverlay(map: MapLibreMap, layer: MapLayer) {
   map.setPaintProperty(LIGHTS_ID, "raster-saturation", cloud ? -0.6 : 0)
   map.setPaintProperty(SKY_GLOW_ID, "raster-opacity", fade(cloud ? 0.3 : 1, 0.6))
   map.setPaintProperty(SKY_DARK_ID, "raster-opacity", cloud ? 0.35 : 1)
-  map.setPaintProperty(SKY_LINES_ID, "line-opacity", cloud ? 0.25 : 0.85)
-  map.setLayoutProperty(SKY_LINE_LABELS_ID, "visibility", cloud ? "none" : "visible")
 }
 
 /** 내 장소 표식에 그리는 책갈피 */
@@ -383,7 +328,7 @@ function paintMarker(
 
 /**
  * MapLibre 지도. 추천 장소를 표식으로 올리고 레이어에 따라 모양을 바꾼다.
- * 광해는 하늘 밝기의 양 끝과 경계선, 위성 불빛을 겹친 것, 구름은 격자 예보로 그린 구름장과 장소별 시간 예보로 칠한 표식, 일반 지도는 기본 지도만이다.
+ * 광해는 하늘 밝기의 양 끝(어두운 곳은 푸르게, 도시 둘레는 빛무리)과 위성 불빛을 겹친 것, 구름은 격자 예보로 그린 구름장과 장소별 시간 예보로 칠한 표식, 일반 지도는 기본 지도만이다.
  */
 export default function NightMap({
   places,

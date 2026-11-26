@@ -174,7 +174,7 @@ export const SOURCES: readonly SourceEntry[] = [
   },
   {
     title: "지도",
-    body: "광해 지도는 두 가지를 겹쳐 별볼일이 직접 그렸어요. 푸른 곳과 경계선은 장소마다 보여 드리는 하늘 밝기와 같은 계산값으로, 어느 지역의 하늘이 어두운지 보여줘요. 점처럼 빛나는 곳은 위성이 본 불빛(VIIRS 2024)이라 마을, 도로, 스키장, 바다의 어선처럼 불빛이 나오는 자리예요. 위성 자료는 약 450m 칸이라 주차장 가로등 같은 작은 불빛은 잡지 못하고, 산이 불빛을 가려 주는 효과도 이 지도에는 나오지 않아요. 바탕 지도는 OpenStreetMap 자료로 만든 OpenFreeMap의 지도예요. 구름 레이어는 구름의 모양을 그리지 않고, 고른 시각에 각 장소의 예보 구름량만 색으로 보여줘요.",
+    body: "광해 지도는 두 가지를 겹쳐 별볼일이 직접 그렸어요. 푸른빛은 장소마다 보여 드리는 하늘 밝기와 같은 계산값으로 칠했고, 진할수록 하늘이 어두운 곳이에요. 호박색 빛무리는 은하수가 보이지 않을 만큼 하늘이 밝은 곳이에요. 점처럼 빛나는 곳은 위성이 본 불빛(VIIRS 2024)이라 마을, 도로, 스키장, 바다의 어선처럼 불빛이 나오는 자리예요. 위성 자료는 약 450m 칸이라 주차장 가로등 같은 작은 불빛은 잡지 못하고, 산이 불빛을 가려 주는 효과도 이 지도에는 나오지 않아요. 바탕 지도는 OpenStreetMap 자료로 만든 OpenFreeMap의 지도예요. 구름 레이어는 구름의 모양을 그리지 않고, 고른 시각에 각 장소의 예보 구름량만 색으로 보여줘요.",
     links: [
       { label: "VIIRS Nighttime Lights 2024, Earth Observation Group, Payne Institute", url: "https://eogdata.mines.edu/products/vnl/" },
       { label: "OpenFreeMap", url: "https://openfreemap.org/" },

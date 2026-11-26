@@ -2003,7 +2003,7 @@
     border-radius: 3px;
     margin: 6px 0 4px;
   }
-  /* 광해 지도의 범례. 색은 scripts/render_light_layers.py와 night-map.tsx의 경계선 색에 맞춘다 */
+  /* 광해 지도의 범례. 색은 scripts/render_light_layers.py에 맞춘다 */
   .light-key {
     list-style: none;
     margin: 6px 0 2px;
@@ -2018,30 +2018,20 @@
     align-items: center;
     gap: 7px;
   }
-  .light-key small {
-    font-size: 10.5px;
-    color: var(--ink-3);
-  }
   .light-key i {
     flex: none;
     width: 16px;
     height: 10px;
     border-radius: 3px;
   }
+  /* 오른쪽이 가장 어두운 하늘의 진한 푸른빛이다 */
   .light-key i[data-key="dark"] {
-    background: rgba(111, 168, 255, 0.32);
-    border: 1px solid #8fb6ff;
-  }
-  .light-key i[data-key="line"] {
-    height: 0;
-    border-radius: 0;
-    border-top: 1.5px solid #8fb6ff;
+    width: 22px;
+    background: linear-gradient(90deg, rgba(111, 168, 255, 0.04), rgba(111, 168, 255, 0.5));
   }
   .light-key i[data-key="glow"] {
-    height: 0;
-    border-radius: 0;
-    border-top: 1.5px dashed #e2b27a;
-    box-shadow: 0 0 8px 3px rgba(255, 184, 104, 0.35);
+    width: 22px;
+    background: radial-gradient(ellipse at center, rgba(255, 220, 170, 0.75), rgba(255, 184, 104, 0.25) 60%, transparent 75%);
   }
   .light-key i[data-key="lights"] {
     background: radial-gradient(circle, #ffecd0 0 2px, rgba(255, 184, 104, 0.6) 3px, transparent 6px);
