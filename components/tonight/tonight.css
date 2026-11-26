@@ -2027,13 +2027,6 @@
     width: 22px;
     background: linear-gradient(90deg, rgba(111, 168, 255, 0.04), rgba(111, 168, 255, 0.5));
   }
-  .light-key i[data-key="glow"] {
-    width: 22px;
-    background: radial-gradient(ellipse at center, rgba(255, 220, 170, 0.75), rgba(255, 184, 104, 0.25) 60%, transparent 75%);
-  }
-  .light-key i[data-key="lights"] {
-    background: radial-gradient(circle, #ffecd0 0 2px, rgba(255, 184, 104, 0.6) 3px, transparent 6px);
-  }
   .ramp.cloud {
     background: linear-gradient(90deg in oklch, var(--star), var(--cloud));
   }
@@ -2693,15 +2686,6 @@
     margin-left: 6px;
   }
   .pin-key i:first-child {
-    margin-left: 0;
-  }
-  /* 표식 줄의 제목은 한 줄을 따로 쓴다 */
-  .pin-key em {
-    flex-basis: 100%;
-    font-style: normal;
-    color: var(--ink-3);
-  }
-  .pin-key em + i {
     margin-left: 0;
   }
   .pin-key i[data-level="STRONG"] {
