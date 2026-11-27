@@ -5,8 +5,10 @@ import {
   cloudNightUrl,
   cloudOpacity,
   CloudFieldError,
+  coverAt,
   fieldSize,
   frameAt,
+  frameTimeText,
   gridBounds,
   gridCorners,
   mercatorY,
@@ -156,5 +158,32 @@ describe("그림 그리기", () => {
     const out = new Float32Array(2)
     blendFields(Float32Array.from([0, 100]), Float32Array.from([100, 0]), 0.25, out)
     expect(Array.from(out)).toEqual([25, 75])
+  })
+})
+
+describe("한 지점의 구름량", () => {
+  // SMALL: 남쪽 줄 [0, 40, 80], 북쪽 줄 [20, 60, 100]
+  const cover = [0, 40, 80, 20, 60, 100]
+
+  it("격자점 위에서는 그 값이다", () => {
+    expect(coverAt(SMALL, cover, 37, 127)).toBe(0)
+    expect(coverAt(SMALL, cover, 37.4, 127.8)).toBe(100)
+  })
+
+  it("격자점 사이에서는 둘레 네 점을 잇는다", () => {
+    // 첫 칸의 한가운데: (0 + 40 + 20 + 60) / 4
+    expect(coverAt(SMALL, cover, 37.2, 127.2)).toBe(30)
+  })
+
+  it("격자 밖이면 모른다", () => {
+    expect(coverAt(SMALL, cover, 36.9, 127.2)).toBeNull()
+    expect(coverAt(SMALL, cover, 37.2, 128)).toBeNull()
+  })
+})
+
+describe("격자 시각", () => {
+  it("장소의 시간 예보와 같은 한국 시간 문자열로 적는다", () => {
+    expect(frameTimeText(Date.parse("2026-11-30T21:00:00+09:00"))).toBe("2026-11-30T21:00:00+09:00")
+    expect(frameTimeText(Date.parse("2026-11-30T16:00:00Z"))).toBe("2026-12-01T01:00:00+09:00")
   })
 })

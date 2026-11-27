@@ -13,6 +13,7 @@ import { useEffect, useRef, type ReactNode } from "react"
 import {
   blendFields,
   buildSampler,
+  coverAt,
   gridCorners,
   paintField,
   type CloudGrid,
@@ -280,7 +281,14 @@ interface MarkerEntry {
 function paintMarker(
   entry: MarkerEntry,
   place: NightPlace,
-  state: { selected: boolean; top: boolean; layer: MapLayer; cloudTime: string | null },
+  state: {
+    selected: boolean
+    top: boolean
+    layer: MapLayer
+    cloudTime: string | null
+    /** 구름 격자에서 읽은 그 자리의 구름량. 장소의 시간 예보에 그 시각이 없을 때(다른 밤을 띄울 때) 쓴다 */
+    gridCover: number | null
+  },
 ) {
   const { element, marker } = entry
   const stars = levelStars(place.level)
@@ -300,16 +308,18 @@ function paintMarker(
 
   if (state.layer === "cloud") {
     const hour = state.cloudTime ? hourAt(place.hours, state.cloudTime) : undefined
+    // 그 장소의 그 시각 예보값을 먼저 쓰고, 없으면 구름 격자에서 읽은 값을 쓴다
+    const cloudCover = hour ? hour.cloudCover : state.gridCover
     const dot = document.createElement("i")
-    if (hour) {
-      // 금색(구름 0%)에서 회색(100%)으로 이어지는 색. 그 장소의 그 시각 예보값만 쓴다
+    if (cloudCover !== null) {
+      // 금색(구름 0%)에서 회색(100%)으로 이어지는 색
       dot.className = "cdot"
-      dot.style.background = `color-mix(in oklch, var(--cloud) ${hour.cloudCover}%, var(--star))`
+      dot.style.background = `color-mix(in oklch, var(--cloud) ${cloudCover}%, var(--star))`
       const cover = document.createElement("span")
       cover.className = "cc"
-      cover.textContent = `구름 ${hour.cloudCover}%`
+      cover.textContent = `구름 ${cloudCover}%`
       label.appendChild(cover)
-      element.setAttribute("aria-label", `${place.name}, 구름 ${hour.cloudCover}%`)
+      element.setAttribute("aria-label", `${place.name}, 구름 ${cloudCover}%`)
     } else {
       dot.className = "cdot none"
       const cover = document.createElement("span")
@@ -569,7 +579,13 @@ export default function NightMap({
       } else {
         entry.marker.setLngLat([place.longitude, place.latitude])
       }
-      paintMarker(entry, place, { selected: key === selectedKey, top: key === topKey, layer, cloudTime })
+      paintMarker(entry, place, {
+        selected: key === selectedKey,
+        top: key === topKey,
+        layer,
+        cloudTime,
+        gridCover: cloudGrid && cloudCover ? coverAt(cloudGrid, cloudCover, place.latitude, place.longitude) : null,
+      })
     }
     for (const [key, entry] of markers) {
       if (!seen.has(key)) {
@@ -577,7 +593,7 @@ export default function NightMap({
         markers.delete(key)
       }
     }
-  }, [places, selectedKey, topKey, layer, cloudTime])
+  }, [places, selectedKey, topKey, layer, cloudTime, cloudGrid, cloudCover])
 
   // 고른 위치 표시
   const pickLat = pick?.lat ?? null

@@ -125,6 +125,34 @@ export function frameAt(night: CloudNight | null, time: string | null): CloudFra
   return night.frames.find((frame) => frame.time === wanted) ?? null
 }
 
+/**
+ * 한 지점의 구름량(%). 둘레 네 격자점을 이어서 읽는다. 격자 밖이면 null이다.
+ * 장소마다의 시간 예보가 없는 밤(후보 목록과 다른 밤을 지도에 띄울 때)에 표식을 칠하는 데 쓴다. 약 40km 간격이라 대략의 값이다.
+ */
+export function coverAt(grid: CloudGrid, cover: readonly number[], lat: number, lon: number): number | null {
+  if (grid.columns < 2 || grid.rows < 2) return null
+  const { west, east, south, north } = gridBounds(grid)
+  if (lat < south || lat > north || lon < west || lon > east) return null
+  const x = (lon - west) / grid.step
+  const y = (lat - south) / grid.step
+  const column = Math.min(grid.columns - 2, Math.floor(x))
+  const row = Math.min(grid.rows - 2, Math.floor(y))
+  const fx = x - column
+  const fy = y - row
+  const at = (r: number, c: number) => cover[r * grid.columns + c] ?? 0
+  const value =
+    at(row, column) * (1 - fx) * (1 - fy) +
+    at(row, column + 1) * fx * (1 - fy) +
+    at(row + 1, column) * (1 - fx) * fy +
+    at(row + 1, column + 1) * fx * fy
+  return Math.round(value)
+}
+
+/** 격자 시각(epoch ms)을 API와 같은 한국 시간 문자열(`2026-11-30T21:00:00+09:00`)로. 장소의 시간 예보와 같은 모양이어야 견줄 수 있다 */
+export function frameTimeText(time: number): string {
+  return `${new Date(time + 9 * 3_600_000).toISOString().slice(0, 19)}+09:00`
+}
+
 /** 격자의 바깥 점들이 놓인 범위 */
 export function gridBounds(grid: CloudGrid) {
   return {

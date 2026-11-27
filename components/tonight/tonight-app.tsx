@@ -148,6 +148,8 @@ export function TonightApp() {
    * `date`의 밤 값은 뺄 때의 것이고, 다른 밤은 그곳의 이번 주(`week`)로 채운다. 새로 고치면 사라진다.
    */
   const [released, setReleased] = useState<Array<{ place: NightPlace; date: string; week: WeekPlace | null }>>([])
+  /** 장소 화면의 날짜 칸에서 고른 밤. `key`는 그 장소 화면의 키라, 장소나 후보 목록의 밤이 바뀌면 저절로 버려진다 */
+  const [placeNight, setPlaceNight] = useState<{ key: string; date: string } | null>(null)
   const [sheet, setSheet] = useState<SheetKind | null>(null)
   /** 로그인 창을 열면서 미뤄 둔 일 */
   const [afterLogin, setAfterLogin] = useState<AfterLogin | null>(null)
@@ -629,6 +631,10 @@ export function TonightApp() {
   const refreshing = night.loading ? " refreshing" : ""
   /** 장소 화면에 띄우는 곳. 고른 곳이 없으면 그 밤의 1위다 */
   const shownPlace = detailPlace ?? topPlace
+  // 장소 화면은 장소와 후보 목록의 밤이 바뀌면 새로 그려지고, 그때 고른 밤도 목록의 밤으로 돌아간다
+  const placeViewKey = shownPlace && data ? `${shownPlace.latitude},${shownPlace.longitude}/${data.date}` : null
+  /** 넓은 화면의 지도가 그리는 밤. 장소 화면의 날짜 칸에서 고른 밤을 따라가고, 고르지 않았으면 후보 목록의 밤이다 */
+  const mapNightDate = placeNight && placeNight.key === placeViewKey ? placeNight.date : (data?.date ?? null)
   if (night.error) {
     content = <NightError error={night.error} onRetry={reloadNights} />
   } else if (data && tonightDate) {
@@ -639,7 +645,7 @@ export function TonightApp() {
         ) : shownPlace ? (
           <PlaceView
             // 북마크를 빼고 넣으면 키가 바뀌므로 좌표로 묶는다. 같은 장소면 장소 화면에서 고른 밤이 그대로 남는다
-            key={`${shownPlace.latitude},${shownPlace.longitude}/${data.date}`}
+            key={placeViewKey ?? undefined}
             place={shownPlace}
             placeDate={data.date}
             dates={dates}
@@ -647,6 +653,7 @@ export function TonightApp() {
             save={heroExtras(shownPlace).save}
             onOpenMoon={openMoon}
             onOpenGuide={openGuide}
+            onDateChange={(date) => placeViewKey && setPlaceNight({ key: placeViewKey, date })}
           />
         ) : (
           // 가볼 만한 곳이 없는 밤. 그 사정과 다른 밤을 먼저 알린다
@@ -730,8 +737,9 @@ export function TonightApp() {
               places={places}
               selectedKey={shownKey}
               topKey={topKey}
-              nightDate={data?.date ?? null}
-              nightLabel={shownNightName}
+              nightDate={mapNightDate}
+              placesDate={data?.date ?? null}
+              nightLabel={mapNightDate && tonightDate ? nightName(mapNightDate, tonightDate) : shownNightName}
               onSelect={openFromMap}
               pick={pick}
               onPick={pickOnMap}
