@@ -3089,6 +3089,32 @@
 }
 
 /* 목록 맨 위의 내 장소 */
+/* 제목을 눌러 접는 묶음. 접으면 갈매기표가 옆을 보고 개수가 붙는다 */
+.bb .fold-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.bb .fold-title .count {
+  font-size: 0.75em;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.bb .fold-title svg {
+  width: 16px;
+  height: 16px;
+  color: var(--ink-3);
+  transition: transform 0.2s;
+}
+.bb .fold-title[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
 .bb .my-rows {
   display: grid;
   gap: 6px;
@@ -3263,7 +3289,8 @@
   .bb .top {
     gap: 14px;
     padding-block: 20px 22px;
-    margin-bottom: 6px;
+    /* 구분선 바로 아래에 지도와 제목이 붙지 않게 띄운다 */
+    margin-bottom: 18px;
     border-bottom: 1px solid var(--hair);
   }
   .bb .top .brand {
