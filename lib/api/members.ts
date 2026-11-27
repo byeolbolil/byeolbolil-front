@@ -67,6 +67,15 @@ export const membersApi = {
   },
 
   /**
+   * 닉네임을 쓸 수 있는지 (GET /api/v1/members/exists/nickname). 다른 회원이 쓰고 있으면 false.
+   * 로그인한 채로 물으면 자기 닉네임은 true다. 규칙에 어긋나면 400으로 실패하므로 규칙은 먼저 걸러서 부른다.
+   */
+  async isNicknameAvailable(nickname: string): Promise<boolean> {
+    const response = await api.get('/api/v1/members/exists/nickname' as keyof paths, { nickname }) as { validated?: boolean };
+    return response.validated ?? false;
+  },
+
+  /**
    * 이메일 중복 검증
    * 회원가입 전 이메일 중복 여부를 확인합니다.
    * @param email 검증할 이메일 주소
