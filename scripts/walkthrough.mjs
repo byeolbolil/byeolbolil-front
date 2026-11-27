@@ -263,6 +263,9 @@ async function walk(browser, kind) {
     await page.waitForTimeout(1200)
     const selected = await page.locator(".bb .pin.sel").getAttribute("aria-label")
     check(selected === target.label, `누른 표식이 선택된다: ${selected}`)
+    // 빈 곳을 눌렀을 때처럼 지도 위 카드에 그 장소의 하늘 밝기가 나온다
+    const markerSky = flat(await page.locator(".bb .peek .pick-sky").first().innerText().catch(() => ""))
+    check(/하늘/.test(markerSky), `표식을 누르면 그 장소의 하늘 밝기가 나온다: ${markerSky}`)
     if (kind === "mobile") {
       const peek = flat(await page.locator(".bb .peek").innerText())
       check(peek.startsWith(markerName), `표식을 누르면 미리보기가 뜬다: ${peek}`)

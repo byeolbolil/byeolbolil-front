@@ -38,7 +38,7 @@ import { OriginSheet } from "./origin-sheet"
 import { NightError, NightSkeleton } from "./night-status"
 import { GuideSheet } from "./guide-sheet"
 import { LoginSheet } from "./login-sheet"
-import { PickSky } from "./pick-sky"
+import { PickSky, placeSkyState } from "./pick-sky"
 import { PlaceView } from "./place-view"
 import { PlaceRow } from "./place-row"
 import { Rating } from "./rating"
@@ -197,6 +197,9 @@ export function TonightApp() {
     (detailKey !== null && detailSpotId !== null ? (places.find((place) => place.spotId === detailSpotId) ?? null) : null) ??
     (detailKey !== null && detailSnapshot && placeKey(detailSnapshot) === detailKey ? detailSnapshot : null)
   const peekPlace = findPlace(peekKey)
+  // 지도에서 누른 장소도 빈 곳을 눌렀을 때처럼 하늘 밝기를 보여 준다
+  const peekSkyAt = useSkyAt(peekPlace ? { lat: peekPlace.latitude, lon: peekPlace.longitude } : null)
+  const peekSky = peekPlace ? placeSkyState(peekPlace, peekSkyAt) : null
   // 추천을 다시 받았으면 저장 버튼을 푼다
   useEffect(() => {
     setSavingKey(null)
@@ -280,6 +283,8 @@ export function TonightApp() {
   const selectDate = (date: string) => {
     setSelectedDate(date === tonightDate ? null : date)
     closeDetail()
+    // 밤을 바꾸면 오른쪽이 그 밤의 1위로 돌아가므로, 지도 위에 띄운 다른 장소의 카드도 닫는다
+    setPeekKey(null)
   }
   /** 장소 화면에 그 장소를 띄운다. 그 밤의 1위를 다시 누르면 고르기 전으로 돌아간다. 뒤로 가면 보던 자리로 돌아온다 */
   const selectPlace = (key: string) => {
@@ -296,9 +301,10 @@ export function TonightApp() {
     // 다른 지역을 보고 있었어도 지도가 그 장소로 옮겨 간다
     setMapFocus({ lat: place.latitude, lon: place.longitude, at: Date.now() })
   }
-  /** PC의 지도에서 표식을 누르면 오른쪽의 카드에 그 장소를 띄운다 */
+  /** PC의 지도에서 표식을 누르면 오른쪽의 카드에 그 장소를 띄우고, 지도 위에는 그 자리의 하늘 밝기를 띄운다 */
   const openFromMap = (key: string) => {
     selectPlace(key)
+    setPeekKey(key)
     setPick(null)
   }
   const peekOnMap = (key: string) => {
@@ -518,6 +524,7 @@ export function TonightApp() {
             <button type="button" className="btn primary" onClick={() => openPlace(peekPlace)}>
               자세히
             </button>
+            <PickSky state={peekSky} />
           </div>
         ) : null}
       </MapPanel>
@@ -665,6 +672,17 @@ export function TonightApp() {
               focusTo={mapFocus}
             >
               {pickCard}
+              {/* 그 밤의 예보는 오른쪽 장소 화면에 있으므로, 지도 위에는 이름과 하늘 밝기만 둔다 */}
+              {peekPlace && !pick ? (
+                <div className="peek pickcard">
+                  <div className="nm">{peekPlace.name}</div>
+                  {peekPlace.viewpoint ? <div className="sb">{peekPlace.viewpoint}</div> : null}
+                  <PickSky state={peekSky} />
+                  <button type="button" className="x-btn" aria-label="닫기" onClick={() => setPeekKey(null)}>
+                    <CloseIcon />
+                  </button>
+                </div>
+              ) : null}
             </MapPanel>
           ) : null}
         </section>
