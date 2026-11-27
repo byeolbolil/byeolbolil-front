@@ -3243,6 +3243,116 @@
   color: var(--ink-3);
 }
 
+/* 달 없는 밤 시트. 칸마다 달 모양과, 달 없이 어두운 시간만큼 차는 금빛 막대 */
+.bb .moon-cal {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.bb .mc-basis {
+  margin: -10px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.bb .mc-grid {
+  display: grid;
+  gap: 2px;
+}
+.bb .mc-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+.bb .mc-head span {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  padding-bottom: 4px;
+}
+.bb .mc-head [data-weekday="0"] {
+  color: oklch(0.72 0.1 25);
+}
+.bb .mc-head [data-weekday="6"] {
+  color: var(--sky-clear);
+}
+.bb .mc-row button {
+  border: 0;
+  background: none;
+  border-radius: 10px;
+  padding: 6px 0 7px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  cursor: pointer;
+  color: var(--ink-2);
+}
+.bb .mc-row button[aria-pressed="true"] {
+  background: var(--night-3);
+  color: var(--ink);
+}
+/* 달 그림의 둘레는 빛 무리 자리라 비어 있다. 칸이 길어지지 않게 그만큼 겹친다 */
+.bb .mc-row button .gauge {
+  margin-block: -7px;
+}
+.bb .mc-day {
+  font-size: 11.5px;
+  font-family: var(--font-num);
+  line-height: 1;
+}
+.bb .mc-row button[data-today] .mc-day {
+  color: var(--star);
+  font-weight: 700;
+}
+.bb .mc-bar {
+  width: 70%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--night-2);
+  overflow: hidden;
+}
+.bb .mc-bar i {
+  display: block;
+  height: 100%;
+  background: var(--star);
+  border-radius: inherit;
+}
+.bb .mc-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--night-2);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.bb .mc-name {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.bb .mc-hours {
+  font-size: 19px;
+  font-weight: 700;
+}
+.bb .mc-span {
+  font-size: 14px;
+  color: var(--ink-2);
+  font-family: var(--font-num);
+}
+.bb .mc-moon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.bb .mc-detail .btn {
+  background: var(--night-3);
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
 /* 영상 줄의 화살표. 마우스로 쓰는 화면에서만 보인다 */
 .bb .video-arrow {
   display: none;
