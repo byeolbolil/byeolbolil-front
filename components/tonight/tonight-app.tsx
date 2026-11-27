@@ -17,6 +17,7 @@ import { useSkyAt } from "@/lib/tonight/use-sky-at"
 import { useGeoPosition } from "@/lib/tonight/use-geo-position"
 import { useIsDesktop, useIsWide } from "@/lib/tonight/use-is-desktop"
 import { useNight, useNightSummary } from "@/lib/tonight/use-night"
+import { useHistoryLayers } from "@/lib/tonight/history-layers"
 import { fetchWeek, placeOnNight, type WeekPlace } from "@/lib/tonight/week"
 import { patternText } from "@/lib/tonight/wording"
 import { AccountButton } from "./account-button"
@@ -250,6 +251,22 @@ export function TonightApp() {
   const detailOpen = useRef(false)
   detailOpen.current = detailKey !== null
 
+  // 장소 화면과 시트는 열 때 브라우저 기록을 한 칸씩 쌓는다. 휴대폰의 뒤로 가기가 사이트를 떠나지 않고 맨 위의 것을 닫는다.
+  // 시트는 화면을 거의 다 덮어서, 뒤로 가기로 닫히지 않으면 사이트를 나가 버리기 쉽다
+  const layers = useHistoryLayers((layer) => {
+    if (layer === "sheet") setSheet(null)
+    else leaveDetail(true)
+  })
+  /** 시트를 바꿔 열거나(`null`이면) 닫는다. 브라우저 기록도 함께 맞춘다 */
+  const showSheet = useCallback(
+    (next: SheetKind | null) => {
+      setSheet(next)
+      if (next) layers.open("sheet")
+      else layers.close("sheet")
+    },
+    [layers],
+  )
+
   /**
    * 장소를 골라 카드에 띄운다. 화면에는 돌아가는 버튼이 없지만 처음 고를 때 브라우저 기록을 하나 쌓아서,
    * 휴대폰의 뒤로 가기가 사이트를 떠나지 않고 고르기 전으로 돌아오게 한다. 이어서 다른 곳을 고를 때는 더 쌓지 않는다.
@@ -258,7 +275,7 @@ export function TonightApp() {
     if (!detailOpen.current) {
       listScroll.current = scrollPosition()
       cameFrom.current = tab
-      window.history.pushState({ ...window.history.state, bbDetail: true }, "")
+      layers.open("detail")
     }
     const found = findPlace(key)
     setDetailKey(key)
@@ -283,23 +300,10 @@ export function TonightApp() {
     setDetailSnapshot(null)
   }, [])
   /** 탭이나 날짜를 바꾸면서 고른 장소를 풀 때. 쌓아 둔 기록도 함께 되돌린다 */
-  const skipRestore = useRef(false)
   function closeDetail() {
-    if (detailOpen.current && window.history.state?.bbDetail) {
-      skipRestore.current = true
-      window.history.back()
-    }
+    layers.close("detail")
     leaveDetail(false)
   }
-  useEffect(() => {
-    const onPopState = () => {
-      const restore = !skipRestore.current
-      skipRestore.current = false
-      if (detailOpen.current) leaveDetail(restore)
-    }
-    window.addEventListener("popstate", onPopState)
-    return () => window.removeEventListener("popstate", onPopState)
-  }, [leaveDetail])
   // 화면이 다시 그려진 직후, 눈에 보이기 전에 보던 자리로 옮긴다
   useLayoutEffect(() => {
     if (detailKey !== null || scrollToRestore.current === null) return
@@ -410,7 +414,7 @@ export function TonightApp() {
   /** 다른 페이지로 옮기지 않고 로그인 창을 띄운다. 로그인하면 `after`를 이어서 한다 */
   const askLogin = (after: AfterLogin) => {
     setAfterLogin(after)
-    setSheet("login")
+    showSheet("login")
   }
   /** 로그인한 뒤에 미뤄 둔 일을 한다. 내 장소가 추천에 들어오도록 추천은 늘 다시 받는다 */
   const continueAfterLogin = async (after: AfterLogin | null) => {
@@ -428,12 +432,12 @@ export function TonightApp() {
       }
     }
     reloadNights()
-    if (after?.kind === "savePick") setSheet("save")
+    if (after?.kind === "savePick") showSheet("save")
   }
   const finishLogin = () => {
     const after = afterLogin
     setAfterLogin(null)
-    setSheet(null)
+    showSheet(null)
     toast({ title: "로그인했어요" })
     void continueAfterLogin(after)
   }
@@ -457,7 +461,7 @@ export function TonightApp() {
 
   /** 다른 화면에서 고른 밤의 추천 순위로 간다 */
   const openNight = (date: string) => {
-    setSheet(null)
+    showSheet(null)
     setChosenTab("tonight")
     selectDate(date)
     scrollPanelTo(0)
@@ -488,12 +492,12 @@ export function TonightApp() {
     // 이전 탭에서 내려 둔 스크롤이 남으면 새 화면의 중간부터 보인다
     scrollPanelTo(0)
   }
-  const openSettings = useCallback(() => setSheet("settings"), [])
-  const openOrigin = useCallback(() => setSheet("origin"), [])
-  const openSources = useCallback(() => setSheet("sources"), [])
-  const openGuide = useCallback(() => setSheet("guide"), [])
-  const openMoon = useCallback(() => setSheet("moon"), [])
-  const closeSheet = useCallback(() => setSheet(null), [])
+  const openSettings = useCallback(() => showSheet("settings"), [showSheet])
+  const openOrigin = useCallback(() => showSheet("origin"), [showSheet])
+  const openSources = useCallback(() => showSheet("sources"), [showSheet])
+  const openGuide = useCallback(() => showSheet("guide"), [showSheet])
+  const openMoon = useCallback(() => showSheet("moon"), [showSheet])
+  const closeSheet = useCallback(() => showSheet(null), [showSheet])
 
   /** 장소 카드에 붙이는 저장 버튼 */
   const heroExtras = (place: NightPlace): CardExtras => {
@@ -531,7 +535,7 @@ export function TonightApp() {
           여기서 출발
         </button>
         {isAuthenticated ? (
-          <button type="button" className="btn primary" onClick={() => setSheet("save")}>
+          <button type="button" className="btn primary" onClick={() => showSheet("save")}>
             북마크
           </button>
         ) : (
@@ -539,7 +543,7 @@ export function TonightApp() {
             로그인하고 북마크
           </button>
         )}
-        <button type="button" className="btn wide" onClick={() => setSheet("week")}>
+        <button type="button" className="btn wide" onClick={() => showSheet("week")}>
           <CalendarIcon />
           이곳의 이번 주 보기
         </button>
@@ -805,7 +809,7 @@ export function TonightApp() {
         <LoginSheet
           reason={afterLogin && afterLogin.kind !== "none" ? "save" : undefined}
           onClose={() => {
-            setSheet(null)
+            showSheet(null)
             setAfterLogin(null)
           }}
           onDone={finishLogin}
