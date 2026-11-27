@@ -20,8 +20,8 @@ const NightMap = dynamic(() => import("./night-map"), {
   loading: () => <div className="mapwrap map-loading">지도를 불러오는 중이에요</div>,
 })
 
-/** 재생할 때 한 시간을 넘기는 간격 */
-const PLAY_INTERVAL_MS = 900
+/** 재생할 때 한 시간을 넘기는 간격. 0.9초는 구름이 움직이는 것을 눈으로 따라가기에 빨랐다 */
+const PLAY_INTERVAL_MS = 1400
 
 interface MapPanelProps {
   places: readonly NightPlace[]
