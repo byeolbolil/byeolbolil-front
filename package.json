@@ -9,7 +9,8 @@
     "start": "next start",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "walkthrough": "node scripts/walkthrough.mjs"
+    "walkthrough": "node scripts/walkthrough.mjs",
+    "scenarios": "node scripts/scenarios.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
