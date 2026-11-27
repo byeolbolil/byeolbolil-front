@@ -3308,7 +3308,10 @@
   color: var(--star);
   font-weight: 700;
 }
-/* 저녁부터 아침까지의 띠. 바탕은 아직 밝은 때, 옅은 칸은 어둡지만 달이 뜬 때, 금빛은 달 없이 어두운 때 */
+/*
+ * 저녁부터 아침까지의 띠. 바탕은 아직 밝은 때, 옅은 달빛 색은 어둡지만 달이 뜬 때, 푸른빛은 달 없이 어두운 때.
+ * 달이 뜬 때는 달 그림과 같은 색으로, 달 없는 때는 광해 지도에서 어두운 하늘을 뜻하는 푸른빛으로 칠한다
+ */
 .bb .mc-strip {
   display: block;
   position: relative;
@@ -3324,9 +3327,15 @@
   inset-block: 0;
 }
 .bb .mc-moonlit {
-  background: color-mix(in oklch, var(--ink-3) 45%, transparent);
+  background: oklch(0.95 0.04 95 / 0.38);
 }
 .bb .mc-moonless {
+  background: rgb(111, 168, 255);
+}
+:root[data-red="1"] .bb .mc-moonlit {
+  background: color-mix(in oklch, var(--ink-3) 45%, transparent);
+}
+:root[data-red="1"] .bb .mc-moonless {
   background: var(--star);
 }
 .bb .mc-row button[aria-pressed="true"] .mc-strip {

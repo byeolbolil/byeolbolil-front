@@ -34,7 +34,7 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"]
 
 /**
  * 앞으로 6주의 달. 칸마다 달 모양과, 저녁부터 아침까지를 가로로 편 띠를 그린다.
- * 띠는 하늘이 어두운 동안 옅게, 그 가운데 달이 없는 동안 금빛으로 칠해서, 얼마나 길게와 언제를 함께 보여 준다.
+ * 띠는 하늘이 어두운 동안 옅은 달빛 색으로, 그 가운데 달이 없는 동안 푸른빛으로 칠해서, 얼마나 길게와 언제를 함께 보여 준다.
  * 칸을 누르면 아래에 그 밤의 달 없는 구간과 달이 뜨고 지는 시각을 적는다. 날씨는 보지 않는다.
  */
 export function MoonSheet({ position, placeName, forecastDates, onOpenNight, onClose }: MoonSheetProps) {
@@ -166,7 +166,7 @@ function Calendar({
   )
 }
 
-/** 저녁부터 아침까지의 띠. 어두운 동안은 옅게, 그 가운데 달이 없는 동안은 금빛으로 칠한다 */
+/** 저녁부터 아침까지의 띠. 달이 떠 있는 동안은 옅은 달빛 색으로, 달 없이 어두운 동안은 푸른빛으로 칠한다 */
 function NightStrip({ night, frame }: { night: MoonCalendarNight; frame: NightFrame }) {
   const { dark, moonless } = nightStrip(night, frame)
   const place = (part: { from: number; to: number }) => ({
