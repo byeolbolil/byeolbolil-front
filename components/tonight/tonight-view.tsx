@@ -12,6 +12,7 @@ import { useNextGoodNight } from "@/lib/tonight/use-next-good-night"
 import { FacilityList } from "./facility-list"
 import { ForecastCredit } from "./forecast-credit"
 import { HeroCard } from "./hero-card"
+import { CameraIcon, MoonIcon } from "./icons"
 import { PlaceRow } from "./place-row"
 import { Rating } from "./rating"
 
@@ -42,6 +43,9 @@ interface NightCardProps {
   selected: NightPlace | null
   onSelectDate: (date: string) => void
   extras?: (place: NightPlace) => CardExtras
+  /** 월령 달력과 촬영 안내. 장소 화면이 없는 밤에도 열 수 있어야 해서 여기에도 둔다 */
+  onOpenMoon?: () => void
+  onOpenGuide?: () => void
 }
 
 /**
@@ -49,7 +53,17 @@ interface NightCardProps {
  * 그 장소로 바뀐다. 화면을 새로 쌓지 않으므로 돌아가는 버튼이 없고, 1위로 돌아가려면 목록의 첫 줄을 누르면 된다.
  * 가볼 만한 곳이 없는 밤에는 그 사정을 먼저 알리고, 그래도 장소를 고르면 알림을 줄여서 카드 위에 남긴다.
  */
-export function NightCard({ night, tonightDate, laterDates, query, selected, onSelectDate, extras }: NightCardProps) {
+export function NightCard({
+  night,
+  tonightDate,
+  laterDates,
+  query,
+  selected,
+  onSelectDate,
+  extras,
+  onOpenMoon,
+  onOpenGuide,
+}: NightCardProps) {
   const view = buildNightView(night)
   const name = nightName(night.date, tonightDate)
   const place = selected ?? view.top
@@ -79,7 +93,25 @@ export function NightCard({ night, tonightDate, laterDates, query, selected, onS
           eyebrow={isTop ? `${name} 가장 좋은 곳` : name}
           save={cardExtras.save}
           nightLabel={name}
+          onOpenMoon={onOpenMoon}
+          onOpenGuide={onOpenGuide}
         />
+      ) : onOpenMoon || onOpenGuide ? (
+        // 갈 곳이 없는 밤일수록 달 없는 밤이 언제인지가 궁금하다. 장소 카드가 없으니 안내 아래에 따로 둔다
+        <div className="actions">
+          {onOpenMoon ? (
+            <button type="button" className="btn" onClick={onOpenMoon}>
+              <MoonIcon />
+              월령 달력
+            </button>
+          ) : null}
+          {onOpenGuide ? (
+            <button type="button" className="btn" onClick={onOpenGuide}>
+              <CameraIcon />
+              별 사진 찍는 법
+            </button>
+          ) : null}
+        </div>
       ) : null}
       {runs.length > 1 ? (
         <p className="calm small">맑은 시간이 여러 번 있어요: {runs.map((run) => windowText(run)).join(", ")}</p>

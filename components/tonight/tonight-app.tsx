@@ -567,6 +567,13 @@ export function TonightApp() {
   /** 장소 화면과 지도가 보여 주는 밤. 장소 화면의 날짜 칸에서 고른 밤이고, 고르지 않았으면 후보 목록의 밤이다 */
   const viewNightDate = placeNight && placeNight.key === placeViewKey ? placeNight.date : (data?.date ?? null)
   const viewNightName = viewNightDate && tonightDate ? nightName(viewNightDate, tonightDate) : shownNightName
+  // 월령 달력의 시각은 지금 보는 장소에서 계산한다. 가볼 만한 곳이 없는 밤처럼 장소가 없으면 출발지(1km로 줄여서),
+  // 그것도 없으면 남한의 가운데쯤이다. 국내에서는 어디서 계산해도 그믐이 드는 날은 같고, 시각만 수십 분 안에서 달라진다
+  const moonBasis = shownPlace
+    ? { position: { lat: shownPlace.latitude, lon: shownPlace.longitude }, name: shownPlace.name }
+    : origin
+      ? { position: { lat: roundCoordinate(origin.lat), lon: roundCoordinate(origin.lon) }, name: originText }
+      : { position: { lat: 36.5, lon: 127.8 }, name: "남한 가운데쯤" }
 
   // 후보 목록의 밤 고르기. 오늘 밤 탭의 목록 위에 둔다
   const nightPicker =
@@ -684,6 +691,8 @@ export function TonightApp() {
             selected={null}
             onSelectDate={selectDate}
             extras={heroExtras}
+            onOpenMoon={openMoon}
+            onOpenGuide={openGuide}
           />
         )}
       </div>
@@ -814,11 +823,10 @@ export function TonightApp() {
       ) : null}
       {sheet === "sources" ? <SourcesSheet onClose={closeSheet} /> : null}
       {sheet === "guide" ? <GuideSheet onClose={closeSheet} /> : null}
-      {/* 달력은 장소 화면에서만 열고, 시각은 그 장소에서 계산한다 */}
-      {sheet === "moon" && shownPlace ? (
+      {sheet === "moon" ? (
         <MoonSheet
-          position={{ lat: shownPlace.latitude, lon: shownPlace.longitude }}
-          placeName={shownPlace.name}
+          position={moonBasis.position}
+          placeName={moonBasis.name}
           forecastDates={dates}
           onOpenNight={openNight}
           onClose={closeSheet}
