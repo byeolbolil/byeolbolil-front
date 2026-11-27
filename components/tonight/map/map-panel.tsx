@@ -11,6 +11,7 @@ import type { Coordinates } from "@/lib/tonight/settings"
 import { hourOf, koreanHour } from "@/lib/tonight/time"
 import type { NightPlace } from "@/lib/tonight/types"
 import { useCloudNight } from "@/lib/tonight/use-cloud-night"
+import { useIsTouch } from "@/lib/tonight/use-is-desktop"
 import { PlaceSearch } from "../place-search"
 
 // MapLibre는 window가 있어야 해서 브라우저에서만 불러온다
@@ -58,6 +59,7 @@ export function MapPanel({
   children,
 }: MapPanelProps) {
   const [layer, setLayer] = useState<MapLayer>("night")
+  const touch = useIsTouch()
   /** 검색으로 고른 곳. 지도를 그쪽으로 옮긴다 */
   const [focus, setFocus] = useState<(Coordinates & { at: number }) | null>(null)
   const pickFound = (place: FoundPlace) => {
@@ -179,7 +181,7 @@ export function MapPanel({
             className="map-search"
             label="지도에서 장소 검색"
             placeholder="지역, 산, 천문대 이름으로 찾기"
-            emptyHint="지도에서 빈 곳을 눌러 직접 골라도 돼요."
+            emptyHint={touch ? "지도에서 빈 곳을 꾹 눌러 직접 골라도 돼요." : "지도에서 빈 곳을 눌러 직접 골라도 돼요."}
             onSelect={pickFound}
           />
         ) : null}

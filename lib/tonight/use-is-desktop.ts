@@ -28,3 +28,8 @@ export function useIsDesktop(): boolean {
 export function useIsWide(): boolean {
   return useMediaQuery(WIDE_QUERY)
 }
+
+/** 주로 손가락으로 쓰는 기기인지. 지도에서 위치를 고르는 방법(누르기, 꾹 누르기)이 여기에 따라 다르다. */
+export function useIsTouch(): boolean {
+  return useMediaQuery("(pointer: coarse)")
+}
