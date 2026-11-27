@@ -69,14 +69,18 @@ pnpm scenarios    # 쓰는 흐름을 따라 하며 화면끼리 어긋나지 않
 
 `pnpm walkthrough`는 모바일(390x844)과 PC(1440x900)에서 오늘 밤 추천, 후보 고르기, 밤 띠 훑기, 자세히 보기, 별 사진 찍기,
 지도의 세 레이어와 표식, 설정 바꾸기, 추천 기준과 출처를 차례로 열어 `walkthrough-shots/`에 화면을 찍는다. 설정을 바꾼 뒤
-요청 쿼리가 바뀌었는지, 지도 표식과 목록의 선택이 맞는지, 콘솔 오류가 없는지도 확인한다. 추천은 실제 백엔드에서 받고,
-인증 API 호출은 브라우저 안에서 막는다.
+요청 쿼리가 바뀌었는지, 지도 표식과 목록의 선택이 맞는지, 콘솔 오류가 없는지도 확인한다. 인증 API 호출은 브라우저 안에서 막는다.
 
 `pnpm scenarios`는 여러 화면을 오가는 흐름을 따라 한다. 시트와 뒤로 가기, 장소 화면과 후보 목록과 지도가 같은 밤을
 말하는지, 좁은 화면의 지도 탭, 지도를 꾹 눌러 고르기, 구름 시간 막대의 날짜 순서, 월령 달력과 촬영 안내의 입구(가볼 만한 곳이 없는 밤 포함),
 닉네임 바꾸기와 소셜 첫 가입의 닉네임 시트, 이메일 가입의 닉네임 검사(로그인과 회원 API는 브라우저 안에서 흉내 낸다)를 본다.
-`--only 이름`(back, nights, mapTab, longPress, cloudTimes, moon, emptyNight, nickname, welcome, register)으로 하나만 돌릴 수 있다. 그날의 실제 예보로 돌기 때문에
-값 자체가 아니라 화면끼리 같은 것을 말하는지를 본다.
+`--only 이름`(back, nights, mapTab, longPress, cloudTimes, moon, emptyNight, nickname, welcome, register)으로 하나만 돌릴 수 있다.
+
+둘 다 추천, 구름, 장소, 검색 API를 실제 백엔드에 묻지 않고 `scripts/fixtures/`의 녹화본으로 답하며, 브라우저 시계도 녹화한
+시각에 맞춘다(`scripts/api-tape.mjs`). 실제 예보로 돌리면 가볼 만한 곳이 없는 밤에는 장소 화면이 뜨지 않아 그 위의 흐름을
+하나도 따라 할 수 없고, 장마철에는 그런 밤이 몇 주씩 이어진다. 녹화본에 없는 요청을 화면이 부르면 실패로 끝나며, 그때는
+가볼 만한 곳이 여럿인 밤에 `--record`를 붙여 실제 백엔드로 다시 녹화하고 녹화본을 함께 커밋한다. 백엔드의 응답 모양이
+바뀌었을 때도 다시 녹화한다. 녹화본은 주소가 같은 요청만 알아보므로, 응답 모양이 바뀐 것은 스스로 알아채지 못한다.
 
 화면을 바꾸면 커밋하기 전에 `pnpm test`, `pnpm typecheck`, `pnpm walkthrough`, `pnpm scenarios`를 모두 통과시킨다.
 새 상호작용을 만들거나 화면 사이의 버그를 고치면, 그 흐름을 따라 하는 시나리오를 `scripts/scenarios.mjs`에 더한다.
@@ -122,6 +126,7 @@ scripts/
   render_icons.py           아이콘 만들기
   walkthrough.mjs           브라우저 점검
   scenarios.mjs             쓰는 흐름 시나리오 점검
+  api-tape.mjs, fixtures/   두 점검이 트는 백엔드 응답 녹화본
 ```
 
 ## API

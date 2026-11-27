@@ -5,12 +5,15 @@
  *     pnpm scenarios                 # 또는 node scripts/scenarios.mjs --base http://localhost:3000 [--only 이름]
  *
  * `pnpm walkthrough`가 화면을 하나씩 열어 보며 찍는 것이라면, 이것은 여러 화면을 오가는 흐름에서 생기는 어긋남을 잡는다.
- * 고친 버그마다 그 버그를 다시 밟는 흐름을 여기에 더한다. 시나리오는 그날의 실제 예보로 돌기 때문에, 값 자체가 아니라
- * 화면끼리 같은 것을 말하는지(장소 화면의 밤과 지도의 밤, 시간 막대의 날짜 순서)를 본다.
+ * 고친 버그마다 그 버그를 다시 밟는 흐름을 여기에 더한다. 값 자체가 아니라 화면끼리 같은 것을 말하는지(장소 화면의 밤과
+ * 지도의 밤, 시간 막대의 날짜 순서)를 본다.
  *
- * 추천 API는 walkthrough와 같이 실제 백엔드를 부르고, 로그인 관련 호출은 브라우저 안에서 401로 답한다.
+ * 추천, 구름, 장소 API는 녹화본(scripts/fixtures/scenarios-api.json)을 틀고 브라우저 시계도 녹화한 시각에 맞춘다.
+ * 그래서 그날 날씨와 상관없이 같은 밤으로 돈다. 화면이 새 API를 부르면 가볼 만한 곳이 여럿인 밤에
+ * `--record`를 붙여 실제 백엔드로 다시 녹화한다(scripts/api-tape.mjs). 로그인 관련 호출은 브라우저 안에서 401로 답한다.
  */
 import { chromium } from "playwright"
+import { apiTape } from "./api-tape.mjs"
 
 const args = process.argv.slice(2)
 const option = (name, fallback) => {
@@ -19,6 +22,7 @@ const option = (name, fallback) => {
 }
 const BASE = option("base", "http://localhost:3000")
 const ONLY = option("only", null)
+const tape = apiTape("scripts/fixtures/scenarios-api.json", { record: args.includes("--record"), origin: BASE })
 const ORIGIN = { latitude: 37.55, longitude: 126.91 }
 const VIEWPORTS = {
   mobile: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
@@ -41,6 +45,7 @@ async function open(browser, kind, { setup = null, ready = ".bb .tonight .sky-te
     permissions: ["geolocation"],
     geolocation: ORIGIN,
   })
+  await tape.attach(context)
   await context.route("**/api/v1/auth/**", (route) =>
     route.fulfill({
       status: 401,
@@ -49,7 +54,7 @@ async function open(browser, kind, { setup = null, ready = ".bb .tonight .sky-te
       body: JSON.stringify({ success: false, status: 401, message: "scenarios" }),
     }),
   )
-  // 그날의 예보에 없는 상황(가볼 만한 곳이 없는 밤 같은)은 응답을 고쳐서 만든다
+  // 녹화본에 없는 상황(가볼 만한 곳이 없는 밤 같은)은 응답을 고쳐서 만든다
   if (setup) await setup(context)
   const page = await context.newPage()
   const errors = []
@@ -361,10 +366,9 @@ const scenarios = {
   async emptyNight(browser, kind) {
     const setup = (context) =>
       context.route("**/api/v1/recommendations/tonight**", async (route) => {
-        const response = await route.fetch()
-        const body = await response.json()
+        const body = await tape.json(route)
         body.data.places = []
-        await route.fulfill({ response, json: body })
+        await route.fulfill({ json: body, headers: { "access-control-allow-origin": BASE, "access-control-allow-credentials": "true" } })
       })
     const { context, page, errors } = await open(browser, kind, { setup, ready: ".bb main .tonight" })
     check((await page.locator(".bb .place-view").count()) === 0, "장소 화면이 없는 밤이다")
@@ -541,6 +545,10 @@ try {
   }
 } finally {
   await browser.close()
+}
+tape.save()
+if (tape.misses().length > 0) {
+  check(false, `녹화본에 없는 요청 ${tape.misses().length}개. --record로 다시 녹화한다: ${tape.misses().slice(0, 5).join(", ")}`)
 }
 if (failures.length > 0) {
   console.error(`\n실패 ${failures.length}건\n  ${failures.join("\n  ")}`)

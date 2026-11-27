@@ -6,13 +6,16 @@
  *
  * 모바일(390x844)과 PC(1440x900)에서 각각: 오늘 밤 추천 → 다른 후보 고르기 → 밤 띠 훑기 → 카드의 탭 →
  * 별 사진 찍기 → 지도의 세 레이어와 표식 → 설정 바꾸기 → 추천 기준과 출처.
- * 추천 API는 앱이 쓰는 그대로(/api rewrite) 실제 백엔드를 부른다. 로그인 관련 호출은 브라우저 안에서 401로 답해서
- * 백엔드의 인증 API에는 아무것도 보내지 않는다. 그 401이 콘솔에 한 줄 남는 것은 정상이다.
+ * 추천, 구름, 장소 API는 녹화본(scripts/fixtures/walkthrough-api.json)을 틀고 브라우저 시계도 녹화한 시각에 맞춘다.
+ * 그래서 그날 날씨와 상관없이 같은 화면을 찍는다. 화면이 새 API를 부르면 가볼 만한 곳이 여럿인 밤에 `--record`를 붙여
+ * 실제 백엔드로 다시 녹화한다(scripts/api-tape.mjs). 로그인 관련 호출은 브라우저 안에서 401로 답해서 백엔드의 인증
+ * API에는 아무것도 보내지 않는다. 그 401이 콘솔에 한 줄 남는 것은 정상이다.
  *
  * 설정을 바꾼 뒤 요청 쿼리가 실제로 바뀌었는지, 지도 표식과 목록의 선택이 맞는지도 확인하고, 어긋나면 실패로 끝난다.
  */
 import { mkdirSync } from "node:fs"
 import { chromium } from "playwright"
+import { apiTape } from "./api-tape.mjs"
 
 const args = process.argv.slice(2)
 const option = (name, fallback) => {
@@ -22,6 +25,7 @@ const option = (name, fallback) => {
 const BASE = option("base", "http://localhost:3000")
 const OUT = option("out", "walkthrough-shots")
 const ONLY = option("only", null)
+const tape = apiTape("scripts/fixtures/walkthrough-api.json", { record: args.includes("--record"), origin: BASE })
 // 이동 시간을 보려면 출발지가 필요하다. 목업과 같은 서울 마포의 한 점을 쓴다
 const ORIGIN = { latitude: 37.55, longitude: 126.91 }
 const VIEWPORTS = {
@@ -49,6 +53,7 @@ async function walk(browser, kind) {
     permissions: ["geolocation"],
     geolocation: ORIGIN,
   })
+  await tape.attach(context)
   await context.route("**/api/v1/auth/**", (route) =>
     route.fulfill({
       status: 401,
@@ -253,16 +258,24 @@ async function walk(browser, kind) {
 
   await page.getByRole("button", { name: "광해 지도" }).click()
   await page.waitForTimeout(4000)
-  // 다른 표식에 가려지지 않은 표식 하나를 누른다
-  const target = await page.evaluate(() => {
-    for (const pin of document.querySelectorAll(".bb .pin:not(.sel):not(.top)")) {
-      const rect = pin.querySelector(".mk").getBoundingClientRect()
-      const x = rect.x + rect.width / 2
-      const y = rect.y + rect.height / 2
-      if (pin.contains(document.elementFromPoint(x, y))) return { x, y, label: pin.getAttribute("aria-label") }
-    }
-    return null
-  })
+  // 다른 표식에 가려지지 않은 표식 하나를 누른다. 목록에서 고른 장소로 지도가 다가가 있으면 다른 표식이 화면 밖에
+  // 있을 수 있어서, 보일 때까지 몇 번 축소한다
+  const findTarget = () =>
+    page.evaluate(() => {
+      for (const pin of document.querySelectorAll(".bb .pin:not(.sel):not(.top)")) {
+        const rect = pin.querySelector(".mk").getBoundingClientRect()
+        const x = rect.x + rect.width / 2
+        const y = rect.y + rect.height / 2
+        if (pin.contains(document.elementFromPoint(x, y))) return { x, y, label: pin.getAttribute("aria-label") }
+      }
+      return null
+    })
+  let target = await findTarget()
+  for (let i = 0; i < 3 && target === null; i++) {
+    await page.getByRole("button", { name: "축소" }).click()
+    await page.waitForTimeout(1500)
+    target = await findTarget()
+  }
   check(target !== null, "누를 수 있는 표식이 있다")
   if (target) {
     const markerName = target.label.split(",")[0]
@@ -341,6 +354,10 @@ try {
   }
 } finally {
   await browser.close()
+}
+tape.save()
+if (tape.misses().length > 0) {
+  check(false, `녹화본에 없는 요청 ${tape.misses().length}개. --record로 다시 녹화한다: ${tape.misses().slice(0, 5).join(", ")}`)
 }
 if (failures.length > 0) {
   console.error(`\n실패 ${failures.length}건`)
