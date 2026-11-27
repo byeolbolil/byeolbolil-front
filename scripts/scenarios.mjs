@@ -323,6 +323,78 @@ const scenarios = {
     check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
     await context.close()
   },
+
+  /** 닉네임을 바꾸면 머리의 이름이 바로 달라지고, 새로 고쳐도 남는다. 규칙에 어긋나면 보내지 않는다 */
+  async nickname(browser, kind) {
+    const server = { nickname: "홍길동😀", patches: [] }
+    const cors = {
+      "access-control-allow-origin": BASE,
+      "access-control-allow-credentials": "true",
+      "access-control-allow-headers": "authorization, content-type",
+      "access-control-allow-methods": "GET, PATCH, OPTIONS",
+    }
+    const json = (route, data) =>
+      route.fulfill({ status: 200, contentType: "application/json", headers: cors, body: JSON.stringify({ success: true, status: 200, message: "scenarios", data }) })
+    // 로그인한 채로 시작한다. 소셜 로그인으로 들어와 제공자의 이름(이모지가 든)이 닉네임이 된 사람이다
+    const setup = async (context) => {
+      await context.route("**/api/v1/auth/reissue", (route) => json(route, { accessToken: "scenarios-token" }))
+      await context.route("**/api/v1/bookmarks**", (route) => json(route, []))
+      await context.route("**/api/v1/members/me", async (route) => {
+        const request = route.request()
+        if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
+        if (request.method() === "PATCH") {
+          const body = request.postDataJSON()
+          server.patches.push(body.nickname)
+          server.nickname = body.nickname
+        }
+        return json(route, { memberId: 1, nickname: server.nickname })
+      })
+    }
+    const { context, page, errors } = await open(browser, kind, { setup })
+    const account = page.locator(".bb .acct.on")
+    await account.waitFor({ timeout: 30_000 })
+    check((await account.innerText()).includes("홍길동😀님"), "제공자가 준 닉네임으로 로그인되어 있다")
+
+    await account.click()
+    await page.getByRole("menuitem", { name: "닉네임 바꾸기" }).click()
+    const input = page.locator(".bb .sheet #nickname")
+    await input.waitFor()
+    check((await input.inputValue()) === "홍길동😀", "지금 닉네임이 입력란에 들어 있다")
+    const save = page.locator(".bb .sheet").getByRole("button", { name: "저장" })
+    check(await save.isDisabled(), "바꾸지 않으면 저장을 누를 수 없다")
+
+    await input.fill("별")
+    check((await page.locator(".bb .sheet .field-error").count()) === 0, "적는 중에는 짧다고 말하지 않는다")
+    await save.click()
+    await settle(page, 300)
+    check((await page.locator(".bb .sheet .field-error").innerText().catch(() => "")).includes("2자 이상"), "저장을 누르면 짧다는 까닭을 입력란 아래에 적는다")
+    await input.fill("별지기⭐")
+    check((await page.locator(".bb .sheet .field-error").innerText().catch(() => "")).includes("한글, 영문"), "쓸 수 없는 글자는 적는 대로 알린다")
+    await save.click()
+    await settle(page, 300)
+    check(server.patches.length === 0, "규칙에 어긋난 닉네임은 서버로 보내지 않는다")
+
+    await input.fill("  밤하늘 산책 ")
+    check((await page.locator(".bb .sheet .field-error").count()) === 0, "고치면 까닭이 사라진다")
+    await save.click()
+    await page.waitForFunction(() => document.querySelectorAll(".bb .sheet").length === 0, null, { timeout: 10_000 })
+    check(server.patches.join() === "밤하늘 산책", `앞뒤 공백을 떼고 한 번 보낸다 (${server.patches.join(" / ")})`)
+    check((await account.innerText()).includes("밤하늘 산책님"), "저장하면 머리의 이름이 바로 바뀐다")
+
+    await page.reload({ waitUntil: "domcontentloaded" })
+    await page.waitForSelector(".bb .tonight .sky-text h1", { timeout: 90_000 })
+    await account.waitFor({ timeout: 30_000 })
+    check((await account.innerText()).includes("밤하늘 산책님"), "새로 고쳐도 바꾼 닉네임이 남는다")
+
+    await account.click()
+    await page.getByRole("menuitem", { name: "닉네임 바꾸기" }).click()
+    await page.waitForSelector(".bb .sheet #nickname")
+    await page.goBack()
+    await settle(page, 600)
+    check((await sheetCount(page)) === 0 && page.url().startsWith(BASE), "닉네임 시트도 뒤로 가기로 닫힌다")
+    check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
+    await context.close()
+  },
 }
 
 const browser = await chromium.launch({
