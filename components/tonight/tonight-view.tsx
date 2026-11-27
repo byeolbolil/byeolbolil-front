@@ -18,6 +18,14 @@ import { Rating } from "./rating"
 /** 목록이 카드 아래에 놓이는 화면에서 처음에 보여주는 후보 수. 나머지는 "더 보기"로 편다. */
 const SHORT_LIST = 4
 
+/** 후보 목록을 북마크한 곳과 명소로 나눠 보는 방법 */
+type CandidateFilter = "all" | "mine" | "spots"
+const CANDIDATE_FILTERS: ReadonlyArray<{ value: CandidateFilter; label: string }> = [
+  { value: "all", label: "전체" },
+  { value: "mine", label: "북마크" },
+  { value: "spots", label: "명소" },
+]
+
 /** 장소 카드에 붙이는 버튼과 펼침 내용 */
 export interface CardExtras {
   save?: ReactNode
@@ -120,18 +128,24 @@ export function NightCandidates({
   footer,
 }: NightCandidatesProps) {
   const [showAll, setShowAll] = useState(false)
+  const [filter, setFilter] = useState<CandidateFilter>("all")
   const rowsRef = useRef<HTMLDivElement>(null)
   const hasOrigin = origin !== null
   const view = buildNightView(night)
   const name = nightName(night.date, tonightDate)
   // 가볼 만한 곳이 없는 밤에는 쉬어가라는 곳을 목록에서 뺀다
   const list = view.top ? night.places : view.rest
-  const ranked = list.map((place, index) => ({ place, rank: index + 1 }))
+  // 북마크한 곳과 명소가 함께 있을 때만 나눠 볼 수 있다. 번호는 나눠 봐도 전체에서의 순위 그대로 둔다
+  const canFilter = list.some((place) => place.type === "BOOKMARK") && list.some((place) => place.type !== "BOOKMARK")
+  const active = canFilter ? filter : "all"
+  const ranked = list
+    .map((place, index) => ({ place, rank: index + 1 }))
+    .filter(({ place }) => active === "all" || (active === "mine") === (place.type === "BOOKMARK"))
   const everything = beside || showAll
   const shown = everything
     ? ranked
     : // 접어 둔 목록 밖의 장소를 지도에서 골랐으면 그 줄만 끝에 덧붙인다
-      ranked.filter((item) => item.rank <= SHORT_LIST || placeKey(item.place) === shownKey)
+      ranked.filter((item, index) => index < SHORT_LIST || placeKey(item.place) === shownKey)
   const hidden = ranked.length - shown.length
   const missing = night.candidateCount - night.evaluatedCount
   const maxTravelHours = night.criteria.maxTravelMinutes ? Math.round(night.criteria.maxTravelMinutes / 60) : null
@@ -149,6 +163,20 @@ export function NightCandidates({
         <section className="sec">
           <div className="sec-title stack">
             <h2>{view.top ? `${name} 후보 ${ranked.length}곳` : "그나마 볼 수 있는 곳"}</h2>
+            {canFilter ? (
+              <div className="seg mini" role="group" aria-label="후보 나눠 보기">
+                {CANDIDATE_FILTERS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={active === option.value}
+                    onClick={() => setFilter(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
           {picker}
           <div className="rows" ref={rowsRef}>
