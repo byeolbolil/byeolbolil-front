@@ -5,7 +5,7 @@
  *     pnpm walkthrough               # 또는 node scripts/walkthrough.mjs --out <폴더> --base http://localhost:3000
  *
  * 모바일(390x844)과 PC(1440x900)에서 각각: 오늘 밤 추천 → 다른 후보 고르기 → 밤 띠 훑기 → 카드의 탭 →
- * 지도의 세 레이어와 표식 → 설정 바꾸기 → 추천 기준과 출처 → 별 사진 찍기.
+ * 별 사진 찍기 → 지도의 세 레이어와 표식 → 설정 바꾸기 → 추천 기준과 출처.
  * 추천 API는 앱이 쓰는 그대로(/api rewrite) 실제 백엔드를 부른다. 로그인 관련 호출은 브라우저 안에서 401로 답해서
  * 백엔드의 인증 API에는 아무것도 보내지 않는다. 그 401이 콘솔에 한 줄 남는 것은 정상이다.
  *
@@ -207,6 +207,14 @@ async function walk(browser, kind) {
   }
   await tabs.getByRole("tab").first().click()
 
+  // 별 사진 찍기: 장소 카드의 길찾기 옆 버튼으로 시트가 열리고, 기종을 바꾸면 그 기종의 설정이 나온다
+  await page.getByRole("button", { name: "별 사진 찍는 법" }).first().click()
+  await page.waitForSelector(".bb .guide")
+  await page.locator(".bb .guide .seg").getByRole("button", { name: "아이폰" }).click()
+  check((await page.locator(".bb .guide").innerText()).includes("야간 모드"), "촬영 안내가 앱 안의 시트로 열리고 기종을 고를 수 있다")
+  await shot("guide")
+  await page.keyboard.press("Escape")
+
   // 로그인하지 않고 북마크를 누르면 페이지를 옮기지 않고 로그인 창이 뜬다
   const urlBefore = page.url()
   await page.locator(".bb .save-pill").first().click()
@@ -318,14 +326,6 @@ async function walk(browser, kind) {
   console.log(`  바꾸기 전 가장 좋은 곳: ${topName}`)
   console.log(`  바꾼 뒤: ${newTop}${notes ? ` / ${notes}` : ""}`)
   await shot("after-settings")
-
-  // 8. 별 사진 찍기: 머리의 버튼으로 시트가 열리고, 기종을 바꾸면 그 기종의 설정이 나온다
-  await page.getByRole("button", { name: "별 사진 찍기" }).click()
-  await page.waitForSelector(".bb .guide")
-  await page.locator(".bb .guide .seg").getByRole("button", { name: "아이폰" }).click()
-  check((await page.locator(".bb .guide").innerText()).includes("야간 모드"), "촬영 안내가 앱 안의 시트로 열리고 기종을 고를 수 있다")
-  await shot("guide")
-  await page.keyboard.press("Escape")
 
   check(consoleErrors.length === 0, `콘솔 오류가 없다${consoleErrors.length ? `:\n    ${consoleErrors.join("\n    ")}` : ""}`)
   await context.close()
