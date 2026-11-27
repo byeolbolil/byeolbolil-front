@@ -40,6 +40,7 @@ import { NightError, NightSkeleton } from "./night-status"
 import { GuideSheet } from "./guide-sheet"
 import { LoginSheet } from "./login-sheet"
 import { MoonSheet } from "./moon-sheet"
+import { NicknameSheet } from "./nickname-sheet"
 import { PickSky, placeSkyState } from "./pick-sky"
 import { PlaceView } from "./place-view"
 import { PlaceRow } from "./place-row"
@@ -52,7 +53,7 @@ import { NightCandidates, NightCard, type CardExtras } from "./tonight-view"
 import { WeekOutlook } from "./week-outlook"
 import "./tonight.css"
 
-type SheetKind = "settings" | "origin" | "sources" | "save" | "week" | "login" | "guide" | "moon"
+type SheetKind = "settings" | "origin" | "sources" | "save" | "week" | "login" | "guide" | "moon" | "nickname"
 
 /** 로그인 창을 열 때 하려던 일. 로그인하면 이어서 한다 */
 type AfterLogin = { kind: "saveSpot"; spotId: number; name: string } | { kind: "savePick" } | { kind: "none" }
@@ -83,6 +84,7 @@ export function TonightApp() {
   const settingsState = useSettings()
   const settings = useMemo(() => settingsOf(settingsState), [settingsState])
   const isAuthenticated = authStore((state) => state.isAuthenticated)
+  const nickname = authStore((state) => state.user?.nickname ?? "")
   const { isInitializing } = useAuthInit()
   const { toast } = useToast()
   // 저장된 토큰이 있으면 시작할 때의 재발급이 끝난 뒤에 추천을 받는다. 그래야 내 장소가 처음부터 들어간다.
@@ -741,7 +743,11 @@ export function TonightApp() {
           <PinIcon />
           <span>{originText}</span>
         </button>
-        <AccountButton pending={isInitializing} onLogin={() => askLogin({ kind: "none" })} />
+        <AccountButton
+          pending={isInitializing}
+          onLogin={() => askLogin({ kind: "none" })}
+          onEditNickname={() => showSheet("nickname")}
+        />
         {/* 달력과 사진 안내는 머리에 두지 않는다. 아이콘만으로는 무엇인지 읽히지 않아서, 필요해지는 자리(장소 화면)에 둔다 */}
         <button type="button" className="gear" aria-label="설정" title="설정" onClick={openSettings}>
           <SettingsIcon />
@@ -854,6 +860,16 @@ export function TonightApp() {
           }}
           onDone={finishLogin}
           onLeave={rememberBeforeLeaving}
+        />
+      ) : null}
+      {sheet === "nickname" && isAuthenticated ? (
+        <NicknameSheet
+          current={nickname}
+          onClose={closeSheet}
+          onDone={(name) => {
+            showSheet(null)
+            toast({ title: "닉네임을 바꿨어요", description: `이제 ${name}님으로 보여요.` })
+          }}
         />
       ) : null}
       {sheet === "save" && pick ? (

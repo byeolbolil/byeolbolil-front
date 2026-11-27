@@ -11,13 +11,15 @@ interface AccountButtonProps {
   pending: boolean
   /** 로그인 창을 연다. 다른 페이지로 옮겨 가지 않는다 */
   onLogin: () => void
+  /** 닉네임 바꾸는 시트를 연다 */
+  onEditNickname: () => void
 }
 
 /**
- * 머리의 로그인 상태. 로그인하지 않았으면 "로그인", 했으면 닉네임을 보여주고 누르면 로그아웃이 나온다.
+ * 머리의 로그인 상태. 로그인하지 않았으면 "로그인", 했으면 닉네임을 보여주고 누르면 닉네임 바꾸기와 로그아웃이 나온다.
  * 지금 로그인돼 있는지를 어느 화면에서나 알 수 있게 하는 자리다.
  */
-export function AccountButton({ pending, onLogin }: AccountButtonProps) {
+export function AccountButton({ pending, onLogin, onEditNickname }: AccountButtonProps) {
   const isAuthenticated = authStore((state) => state.isAuthenticated)
   const nickname = authStore((state) => state.user?.nickname)
   const { toast } = useToast()
@@ -72,6 +74,16 @@ export function AccountButton({ pending, onLogin }: AccountButtonProps) {
       {open ? (
         <div className="acct-menu" role="menu">
           <p>{nickname ? `${nickname}님으로 로그인되어 있어요` : "로그인되어 있어요"}</p>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false)
+              onEditNickname()
+            }}
+          >
+            닉네임 바꾸기
+          </button>
           <button type="button" role="menuitem" onClick={() => void logout()}>
             로그아웃
           </button>
