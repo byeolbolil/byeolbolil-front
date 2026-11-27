@@ -1300,6 +1300,14 @@
     border-color: var(--ink);
     font-weight: 600;
   }
+  /* 목록 제목 옆의 작은 나눠 보기 */
+  .seg.mini {
+    gap: 4px;
+  }
+  .seg.mini button {
+    padding: 3px 10px;
+    font-size: 12px;
+  }
   details.adv {
     border-top: 1px solid var(--hair);
     padding-top: 14px;
