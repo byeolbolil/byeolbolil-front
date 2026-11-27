@@ -29,6 +29,8 @@ interface MapPanelProps {
   topKey: string | null
   /** 보고 있는 밤이 시작하는 날짜. 구름 레이어가 그 밤의 구름 예보를 받는 데 쓴다 */
   nightDate: string | null
+  /** 보고 있는 밤의 이름("오늘 밤", "내일 밤"). 구름 레이어가 어느 밤인지 적는다 */
+  nightLabel?: string
   onSelect: (key: string) => void
   /** 지도의 빈 곳을 누르거나 검색해서 고른 위치 */
   pick?: Coordinates | null
@@ -51,6 +53,7 @@ export function MapPanel({
   selectedKey,
   topKey,
   nightDate,
+  nightLabel = "오늘 밤",
   onSelect,
   pick,
   onPick,
@@ -125,7 +128,7 @@ export function MapPanel({
     ) : layer === "cloud" ? (
       <>
         {cloudFrame
-          ? "하얗게 덮인 곳이 구름이에요. 재생을 누르면 밤사이 움직임이 보여요"
+          ? `${nightLabel}의 구름이에요. 하얗게 덮인 곳이 구름이고, 재생을 누르면 밤사이 움직임이 보여요`
           : clouds.status === "loading"
             ? "구름 예보를 받는 중이에요"
             : clouds.status === "error"
@@ -206,20 +209,30 @@ export function MapPanel({
               </svg>
             )}
           </button>
-          <input
-            type="range"
-            min={0}
-            max={timeline.length - 1}
-            step={1}
-            value={Math.max(0, shownIndex)}
-            aria-label="시각"
-            aria-valuetext={shownTime ? koreanHour(hourOf(shownTime)) : undefined}
-            onChange={(event) => {
-              setPlaying(false)
-              setCloudTime(timeline[Number(event.target.value)] ?? null)
-            }}
-          />
-          <span className="tl-label">{shownTime ? koreanHour(hourOf(shownTime)) : ""}</span>
+          {/* 구름은 고른 밤 하나의 해 진 뒤부터 아침까지다. 앞으로 몇 시간으로 읽히지 않게 양 끝 시각과 밤의 이름을 적는다 */}
+          <div className="tl-track">
+            <input
+              type="range"
+              min={0}
+              max={timeline.length - 1}
+              step={1}
+              value={Math.max(0, shownIndex)}
+              aria-label={`${nightLabel} 시각`}
+              aria-valuetext={shownTime ? koreanHour(hourOf(shownTime)) : undefined}
+              onChange={(event) => {
+                setPlaying(false)
+                setCloudTime(timeline[Number(event.target.value)] ?? null)
+              }}
+            />
+            <div className="tl-ends" aria-hidden="true">
+              <span>{koreanHour(hourOf(timeline[0]))}</span>
+              <span>{koreanHour(hourOf(timeline[timeline.length - 1]))}</span>
+            </div>
+          </div>
+          <span className="tl-label">
+            <small>{nightLabel}</small>
+            {shownTime ? koreanHour(hourOf(shownTime)) : ""}
+          </span>
         </div>
       ) : null}
       {legend || mineKey ? (
