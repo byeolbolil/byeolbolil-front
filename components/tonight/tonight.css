@@ -1241,6 +1241,9 @@
     flex-direction: column;
     gap: 20px;
   }
+  .sheet.wide {
+    width: min(760px, 100%);
+  }
   .sheet-head {
     display: flex;
     justify-content: space-between;
@@ -3243,7 +3246,7 @@
   color: var(--ink-3);
 }
 
-/* 달 없는 밤 시트. 칸마다 달 모양과, 달 없이 어두운 시간만큼 차는 금빛 막대 */
+/* 달 없는 밤 시트. 칸마다 달 모양과, 달 없이 어두운 때를 금빛으로 칠한 띠 */
 .bb .moon-cal {
   display: flex;
   flex-direction: column;
@@ -3305,18 +3308,49 @@
   color: var(--star);
   font-weight: 700;
 }
-.bb .mc-bar {
-  width: 70%;
-  height: 3px;
-  border-radius: 2px;
+/* 저녁부터 아침까지의 띠. 바탕은 아직 밝은 때, 옅은 칸은 어둡지만 달이 뜬 때, 금빛은 달 없이 어두운 때 */
+.bb .mc-strip {
+  display: block;
+  position: relative;
+  width: 86%;
+  height: 7px;
+  margin-top: 2px;
+  border-radius: 4px;
   background: var(--night-2);
   overflow: hidden;
 }
-.bb .mc-bar i {
-  display: block;
-  height: 100%;
+.bb .mc-strip i {
+  position: absolute;
+  inset-block: 0;
+}
+.bb .mc-moonlit {
+  background: color-mix(in oklch, var(--ink-3) 45%, transparent);
+}
+.bb .mc-moonless {
   background: var(--star);
-  border-radius: inherit;
+}
+.bb .mc-row button[aria-pressed="true"] .mc-strip {
+  background: var(--night-1);
+}
+.bb .mc-timeline {
+  margin-top: 10px;
+  padding-bottom: 18px;
+  position: relative;
+}
+.bb .mc-timeline .mc-strip {
+  width: 100%;
+  height: 14px;
+  border-radius: 7px;
+  background: var(--night-1);
+}
+.bb .mc-ticks span {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  font-size: 11.5px;
+  font-family: var(--font-num);
+  color: var(--ink-3);
+  white-space: nowrap;
 }
 .bb .mc-detail {
   display: flex;

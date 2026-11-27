@@ -1,9 +1,18 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { fetchMoon, type MoonCalendar } from "@/lib/tonight/api"
+import { fetchMoon, type MoonCalendar, type MoonCalendarNight } from "@/lib/tonight/api"
 import { moonPhaseName, moonTimesText } from "@/lib/tonight/moon"
-import { calendarNightName, calendarWeeks, durationText, moonlessShare, moonlessSpansText } from "@/lib/tonight/moon-calendar"
+import {
+  calendarNightName,
+  calendarWeeks,
+  durationText,
+  frameTicks,
+  moonlessSpansText,
+  nightFrame,
+  nightStrip,
+  type NightFrame,
+} from "@/lib/tonight/moon-calendar"
 import type { Coordinates } from "@/lib/tonight/settings"
 import { MoonPhase } from "./gauges"
 import { Sheet } from "./sheet"
@@ -24,7 +33,8 @@ type State = { status: "loading" } | { status: "ready"; calendar: MoonCalendar }
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"]
 
 /**
- * 앞으로 6주의 달. 칸마다 달 모양과, 달 없이 어두운 시간만큼 차는 막대를 그린다.
+ * 앞으로 6주의 달. 칸마다 달 모양과, 저녁부터 아침까지를 가로로 편 띠를 그린다.
+ * 띠는 하늘이 어두운 동안 옅게, 그 가운데 달이 없는 동안 금빛으로 칠해서, 얼마나 길게와 언제를 함께 보여 준다.
  * 칸을 누르면 아래에 그 밤의 달 없는 구간과 달이 뜨고 지는 시각을 적는다. 날씨는 보지 않는다.
  */
 export function MoonSheet({ position, placeName, forecastDates, onOpenNight, onClose }: MoonSheetProps) {
@@ -44,7 +54,7 @@ export function MoonSheet({ position, placeName, forecastDates, onOpenNight, onC
   }, [lat, lon])
 
   return (
-    <Sheet title="달 없는 밤" onClose={onClose}>
+    <Sheet title="달 없는 밤" onClose={onClose} wide>
       {state.status === "ready" && state.calendar.nights.length > 0 ? (
         <Calendar
           calendar={state.calendar}
@@ -77,6 +87,7 @@ function Calendar({
   onOpenNight: (date: string) => void
 }) {
   const { nights, startDate } = calendar
+  const frame = nightFrame(nights)
   const night = nights.find((item) => item.date === selected) ?? nights[0]
   const spans = moonlessSpansText(night)
   const moonTimes = moonTimesText(night.moon)
@@ -112,10 +123,8 @@ function Calendar({
                   onClick={() => onSelect(cell.date)}
                 >
                   <span className="mc-day">{label}</span>
-                  <MoonPhase moon={cell.moon} brightness={0} up size={34} />
-                  <span className="mc-bar" aria-hidden="true">
-                    <i style={{ width: `${Math.round(moonlessShare(cell, nights) * 100)}%` }} />
-                  </span>
+                  <MoonPhase moon={cell.moon} brightness={0} up size={30} />
+                  <NightStrip night={cell} frame={frame} />
                 </button>
               )
             })}
@@ -133,6 +142,16 @@ function Calendar({
             {text}
           </div>
         ))}
+        <div className="mc-timeline" aria-hidden="true">
+          <NightStrip night={night} frame={frame} />
+          <div className="mc-ticks">
+            {frameTicks(frame).map((tick) => (
+              <span key={tick.at} style={{ left: `${tick.at * 100}%` }}>
+                {tick.label}
+              </span>
+            ))}
+          </div>
+        </div>
         <div className="mc-moon">
           <MoonPhase moon={night.moon} brightness={0} up size={28} />
           <span>{[moonPhaseName(night.moon), moonTimes].filter(Boolean).join(" · ")}</span>
@@ -144,5 +163,22 @@ function Calendar({
         ) : null}
       </section>
     </div>
+  )
+}
+
+/** 저녁부터 아침까지의 띠. 어두운 동안은 옅게, 그 가운데 달이 없는 동안은 금빛으로 칠한다 */
+function NightStrip({ night, frame }: { night: MoonCalendarNight; frame: NightFrame }) {
+  const { dark, moonless } = nightStrip(night, frame)
+  const place = (part: { from: number; to: number }) => ({
+    left: `${part.from * 100}%`,
+    width: `${(part.to - part.from) * 100}%`,
+  })
+  return (
+    <span className="mc-strip" aria-hidden="true">
+      {dark ? <i className="mc-moonlit" style={place(dark)} /> : null}
+      {moonless.map((part) => (
+        <i key={part.from} className="mc-moonless" style={place(part)} />
+      ))}
+    </span>
   )
 }
