@@ -24,11 +24,9 @@ import {
   BookmarkIcon,
   BrandMark,
   CalendarIcon,
-  CameraIcon,
   ChevronIcon,
   CloseIcon,
   MapTabIcon,
-  MoonIcon,
   PinIcon,
   SettingsIcon,
   TonightTabIcon,
@@ -623,13 +621,6 @@ export function TonightApp() {
     ) : null
   /** 장소 화면에 띄우는 곳. 고른 곳이 없으면 그 밤의 1위다 */
   const shownPlace = detailPlace ?? topPlace
-  // 달력의 시각은 지금 보는 장소에서 계산한다. 아직 장소가 없으면 출발지(1km로 줄여서), 그것도 없으면 남한의 가운데쯤이다.
-  // 국내에서는 어디서 계산해도 그믐이 드는 날은 같고, 시각만 수십 분 안에서 달라진다
-  const moonBasis = shownPlace
-    ? { position: { lat: shownPlace.latitude, lon: shownPlace.longitude }, name: shownPlace.name }
-    : origin
-      ? { position: { lat: roundCoordinate(origin.lat), lon: roundCoordinate(origin.lon) }, name: originText }
-      : { position: { lat: 36.5, lon: 127.8 }, name: "남한 가운데쯤" }
   if (night.error) {
     content = <NightError error={night.error} onRetry={reloadNights} />
   } else if (data && tonightDate) {
@@ -646,6 +637,8 @@ export function TonightApp() {
             dates={dates}
             criteria={query}
             save={heroExtras(shownPlace).save}
+            onOpenMoon={openMoon}
+            onOpenGuide={openGuide}
           />
         ) : (
           // 가볼 만한 곳이 없는 밤. 그 사정과 다른 밤을 먼저 알린다
@@ -706,12 +699,7 @@ export function TonightApp() {
           <span>{originText}</span>
         </button>
         <AccountButton pending={isInitializing} onLogin={() => askLogin({ kind: "none" })} />
-        <button type="button" className="gear" aria-label="달 없는 밤" title="달 없는 밤" onClick={openMoon}>
-          <MoonIcon />
-        </button>
-        <button type="button" className="gear" aria-label="별 사진 찍기" title="별 사진 찍기" onClick={openGuide}>
-          <CameraIcon />
-        </button>
+        {/* 달력과 사진 안내는 머리에 두지 않는다. 아이콘만으로는 무엇인지 읽히지 않아서, 필요해지는 자리(장소 화면)에 둔다 */}
         <button type="button" className="gear" aria-label="설정" title="설정" onClick={openSettings}>
           <SettingsIcon />
         </button>
@@ -790,10 +778,11 @@ export function TonightApp() {
       ) : null}
       {sheet === "sources" ? <SourcesSheet onClose={closeSheet} /> : null}
       {sheet === "guide" ? <GuideSheet onClose={closeSheet} /> : null}
-      {sheet === "moon" ? (
+      {/* 달력은 장소 화면에서만 열고, 시각은 그 장소에서 계산한다 */}
+      {sheet === "moon" && shownPlace ? (
         <MoonSheet
-          position={moonBasis.position}
-          placeName={moonBasis.name}
+          position={{ lat: shownPlace.latitude, lon: shownPlace.longitude }}
+          placeName={shownPlace.name}
           forecastDates={dates}
           onOpenNight={openNight}
           onClose={closeSheet}
