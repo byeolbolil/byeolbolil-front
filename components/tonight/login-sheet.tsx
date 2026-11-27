@@ -188,6 +188,9 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
         <button type="button" className="linkish" onClick={() => switchMode(mode === "login" ? "register" : "login")}>
           {mode === "login" ? "처음이면 가입하기" : "이미 계정이 있으면 로그인"}
         </button>
+        <a className="login-privacy" href="/privacy">
+          개인정보처리방침
+        </a>
       </div>
     </Sheet>
   )

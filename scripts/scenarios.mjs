@@ -498,6 +498,22 @@ const scenarios = {
     check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
     await context.close()
   },
+
+  /** 로그인 창에서 개인정보처리방침을 열고, 돌아가기로 첫 화면에 온다 */
+  async privacy(browser, kind) {
+    const { setup } = fakeMembers({ nickname: "", loggedIn: false })
+    const { context, page, errors } = await open(browser, kind, { setup })
+    await page.locator(".bb .acct").first().click()
+    await page.locator(".bb .sheet").getByRole("link", { name: "개인정보처리방침" }).click()
+    await page.waitForURL("**/privacy")
+    check(await page.getByRole("heading", { name: "개인정보처리방침" }).isVisible(), "로그인 창에서 개인정보처리방침이 열린다")
+    check((await page.locator("main").innerText()).includes("contact@byeolbolil.com"), "문의 메일 주소가 보인다")
+    await page.getByRole("link", { name: "별볼일로 돌아가기" }).click()
+    await page.waitForSelector(".bb .tonight .sky-text h1")
+    check(true, "돌아가기를 누르면 첫 화면이 열린다")
+    check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
+    await context.close()
+  },
 }
 
 const browser = await chromium.launch({

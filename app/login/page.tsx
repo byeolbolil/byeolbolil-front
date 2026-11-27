@@ -542,6 +542,11 @@ export default function LoginPage() {
             </Tabs>
           </CardContent>
         </Card>
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          <a href="/privacy" className="underline underline-offset-4">
+            개인정보처리방침
+          </a>
+        </p>
       </div>
     </div>
   )
