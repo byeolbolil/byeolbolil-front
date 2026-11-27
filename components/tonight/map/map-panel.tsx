@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useState, type ReactNode } from "react"
-import { frameAt } from "@/lib/tonight/cloud-field"
+import { frameAt, frameTimeText } from "@/lib/tonight/cloud-field"
 import type { FoundPlace, PickedPlace } from "@/lib/tonight/geocode"
 import { hourTimeline, initialTimelineTime } from "@/lib/tonight/hours"
 import { MAP_LAYERS, type MapLayer } from "@/lib/tonight/night-overlay"
@@ -20,8 +20,8 @@ const NightMap = dynamic(() => import("./night-map"), {
   loading: () => <div className="mapwrap map-loading">지도를 불러오는 중이에요</div>,
 })
 
-/** 재생할 때 한 시간을 넘기는 간격 */
-const PLAY_INTERVAL_MS = 900
+/** 재생할 때 한 시간을 넘기는 간격. 0.9초는 구름이 움직이는 것을 눈으로 따라가기에 빨랐다 */
+const PLAY_INTERVAL_MS = 1400
 
 interface MapPanelProps {
   places: readonly NightPlace[]
@@ -31,6 +31,11 @@ interface MapPanelProps {
   nightDate: string | null
   /** 보고 있는 밤의 이름("오늘 밤", "내일 밤"). 구름 레이어가 어느 밤인지 적는다 */
   nightLabel?: string
+  /**
+   * `places`의 시간 예보가 어느 밤의 것인지. 없으면 `nightDate`와 같다고 본다. 넓은 화면에서 장소 화면의 날짜 칸으로
+   * 다른 밤을 고르면 지도는 그 밤의 구름을 그리지만 표식은 후보 목록의 밤 그대로라, 표식은 구름 격자에서 읽은 값으로 칠한다
+   */
+  placesDate?: string | null
   onSelect: (key: string) => void
   /** 지도의 빈 곳을 누르거나 검색해서 고른 위치 */
   pick?: Coordinates | null
@@ -54,6 +59,7 @@ export function MapPanel({
   topKey,
   nightDate,
   nightLabel = "오늘 밤",
+  placesDate,
   onSelect,
   pick,
   onPick,
@@ -72,13 +78,19 @@ export function MapPanel({
   const [cloudTime, setCloudTime] = useState<string | null>(null)
   const [playing, setPlaying] = useState(false)
 
-  const timeline = useMemo(() => hourTimeline(places), [places])
-  const focusPlace = places.find((place) => placeKey(place) === (selectedKey ?? topKey)) ?? places[0]
-  const timeIndex = cloudTime ? timeline.indexOf(cloudTime) : -1
-  const shownTime = timeIndex >= 0 ? cloudTime : (initialTimelineTime(timeline, focusPlace) ?? null)
-  const shownIndex = shownTime ? timeline.indexOf(shownTime) : -1
   // 구름 예보는 구름 레이어를 켰을 때만 받는다
   const clouds = useCloudNight(nightDate, layer === "cloud")
+  // 시간 막대의 칸. 장소들의 시간 예보가 그 밤의 것이면 그 시각들을 쓰고(지난 시각은 빠져 있다),
+  // 장소 화면에서 다른 밤을 고른 것처럼 밤이 다르면 그 밤의 구름 격자 시각을 쓴다
+  const sameNight = (placesDate ?? nightDate) === nightDate
+  const timeline = useMemo(
+    () => (sameNight ? hourTimeline(places) : (clouds.night?.frames.map((frame) => frameTimeText(frame.time)) ?? [])),
+    [sameNight, places, clouds.night],
+  )
+  const focusPlace = places.find((place) => placeKey(place) === (selectedKey ?? topKey)) ?? places[0]
+  const timeIndex = cloudTime ? timeline.indexOf(cloudTime) : -1
+  const shownTime = timeIndex >= 0 ? cloudTime : (initialTimelineTime(timeline, sameNight ? focusPlace : undefined) ?? null)
+  const shownIndex = shownTime ? timeline.indexOf(shownTime) : -1
   const cloudFrame = frameAt(clouds.night, shownTime)
 
   useEffect(() => {
