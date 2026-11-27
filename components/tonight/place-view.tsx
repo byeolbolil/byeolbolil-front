@@ -6,6 +6,7 @@ import type { NightPlace, NightQuery, RecommendationLevel } from "@/lib/tonight/
 import { useWeek } from "@/lib/tonight/use-week"
 import { placeOnNight } from "@/lib/tonight/week"
 import { HeroCard } from "./hero-card"
+import { MoonIcon } from "./icons"
 import { NightPicker } from "./night-picker"
 
 interface PlaceViewProps {
@@ -18,6 +19,9 @@ interface PlaceViewProps {
   criteria: Pick<NightQuery, "minClearHours" | "preferBefore">
   /** 북마크 버튼 */
   save?: ReactNode
+  /** 이 장소의 6주 달력을 연다. 이번 주 너머의 밤을 찾는 곳이라 이번 주 제목 옆과 카드의 달 칸에 둔다 */
+  onOpenMoon?: () => void
+  onOpenGuide?: () => void
 }
 
 /**
@@ -26,7 +30,7 @@ interface PlaceViewProps {
  * 고르므로, 두 줄은 각자 위의 제목("○○의 이번 주", "○요일 밤 후보")으로 구분한다.
  * 고른 밤의 값은 이 장소의 이번 주 응답에서 가져온다. 처음 고른 밤은 목록에서 받은 값을 그대로 쓴다.
  */
-export function PlaceView({ place, placeDate, dates, criteria, save }: PlaceViewProps) {
+export function PlaceView({ place, placeDate, dates, criteria, save, onOpenMoon, onOpenGuide }: PlaceViewProps) {
   const [date, setDate] = useState(placeDate)
   const week = useWeek({ lat: place.latitude, lon: place.longitude }, criteria)
   const weekPlace = week.week?.places[0]
@@ -46,6 +50,12 @@ export function PlaceView({ place, placeDate, dates, criteria, save }: PlaceView
       {/* 옆 칸의 "그 밤 후보" 제목과 같은 모양으로, 아래 날짜 줄이 이 장소의 일곱 밤이라는 것을 이름으로 알린다 */}
       <div className="sec-title">
         <h2>{place.name}의 이번 주</h2>
+        {onOpenMoon ? (
+          <button type="button" className="sec-link" onClick={onOpenMoon}>
+            <MoonIcon />
+            달 없는 밤
+          </button>
+        ) : null}
       </div>
       {dates.length > 0 ? (
         <NightPicker dates={dates} selected={date} onSelect={setDate} levels={levels} settled={week.status !== "loading"} />
@@ -57,6 +67,8 @@ export function PlaceView({ place, placeDate, dates, criteria, save }: PlaceView
           eyebrow={nightName(date, tonight)}
           nightLabel={nightName(date, tonight)}
           save={save}
+          onOpenMoon={onOpenMoon}
+          onOpenGuide={onOpenGuide}
         />
       ) : (
         <p className="calm">

@@ -9,7 +9,7 @@ import type { NightPlace } from "@/lib/tonight/types"
 import { levelText } from "@/lib/tonight/wording"
 import { average, windowHours } from "@/lib/tonight/hours"
 import { CloudSky, HumidityDrop, MoonPhase, ScoreRing } from "./gauges"
-import { MoonIcon, PinIcon, SkyIcon } from "./icons"
+import { CameraIcon, ChevronIcon, MoonIcon, PinIcon, SkyIcon } from "./icons"
 import { NightBand } from "./night-band"
 import { PlaceAbout } from "./place-about"
 import { Rating } from "./rating"
@@ -23,6 +23,10 @@ interface HeroCardProps {
   save?: ReactNode
   /** 첫 탭의 이름. 보고 있는 밤의 이름("오늘 밤", "내일 밤")이다 */
   nightLabel?: string
+  /** 달 칸을 누르면 연다. 달이 걸리는 밤에 달 없는 밤이 언제인지 찾아가게 한다 */
+  onOpenMoon?: () => void
+  /** 길찾기 옆의 별 사진 찍는 법. 갈 곳을 정한 뒤에 필요한 것이라 여기에 둔다 */
+  onOpenGuide?: () => void
 }
 
 type CardTab = "tonight" | "place"
@@ -33,7 +37,7 @@ type CardTab = "tonight" | "place"
  * 명소는 이름 아래에 실제로 차를 대고 보는 지점을 적는다. "합천 황매산"만으로는 어디로 가야 할지 알 수 없다.
  * 사진을 구하지 못한 장소는 다른 곳의 사진을 빌려 쓰지 않고, 오늘 밤 조건으로 그린 하늘 그림을 보여준다.
  */
-export function HeroCard({ place, eyebrow, save, nightLabel = "오늘 밤" }: HeroCardProps) {
+export function HeroCard({ place, eyebrow, save, nightLabel = "오늘 밤", onOpenMoon, onOpenGuide }: HeroCardProps) {
   const [scrubbed, setScrubbed] = useState<number | null>(null)
   const [tab, setTab] = useState<CardTab>("tonight")
   const photo = spotPhoto(place)
@@ -142,12 +146,14 @@ export function HeroCard({ place, eyebrow, save, nightLabel = "오늘 밤" }: He
                 </div>
               </li>
               {moon ? (
-                <li>
-                  {place.moon ? <MoonPhase moon={place.moon} brightness={place.moonBrightness} up={moonUp} /> : <MoonIcon />}
-                  <div>
-                    <b>{moon.title}</b>
-                    <span>{moon.detail}</span>
-                  </div>
+                <li className={onOpenMoon ? "tap" : undefined}>
+                  {onOpenMoon ? (
+                    <button type="button" aria-label={`${moon.title}. 달 없는 밤 보기`} onClick={onOpenMoon}>
+                      <MoonFactBody place={place} moonUp={moonUp} title={moon.title} detail={moon.detail} link />
+                    </button>
+                  ) : (
+                    <MoonFactBody place={place} moonUp={moonUp} title={moon.title} detail={moon.detail} />
+                  )}
                 </li>
               ) : null}
               <li>
@@ -171,6 +177,12 @@ export function HeroCard({ place, eyebrow, save, nightLabel = "오늘 밤" }: He
               <a className="btn primary" href={directionsUrl(place)} target="_blank" rel="noopener noreferrer">
                 길찾기
               </a>
+              {onOpenGuide ? (
+                <button type="button" className="btn" onClick={onOpenGuide}>
+                  <CameraIcon />
+                  별 사진 찍는 법
+                </button>
+              ) : null}
             </div>
           </>
         ) : null}
@@ -187,5 +199,33 @@ export function HeroCard({ place, eyebrow, save, nightLabel = "오늘 밤" }: He
         ) : null}
       </div>
     </article>
+  )
+}
+
+/** 장소 카드의 달 칸 내용. `link`면 제목 뒤에 꺾쇠를 붙여 눌러지는 칸인 것을 알린다. 칸이 좁아서 꺾쇠에 따로 자리를 주지 않는다 */
+function MoonFactBody({
+  place,
+  moonUp,
+  title,
+  detail,
+  link = false,
+}: {
+  place: NightPlace
+  moonUp: boolean
+  title: string
+  detail: string
+  link?: boolean
+}) {
+  return (
+    <>
+      {place.moon ? <MoonPhase moon={place.moon} brightness={place.moonBrightness} up={moonUp} /> : <MoonIcon />}
+      <div>
+        <b>
+          {title}
+          {link ? <ChevronIcon /> : null}
+        </b>
+        <span>{detail}</span>
+      </div>
+    </>
   )
 }
