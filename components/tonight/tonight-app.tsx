@@ -318,6 +318,8 @@ export function TonightApp() {
 
   const selectDate = (date: string) => {
     setSelectedDate(date === tonightDate ? null : date)
+    // 목록의 밤을 고르면 장소 화면에서 고른 밤은 버린다. 같은 밤을 다시 눌러도 그 밤으로 맞춘다
+    setPlaceNight(null)
     closeDetail()
     // 밤을 바꾸면 오른쪽이 그 밤의 1위로 돌아가므로, 지도 위에 띄운 다른 장소의 카드도 닫는다
     setPeekKey(null)
@@ -556,7 +558,17 @@ export function TonightApp() {
     </div>
   ) : null
 
-  // 밤 고르기. 오늘 밤 탭에서는 후보 목록 위에, 좁은 화면의 지도 탭에서는 지도 위에 둔다. 구름 레이어는 고른 밤의 구름을 그린다
+  /** 장소 화면에 띄우는 곳. 고른 곳이 없으면 그 밤의 1위다 */
+  const shownPlace = detailPlace ?? topPlace
+  // 장소 화면에서 고른 밤은 그 장소와 후보 목록의 밤에 매인다. 둘 중 하나라도 바뀌면 고른 밤을 버리고 목록의 밤으로 돌아간다.
+  // 버리지 않으면, 목록의 밤을 바꿨다 되돌렸을 때 예전에 고른 밤이 지도에만 되살아난다
+  const placeViewKey = shownPlace && data ? `${shownPlace.latitude},${shownPlace.longitude}/${data.date}` : null
+  if (placeNight && placeNight.key !== placeViewKey) setPlaceNight(null)
+  /** 장소 화면과 지도가 보여 주는 밤. 장소 화면의 날짜 칸에서 고른 밤이고, 고르지 않았으면 후보 목록의 밤이다 */
+  const viewNightDate = placeNight && placeNight.key === placeViewKey ? placeNight.date : (data?.date ?? null)
+  const viewNightName = viewNightDate && tonightDate ? nightName(viewNightDate, tonightDate) : shownNightName
+
+  // 후보 목록의 밤 고르기. 오늘 밤 탭의 목록 위에 둔다
   const nightPicker =
     dates.length > 0 && shownDate ? (
       <NightPicker
@@ -573,13 +585,23 @@ export function TonightApp() {
       <div className="sec-title">
         <h2>지도에서 고르기</h2>
       </div>
-      {nightPicker}
+      {/* 좁은 화면의 지도 탭. 장소 화면에서 고른 밤을 따르고, 여기서 고르면 후보 목록의 밤이 바뀐다 */}
+      {dates.length > 0 && viewNightDate ? (
+        <NightPicker
+          dates={dates}
+          selected={viewNightDate}
+          onSelect={selectDate}
+          levels={levels}
+          settled={nightSummary.summary !== null}
+        />
+      ) : null}
       <MapPanel
         places={places}
         selectedKey={peekKey}
         topKey={topKey}
-        nightDate={data?.date ?? null}
-        nightLabel={shownNightName}
+        nightDate={viewNightDate}
+        placesDate={data?.date ?? null}
+        nightLabel={viewNightName}
         onSelect={peekOnMap}
         pick={pick}
         onPick={pickOnMap}
@@ -629,12 +651,6 @@ export function TonightApp() {
   /** 후보 목록. 오늘 밤 탭에만 있고, 넓은 화면에서는 카드 옆의 칸에, 그보다 좁으면 카드 아래에 놓인다 */
   let candidates: ReactNode = null
   const refreshing = night.loading ? " refreshing" : ""
-  /** 장소 화면에 띄우는 곳. 고른 곳이 없으면 그 밤의 1위다 */
-  const shownPlace = detailPlace ?? topPlace
-  // 장소 화면은 장소와 후보 목록의 밤이 바뀌면 새로 그려지고, 그때 고른 밤도 목록의 밤으로 돌아간다
-  const placeViewKey = shownPlace && data ? `${shownPlace.latitude},${shownPlace.longitude}/${data.date}` : null
-  /** 넓은 화면의 지도가 그리는 밤. 장소 화면의 날짜 칸에서 고른 밤을 따라가고, 고르지 않았으면 후보 목록의 밤이다 */
-  const mapNightDate = placeNight && placeNight.key === placeViewKey ? placeNight.date : (data?.date ?? null)
   if (night.error) {
     content = <NightError error={night.error} onRetry={reloadNights} />
   } else if (data && tonightDate) {
@@ -648,12 +664,15 @@ export function TonightApp() {
             key={placeViewKey ?? undefined}
             place={shownPlace}
             placeDate={data.date}
+            date={viewNightDate ?? data.date}
             dates={dates}
             criteria={query}
             save={heroExtras(shownPlace).save}
             onOpenMoon={openMoon}
             onOpenGuide={openGuide}
-            onDateChange={(date) => placeViewKey && setPlaceNight({ key: placeViewKey, date })}
+            onDateChange={(date) => {
+              if (placeViewKey) setPlaceNight({ key: placeViewKey, date })
+            }}
           />
         ) : (
           // 가볼 만한 곳이 없는 밤. 그 사정과 다른 밤을 먼저 알린다
@@ -737,9 +756,9 @@ export function TonightApp() {
               places={places}
               selectedKey={shownKey}
               topKey={topKey}
-              nightDate={mapNightDate}
+              nightDate={viewNightDate}
               placesDate={data?.date ?? null}
-              nightLabel={mapNightDate && tonightDate ? nightName(mapNightDate, tonightDate) : shownNightName}
+              nightLabel={viewNightName}
               onSelect={openFromMap}
               pick={pick}
               onPick={pickOnMap}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, type ReactNode } from "react"
+import { useMemo, type ReactNode } from "react"
 import { nightName } from "@/lib/tonight/time"
 import type { NightPlace, NightQuery, RecommendationLevel } from "@/lib/tonight/types"
 import { useWeek } from "@/lib/tonight/use-week"
@@ -22,8 +22,13 @@ interface PlaceViewProps {
   /** 이 장소의 6주 달력을 연다. 이번 주 너머의 밤을 찾는 곳이라 이번 주 제목 옆과 카드의 달 칸에 둔다 */
   onOpenMoon?: () => void
   onOpenGuide?: () => void
-  /** 날짜 칸으로 밤을 고를 때. 넓은 화면의 지도가 그 밤의 구름을 그린다 */
-  onDateChange?: (date: string) => void
+  /**
+   * 보여 줄 밤. 고른 밤은 앱이 들고 있다. 지도(넓은 화면의 옆 칸, 좁은 화면의 지도 탭)도 같은 밤의 구름을 그려야 해서,
+   * 장소 화면 안에 따로 두면 둘이 어긋난다
+   */
+  date: string
+  /** 날짜 칸으로 밤을 고를 때 */
+  onDateChange: (date: string) => void
 }
 
 /**
@@ -32,12 +37,7 @@ interface PlaceViewProps {
  * 고르므로, 두 줄은 각자 위의 제목("○○의 이번 주", "○요일 밤 후보")으로 구분한다.
  * 고른 밤의 값은 이 장소의 이번 주 응답에서 가져온다. 처음 고른 밤은 목록에서 받은 값을 그대로 쓴다.
  */
-export function PlaceView({ place, placeDate, dates, criteria, save, onOpenMoon, onOpenGuide, onDateChange }: PlaceViewProps) {
-  const [date, setShownDate] = useState(placeDate)
-  const setDate = (next: string) => {
-    setShownDate(next)
-    onDateChange?.(next)
-  }
+export function PlaceView({ place, placeDate, date, dates, criteria, save, onOpenMoon, onOpenGuide, onDateChange }: PlaceViewProps) {
   const week = useWeek({ lat: place.latitude, lon: place.longitude }, criteria)
   const weekPlace = week.week?.places[0]
   const levels = useMemo(() => {
@@ -64,7 +64,7 @@ export function PlaceView({ place, placeDate, dates, criteria, save, onOpenMoon,
         ) : null}
       </div>
       {dates.length > 0 ? (
-        <NightPicker dates={dates} selected={date} onSelect={setDate} levels={levels} settled={week.status !== "loading"} />
+        <NightPicker dates={dates} selected={date} onSelect={onDateChange} levels={levels} settled={week.status !== "loading"} />
       ) : null}
       {shown ? (
         <HeroCard
