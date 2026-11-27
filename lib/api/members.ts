@@ -5,6 +5,8 @@
  */
 
 import { api } from './client';
+import { apiClient } from './axios';
+import { AuthRejected } from './auth';
 import { authStore, type User } from '@/lib/store/authStore';
 import type { paths } from '@/types/openapi';
 import type { AxiosError } from 'axios';
@@ -44,6 +46,24 @@ export const membersApi = {
       }
       throw error;
     }
+  },
+
+  /**
+   * 닉네임 수정 (PATCH /api/v1/members/me, 백엔드 저장소 docs/API.md "닉네임 수정")
+   * 성공하면 Store의 사용자 정보도 바꿔 머리의 이름이 바로 달라진다.
+   * 규칙에 어긋나면 400(AxiosError), 로그인이 풀렸으면 401(AuthRejected)로 실패한다.
+   * 공통 HTTP 클라이언트는 401을 정상 응답으로 넘기므로 본문의 success로 가린다.
+   */
+  async updateNickname(nickname: string): Promise<User> {
+    const response = await apiClient.patch('/api/v1/members/me', { nickname });
+    const body = response.data as { success?: boolean; status?: number; message?: string; data?: { memberId?: number; nickname?: string } };
+    if (body?.success === false || !body?.data?.nickname) {
+      throw new AuthRejected(body?.status ?? response.status, body?.message ?? '');
+    }
+    const current = authStore.getState().user;
+    const user: User = { ...current, ...body.data, nickname: body.data.nickname };
+    authStore.getState().setUser(user);
+    return user;
   },
 
   /**
