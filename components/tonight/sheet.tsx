@@ -7,10 +7,12 @@ interface SheetProps {
   title: string
   onClose: () => void
   children: ReactNode
+  /** 넓은 화면에서 보통 시트보다 넓게 연다. 칸이 많은 달력처럼 가로가 모자란 내용에 쓴다 */
+  wide?: boolean
 }
 
 /** 아래에서 올라오는 시트(넓은 화면에서는 가운데 창). 바깥을 누르거나 Esc를 누르면 닫힌다. */
-export function Sheet({ title, onClose, children }: SheetProps) {
+export function Sheet({ title, onClose, children, wide = false }: SheetProps) {
   const closeRef = useRef<HTMLButtonElement>(null)
   // 부모가 다시 그려질 때마다 초점이 닫기 버튼으로 돌아가지 않도록, 닫는 함수는 ref로 들고 effect는 한 번만 돈다
   const onCloseRef = useRef(onClose)
@@ -39,7 +41,7 @@ export function Sheet({ title, onClose, children }: SheetProps) {
         if (event.target === event.currentTarget) onClose()
       }}
     >
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={title}>
+      <div className={wide ? "sheet wide" : "sheet"} role="dialog" aria-modal="true" aria-label={title}>
         <div className="sheet-head">
           <h2>{title}</h2>
           <button ref={closeRef} type="button" className="x-btn" aria-label="닫기" onClick={onClose}>

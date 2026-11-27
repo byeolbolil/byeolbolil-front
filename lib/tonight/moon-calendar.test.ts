@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest"
 import { moonUrl, unwrapMoon, type MoonCalendarNight } from "./api"
-import { calendarNightName, calendarWeeks, durationText, moonlessShare, moonlessSpansText } from "./moon-calendar"
+import {
+  calendarNightName,
+  calendarWeeks,
+  durationText,
+  frameTicks,
+  minutesAfterNoon,
+  moonlessSpansText,
+  nightFrame,
+  nightStrip,
+} from "./moon-calendar"
 
 const night = (date: string, moonlessMinutes = 0, dark?: { start: string; end: string }): MoonCalendarNight => ({
   date,
@@ -66,18 +75,72 @@ describe("달력 칸", () => {
     expect(calendarWeeks([])).toEqual([])
   })
 
-  it("막대는 가장 긴 어두운 밤에 견준 달 없는 시간이다", () => {
-    const long = night("2026-12-09", 600, { start: "2026-12-09T18:00:00+09:00", end: "2026-12-10T06:00:00+09:00" })
-    const half = night("2026-12-10", 360, { start: "2026-12-10T18:00:00+09:00", end: "2026-12-11T06:00:00+09:00" })
-    const none = night("2026-12-11", 0)
-    const nights = [long, half, none]
-    expect(moonlessShare(long, nights)).toBeCloseTo(600 / 720)
-    expect(moonlessShare(half, nights)).toBeCloseTo(0.5)
-    expect(moonlessShare(none, nights)).toBe(0)
+})
+
+describe("밤의 띠", () => {
+  it("시각을 그 밤이 시작하는 날 정오부터의 분으로 읽는다", () => {
+    expect(minutesAfterNoon("2026-12-09", "2026-12-09T18:25:00+09:00")).toBe(6 * 60 + 25)
+    expect(minutesAfterNoon("2026-12-09", "2026-12-10T00:00:00+09:00")).toBe(12 * 60)
+    expect(minutesAfterNoon("2026-12-09", "2026-12-10T06:07:00+09:00")).toBe(18 * 60 + 7)
   })
 
-  it("어두운 밤이 하나도 없으면 막대는 비어 있다", () => {
-    expect(moonlessShare(night("2026-12-09", 0), [night("2026-12-09", 0)])).toBe(0)
+  it("축은 가장 이른 어둠부터 가장 늦은 새벽까지를 정시로 넓힌다", () => {
+    const nights = [
+      night("2026-12-09", 0, { start: "2026-12-09T18:25:00+09:00", end: "2026-12-10T06:07:00+09:00" }),
+      night("2026-12-10", 0, { start: "2026-12-10T18:20:00+09:00", end: "2026-12-11T06:30:00+09:00" }),
+      night("2026-12-11", 0),
+    ]
+    expect(nightFrame(nights)).toEqual({ start: 6 * 60, end: 19 * 60 })
+  })
+
+  it("어두워지는 밤이 없으면 저녁 6시부터 아침 6시까지를 축으로 쓴다", () => {
+    expect(nightFrame([night("2026-06-21", 0)])).toEqual({ start: 6 * 60, end: 18 * 60 })
+  })
+
+  it("어두운 구간과 달 없는 구간을 축 위의 자리로 옮긴다", () => {
+    const frame = { start: 6 * 60, end: 18 * 60 }
+    const strip = nightStrip(
+      {
+        date: "2026-12-01",
+        dark: { start: "2026-12-01T18:00:00+09:00", end: "2026-12-02T06:00:00+09:00" },
+        moonless: [
+          { start: "2026-12-01T18:00:00+09:00", end: "2026-12-02T00:00:00+09:00" },
+          { start: "2026-12-02T03:00:00+09:00", end: "2026-12-02T06:00:00+09:00" },
+        ],
+      },
+      frame,
+    )
+    expect(strip).toEqual({
+      dark: { from: 0, to: 1 },
+      moonless: [
+        { from: 0, to: 0.5 },
+        { from: 0.75, to: 1 },
+      ],
+    })
+  })
+
+  it("축 밖으로 나간 부분은 잘라 낸다", () => {
+    const frame = { start: 7 * 60, end: 17 * 60 }
+    const strip = nightStrip(
+      {
+        date: "2026-12-01",
+        dark: { start: "2026-12-01T18:00:00+09:00", end: "2026-12-02T06:00:00+09:00" },
+        moonless: [{ start: "2026-12-01T18:00:00+09:00", end: "2026-12-01T18:30:00+09:00" }],
+      },
+      frame,
+    )
+    expect(strip).toEqual({ dark: { from: 0, to: 1 }, moonless: [] })
+  })
+
+  it("눈금은 세 시간마다 자정에 맞춰 찍는다", () => {
+    expect(frameTicks({ start: 5 * 60, end: 19 * 60 }).map((tick) => tick.label)).toEqual([
+      "6시",
+      "9시",
+      "자정",
+      "3시",
+      "6시",
+    ])
+    expect(frameTicks({ start: 6 * 60, end: 18 * 60 })[0]).toEqual({ at: 0, label: "6시" })
   })
 })
 
