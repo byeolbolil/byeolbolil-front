@@ -29,6 +29,26 @@ export function koreanHour(hour: number): string {
   return `밤 ${h - 12}시`
 }
 
+/**
+ * 시각을 그 시각이 든 날짜와 함께 "11/28 밤 11시", "11/29 새벽 1시"처럼 읽는다.
+ * 밤 이름("내일 밤")은 저녁부터 다음 날 아침까지를 한 밤으로 부르는 것이라, 자정을 넘긴 시각에 붙이면 날짜로 읽혀 거꾸로 가는 것처럼 보인다.
+ * 자정은 흔히 말하듯 그 전날에 붙여 "11/28 자정"이라 한다. 그래야 밤 11시, 자정, 새벽 1시가 날짜와 함께 차례로 읽힌다.
+ */
+export function dayHourText(iso: string): string {
+  return `${shortDate(dateOfHour(iso))} ${koreanHour(hourOf(iso))}`
+}
+
+/** `dayHourText`의 날짜를 요일과 함께. "11/29 (일)" */
+export function dayOfHour(iso: string): string {
+  const date = dateOfHour(iso)
+  return `${shortDate(date)} (${weekdayOf(date).slice(0, 1)})`
+}
+
+/** 시각이 든 날짜. 자정은 그 전날이다 */
+function dateOfHour(iso: string): string {
+  return hourOf(iso) === 0 ? addDays(dateOf(iso), -1) : dateOf(iso)
+}
+
 /** 추천 시간대를 "저녁 7시 – 새벽 2시"로 적는다. */
 export function windowText(window: { start: string; end: string }): string {
   return `${koreanHour(hourOf(window.start))} – ${koreanHour(hourOf(window.end))}`

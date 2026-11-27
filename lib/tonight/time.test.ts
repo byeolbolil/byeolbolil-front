@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
   addDays,
+  dayHourText,
+  dayOfHour,
   shortNightLabel,
   daysBetween,
   hourOf,
@@ -106,5 +108,22 @@ describe("좁은 칸의 밤 이름", () => {
     expect(shortNightLabel("2026-11-28", "2026-11-27")).toBe("내일")
     expect(shortNightLabel("2026-11-29", "2026-11-27")).toBe("일")
     expect(shortNightLabel("2026-11-30", "2026-11-27")).toBe("월")
+  })
+})
+
+describe("날짜와 함께 읽는 시각", () => {
+  it("자정을 넘긴 시각은 다음 날짜로 읽는다", () => {
+    expect(dayHourText("2026-11-28T23:00:00+09:00")).toBe("11/28 밤 11시")
+    expect(dayHourText("2026-11-29T01:00:00+09:00")).toBe("11/29 새벽 1시")
+    expect(dayHourText("2026-11-29T06:00:00+09:00")).toBe("11/29 아침 6시")
+  })
+
+  it("자정은 그 전날 날짜에 붙인다", () => {
+    expect(dayHourText("2026-11-29T00:00:00+09:00")).toBe("11/28 자정")
+    expect(dayOfHour("2026-11-29T00:00:00+09:00")).toBe("11/28 (토)")
+  })
+
+  it("요일을 붙인 날짜", () => {
+    expect(dayOfHour("2026-11-29T01:00:00+09:00")).toBe("11/29 (일)")
   })
 })

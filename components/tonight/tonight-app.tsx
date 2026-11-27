@@ -554,11 +554,24 @@ export function TonightApp() {
     </div>
   ) : null
 
+  // 밤 고르기. 오늘 밤 탭에서는 후보 목록 위에, 좁은 화면의 지도 탭에서는 지도 위에 둔다. 구름 레이어는 고른 밤의 구름을 그린다
+  const nightPicker =
+    dates.length > 0 && shownDate ? (
+      <NightPicker
+        dates={dates}
+        selected={shownDate}
+        onSelect={selectDate}
+        levels={levels}
+        settled={nightSummary.summary !== null}
+      />
+    ) : null
+
   const mapTab = (
     <>
       <div className="sec-title">
         <h2>지도에서 고르기</h2>
       </div>
+      {nightPicker}
       <MapPanel
         places={places}
         selectedKey={peekKey}
@@ -614,16 +627,6 @@ export function TonightApp() {
   /** 후보 목록. 오늘 밤 탭에만 있고, 넓은 화면에서는 카드 옆의 칸에, 그보다 좁으면 카드 아래에 놓인다 */
   let candidates: ReactNode = null
   const refreshing = night.loading ? " refreshing" : ""
-  const nightPicker =
-    dates.length > 0 && shownDate && tab === "tonight" ? (
-      <NightPicker
-        dates={dates}
-        selected={shownDate}
-        onSelect={selectDate}
-        levels={levels}
-        settled={nightSummary.summary !== null}
-      />
-    ) : null
   /** 장소 화면에 띄우는 곳. 고른 곳이 없으면 그 밤의 1위다 */
   const shownPlace = detailPlace ?? topPlace
   if (night.error) {
