@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { directionsUrl, joinParts, placeKey, regionOf, travelText } from "./place"
+import type { NightPlace } from "./types"
+import { directionsUrl, isUnsavedCustom, joinParts, placeKey, regionOf, samePosition, travelText, unsavedPlace } from "./place"
 
 describe("regionOf", () => {
   it.each([
@@ -63,5 +64,27 @@ describe("그 밖의 장소 표기", () => {
   it("빈 조각은 건너뛰고 잇는다", () => {
     expect(joinParts(["저녁 7시 – 새벽 2시", "", undefined, "차로 약 1시간"])).toBe("저녁 7시 – 새벽 2시 · 차로 약 1시간")
     expect(joinParts([])).toBe("")
+  })
+})
+
+describe("unsavedPlace", () => {
+  const bookmark = { type: "BOOKMARK", id: 7, name: "우리 동네 언덕", latitude: 36.1, longitude: 127.5 } as NightPlace
+
+  it("명소를 저장한 북마크는 그 명소로 돌아간다", () => {
+    const spot = unsavedPlace({ ...bookmark, spotId: 13 })
+    expect(placeKey(spot)).toBe("SPOT-13")
+    expect(isUnsavedCustom(spot)).toBe(false)
+  })
+
+  it("직접 고른 위치는 명소 ID와 겹치지 않는 키로 남는다", () => {
+    const custom = unsavedPlace(bookmark)
+    expect(placeKey(custom)).toBe("SPOT--7")
+    expect(isUnsavedCustom(custom)).toBe(true)
+    expect(custom.name).toBe("우리 동네 언덕")
+  })
+
+  it("좌표로 같은 자리를 찾는다", () => {
+    expect(samePosition(bookmark, { latitude: 36.1, longitude: 127.5 })).toBe(true)
+    expect(samePosition(bookmark, { latitude: 36.10001, longitude: 127.5 })).toBe(false)
   })
 })
