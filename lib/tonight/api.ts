@@ -5,7 +5,7 @@
  * localhost만 허용해서, 브라우저가 백엔드를 직접 부르면 Vercel 미리보기 도메인에서 막힌다.
  */
 import { knownNotes, knownSky } from "./clean"
-import type { NightQuery, NightRecommendation, NightSummary, RecommendationLevel, SkyClass } from "./types"
+import type { NightMoon, NightQuery, NightRecommendation, NightSummary, RecommendationLevel, SkyClass } from "./types"
 
 const BASE_PATH = "/api/v1/recommendations"
 
@@ -161,4 +161,70 @@ export function unwrapSky(body: unknown): SkyAt {
 /** 한 좌표의 하늘 밝기를 받는다. 예보를 보지 않는 가벼운 요청이다 */
 export async function fetchSky(position: { lat: number; lon: number }, signal?: AbortSignal): Promise<SkyAt> {
   return unwrapSky(await getBody(skyUrl(position), { signal }))
+}
+
+/** 시간 구간. 한국 시간 ISO 문자열이다 */
+export interface MoonSpan {
+  start: string
+  end: string
+}
+
+/** 달력의 하룻밤. 예보 없이 해와 달의 위치만으로 정해진다 */
+export interface MoonCalendarNight {
+  date: string
+  moon: NightMoon
+  /** 하늘이 어두운 구간(태양 고도 -12° 이하). 그만큼 어두워지지 않으면 없다 */
+  dark?: MoonSpan
+  /** 어두운 구간 가운데 달이 지평선 아래에 있는 구간. 시간순이고, 달이 밤새 떠 있으면 비어 있다 */
+  moonless: MoonSpan[]
+  moonlessMinutes: number
+}
+
+export interface MoonCalendar {
+  startDate: string
+  nights: MoonCalendarNight[]
+}
+
+export function moonUrl(position: { lat: number; lon: number }): string {
+  return `${BASE_PATH}/moon?lat=${position.lat.toFixed(5)}&lon=${position.lon.toFixed(5)}`
+}
+
+function isSpan(value: unknown): value is MoonSpan {
+  return isRecord(value) && typeof value.start === "string" && typeof value.end === "string"
+}
+
+/** 달력 응답에서 모양이 맞는 밤만 받는다. 달 모양이 없는 밤은 그릴 수 없어서 버린다 */
+export function unwrapMoon(body: unknown): MoonCalendar {
+  if (!isRecord(body) || body.success !== true || !isRecord(body.data)) {
+    throw new NightApiError(0, "달력 응답의 형식이 올바르지 않습니다.")
+  }
+  const data = body.data
+  if (typeof data.startDate !== "string" || !Array.isArray(data.nights)) {
+    throw new NightApiError(0, "달력 응답의 형식이 올바르지 않습니다.")
+  }
+  const nights: MoonCalendarNight[] = []
+  for (const item of data.nights) {
+    if (!isRecord(item) || typeof item.date !== "string" || !isRecord(item.moon)) continue
+    const moon = item.moon
+    if (typeof moon.illuminatedFraction !== "number" || typeof moon.waxing !== "boolean") continue
+    const night: MoonCalendarNight = {
+      date: item.date,
+      moon: {
+        illuminatedFraction: moon.illuminatedFraction,
+        waxing: moon.waxing,
+        ...(typeof moon.rise === "string" ? { rise: moon.rise } : {}),
+        ...(typeof moon.set === "string" ? { set: moon.set } : {}),
+      },
+      moonless: Array.isArray(item.moonless) ? item.moonless.filter(isSpan) : [],
+      moonlessMinutes: typeof item.moonlessMinutes === "number" ? item.moonlessMinutes : 0,
+    }
+    if (isSpan(item.dark)) night.dark = item.dark
+    nights.push(night)
+  }
+  return { startDate: data.startDate, nights }
+}
+
+/** 한 좌표의 앞으로 6주의 달. 예보를 보지 않는 가벼운 요청이다 */
+export async function fetchMoon(position: { lat: number; lon: number }, signal?: AbortSignal): Promise<MoonCalendar> {
+  return unwrapMoon(await getBody(moonUrl(position), { signal }))
 }
