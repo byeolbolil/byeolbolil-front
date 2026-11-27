@@ -22,7 +22,8 @@ interface PlaceViewProps {
 
 /**
  * 장소 하나의 화면. 첫 화면은 그 밤의 1위 장소이고, 목록에서 다른 곳을 누르면 그 자리에서 장소만 바뀐다.
- * 위의 날짜 칸은 이 장소의 일곱 밤이고, 날짜를 눌러도 장소는 그대로다. 후보 목록의 밤은 목록 위의 작은 칩으로 고른다.
+ * 위의 날짜 칸은 이 장소의 일곱 밤이고, 날짜를 눌러도 장소는 그대로다. 후보 목록의 밤은 목록 위의 같은 모양 날짜 칸으로
+ * 고르므로, 두 줄은 각자 위의 제목("○○의 이번 주", "○요일 밤 후보")으로 구분한다.
  * 고른 밤의 값은 이 장소의 이번 주 응답에서 가져온다. 처음 고른 밤은 목록에서 받은 값을 그대로 쓴다.
  */
 export function PlaceView({ place, placeDate, dates, criteria, save }: PlaceViewProps) {
@@ -42,6 +43,10 @@ export function PlaceView({ place, placeDate, dates, criteria, save }: PlaceView
 
   return (
     <div className="place-view">
+      {/* 옆 칸의 "그 밤 후보" 제목과 같은 모양으로, 아래 날짜 줄이 이 장소의 일곱 밤이라는 것을 이름으로 알린다 */}
+      <div className="sec-title">
+        <h2>{place.name}의 이번 주</h2>
+      </div>
       {dates.length > 0 ? (
         <NightPicker dates={dates} selected={date} onSelect={setDate} levels={levels} settled={week.status !== "loading"} />
       ) : null}
