@@ -8,7 +8,7 @@ import { hourTimeline, initialTimelineTime } from "@/lib/tonight/hours"
 import { MAP_LAYERS, type MapLayer } from "@/lib/tonight/night-overlay"
 import { placeKey } from "@/lib/tonight/place"
 import type { Coordinates } from "@/lib/tonight/settings"
-import { hourOf, koreanHour } from "@/lib/tonight/time"
+import { dayHourText, dayOfHour, hourOf, koreanHour } from "@/lib/tonight/time"
 import type { NightPlace } from "@/lib/tonight/types"
 import { useCloudNight } from "@/lib/tonight/use-cloud-night"
 import { useIsTouch } from "@/lib/tonight/use-is-desktop"
@@ -209,7 +209,10 @@ export function MapPanel({
               </svg>
             )}
           </button>
-          {/* 구름은 고른 밤 하나의 해 진 뒤부터 아침까지다. 앞으로 몇 시간으로 읽히지 않게 양 끝 시각과 밤의 이름을 적는다 */}
+          {/*
+            구름은 고른 밤 하나의 해 진 뒤부터 아침까지다. 앞으로 몇 시간으로 읽히지 않게 양 끝 시각을 적고, 시각마다 그 시각이
+            든 날짜("11/28 밤 11시", "11/29 새벽 1시")를 붙인다. 밤 이름("내일 밤")을 붙이면 자정 뒤가 날짜로 읽혀 거꾸로 가는 것처럼 보인다
+          */}
           <div className="tl-track">
             <input
               type="range"
@@ -217,20 +220,20 @@ export function MapPanel({
               max={timeline.length - 1}
               step={1}
               value={Math.max(0, shownIndex)}
-              aria-label={`${nightLabel} 시각`}
-              aria-valuetext={shownTime ? koreanHour(hourOf(shownTime)) : undefined}
+              aria-label={`${nightLabel} 구름 시각`}
+              aria-valuetext={shownTime ? dayHourText(shownTime) : undefined}
               onChange={(event) => {
                 setPlaying(false)
                 setCloudTime(timeline[Number(event.target.value)] ?? null)
               }}
             />
             <div className="tl-ends" aria-hidden="true">
-              <span>{koreanHour(hourOf(timeline[0]))}</span>
-              <span>{koreanHour(hourOf(timeline[timeline.length - 1]))}</span>
+              <span>{dayHourText(timeline[0])}</span>
+              <span>{dayHourText(timeline[timeline.length - 1])}</span>
             </div>
           </div>
           <span className="tl-label">
-            <small>{nightLabel}</small>
+            <small>{shownTime ? dayOfHour(shownTime) : ""}</small>
             {shownTime ? koreanHour(hourOf(shownTime)) : ""}
           </span>
         </div>
