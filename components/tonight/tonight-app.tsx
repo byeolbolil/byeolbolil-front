@@ -63,6 +63,8 @@ type AfterLogin = { kind: "saveSpot"; spotId: number; name: string } | { kind: "
  * 보던 탭과 밤, 카드에 띄운 장소, 지도에서 고른 위치와 하려던 일이다.
  */
 const RESUME_KEY = "bb.resumeAfterLogin"
+/** 소셜로 방금 가입하고 돌아왔다는 표시. 콜백 페이지(app/oauth/callback)가 남기고, 첫 화면이 한 번 읽고 지운다 */
+const WELCOME_KEY = "bb.welcome"
 interface Resume {
   tab: Tab
   date: string | null
@@ -157,6 +159,20 @@ export function TonightApp() {
   const [afterLogin, setAfterLogin] = useState<AfterLogin | null>(null)
   /** 소셜 로그인에서 돌아와 아직 하지 못한 일. 로그인 확인이 끝나면 한다 */
   const [resumed, setResumed] = useState<AfterLogin | null>(null)
+  /** 소셜로 방금 가입해서 닉네임을 정하게 해야 하는지. 로그인 확인이 끝나면 닉네임 시트를 연다 */
+  const [welcome, setWelcome] = useState(false)
+  /** 닉네임 시트를 처음 정하는 모양(기본 닉네임 그대로 시작할 수 있는)으로 열었는지 */
+  const [nicknameWelcome, setNicknameWelcome] = useState(false)
+  /** 첫 닉네임 시트에 밀려 미룬, 고른 위치 저장. 시트를 닫으면 이어서 연다 */
+  const afterWelcome = useRef<AfterLogin | null>(null)
+  useEffect(() => {
+    try {
+      if (window.sessionStorage.getItem(WELCOME_KEY) === "1") setWelcome(true)
+      window.sessionStorage.removeItem(WELCOME_KEY)
+    } catch {
+      // 저장소를 쓸 수 없으면 계정 메뉴에서 바꾸면 된다
+    }
+  }, [])
   // 소셜 로그인에서 돌아왔으면 떠나기 전의 화면으로 되돌린다
   useEffect(() => {
     let saved: Resume | null = null
@@ -451,10 +467,33 @@ export function TonightApp() {
   useEffect(() => {
     if (!resumed || isInitializing) return
     setResumed(null)
-    if (isAuthenticated) void continueAfterLogin(resumed)
+    if (!isAuthenticated) return
+    // 첫 닉네임 시트와 저장 시트가 겹치지 않게, 고른 위치 저장은 닉네임을 정한 뒤로 미룬다
+    if (welcome && resumed.kind === "savePick") {
+      afterWelcome.current = resumed
+      void continueAfterLogin({ kind: "none" })
+    } else {
+      void continueAfterLogin(resumed)
+    }
     // 돌아온 뒤 한 번만 하면 된다
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resumed, isInitializing, isAuthenticated])
+  // 소셜로 방금 가입했으면 로그인 확인이 끝난 뒤에 닉네임을 정하게 한다
+  useEffect(() => {
+    if (!welcome || isInitializing) return
+    setWelcome(false)
+    if (!isAuthenticated) return
+    setNicknameWelcome(true)
+    showSheet("nickname")
+    // 돌아온 뒤 한 번만 하면 된다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [welcome, isInitializing, isAuthenticated])
+  const closeNickname = () => {
+    setNicknameWelcome(false)
+    const after = afterWelcome.current
+    afterWelcome.current = null
+    showSheet(after?.kind === "savePick" ? "save" : null)
+  }
   /** 소셜 로그인으로 떠나기 직전에 보던 것과 하려던 일을 남긴다 */
   const rememberBeforeLeaving = () => {
     const resume: Resume = { tab, date: selectedDate, detailKey, detailSpotId, pick, after: afterLogin }
@@ -746,7 +785,10 @@ export function TonightApp() {
         <AccountButton
           pending={isInitializing}
           onLogin={() => askLogin({ kind: "none" })}
-          onEditNickname={() => showSheet("nickname")}
+          onEditNickname={() => {
+            setNicknameWelcome(false)
+            showSheet("nickname")
+          }}
         />
         {/* 달력과 사진 안내는 머리에 두지 않는다. 아이콘만으로는 무엇인지 읽히지 않아서, 필요해지는 자리(장소 화면)에 둔다 */}
         <button type="button" className="gear" aria-label="설정" title="설정" onClick={openSettings}>
@@ -865,9 +907,10 @@ export function TonightApp() {
       {sheet === "nickname" && isAuthenticated ? (
         <NicknameSheet
           current={nickname}
-          onClose={closeSheet}
+          welcome={nicknameWelcome}
+          onClose={closeNickname}
           onDone={(name) => {
-            showSheet(null)
+            closeNickname()
             toast({ title: "닉네임을 바꿨어요", description: `이제 ${name}님으로 보여요.` })
           }}
         />

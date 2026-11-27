@@ -24,6 +24,12 @@ export function nicknameProblem(value: string): NicknameProblem | null {
   return null
 }
 
+/** 다른 회원이 쓰고 있을 때. 서버는 대소문자를 가리지 않고 비교한다 */
+export const NICKNAME_TAKEN_TEXT = "이미 다른 분이 쓰는 닉네임이에요."
+
+/** 닉네임을 정하는 자리마다 붙이는 운영 안내(백엔드 저장소 docs/decisions.md 2026-11-28) */
+export const NICKNAME_POLICY_NOTE = "선정적이거나 광고하는 닉네임은 알리지 않고 바뀔 수 있어요."
+
 export const NICKNAME_PROBLEM_TEXT: Record<NicknameProblem, string> = {
   short: `${NICKNAME_MIN}자 이상 적어 주세요.`,
   long: `${NICKNAME_MAX}자까지 쓸 수 있어요.`,

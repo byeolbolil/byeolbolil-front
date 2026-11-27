@@ -18,6 +18,15 @@ export default function OAuthCallback() {
     }
     hasCalledReissue.current = true
 
+    // 방금 가입한 사람이면 서버가 welcome=1을 붙인다. 첫 화면에서 닉네임을 정하게 남겨 둔다(components/tonight/tonight-app.tsx)
+    if (new URLSearchParams(window.location.search).get('welcome') === '1') {
+      try {
+        window.sessionStorage.setItem('bb.welcome', '1')
+      } catch {
+        // 저장소를 쓸 수 없으면 기본 닉네임으로 시작하고, 계정 메뉴에서 바꿀 수 있다
+      }
+    }
+
     // 컴포넌트 마운트 즉시 reissue API 호출
     const handleReissue = async () => {
       try {

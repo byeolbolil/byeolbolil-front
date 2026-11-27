@@ -4,6 +4,15 @@ import { useState, type FormEvent } from "react"
 import type { AxiosError } from "axios"
 import { AuthRejected, authApi } from "@/lib/api/auth"
 import { membersApi } from "@/lib/api/members"
+import {
+  NICKNAME_MAX,
+  NICKNAME_POLICY_NOTE,
+  NICKNAME_PROBLEM_TEXT,
+  NICKNAME_TAKEN_TEXT,
+  cleanNickname,
+  nicknameProblem,
+} from "@/lib/tonight/nickname"
+import { useNicknameTaken } from "@/lib/tonight/use-nickname-taken"
 import { Sheet } from "./sheet"
 
 type Mode = "login" | "register"
@@ -40,27 +49,45 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
   const [nickname, setNickname] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [tried, setTried] = useState(false)
+
+  // 닉네임은 닉네임 수정과 같은 규칙(백엔드 저장소 docs/API.md "닉네임 수정")을 보고, 다른 회원이 쓰는지도 미리 본다
+  const nicknameIssue = mode === "register" ? nicknameProblem(nickname) : null
+  const nicknameTaken = useNicknameTaken(nickname, mode !== "register")
+  const nicknameError =
+    mode !== "register"
+      ? null
+      : nicknameIssue && (nicknameIssue !== "short" || tried)
+        ? NICKNAME_PROBLEM_TEXT[nicknameIssue]
+        : nicknameTaken
+          ? NICKNAME_TAKEN_TEXT
+          : null
 
   const switchMode = (next: Mode) => {
     setMode(next)
     setError(null)
+    setTried(false)
   }
 
   const validate = (): string | null => {
     if (!EMAIL.test(email.trim())) return "이메일 주소를 확인해 주세요."
     if (mode === "login") return password ? null : "비밀번호를 입력해 주세요."
     if (!PASSWORD.test(password)) return "비밀번호는 8자 이상, 영문자와 숫자, 특수문자(!@#$%^&*)를 섞어 주세요."
-    const name = nickname.trim()
-    if (name.length < 2 || name.length > 20) return "닉네임은 2~20자로 정해 주세요."
     return null
   }
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
     if (busy) return
+    setTried(true)
     const invalid = validate()
     if (invalid) {
       setError(invalid)
+      return
+    }
+    // 닉네임 사유는 입력란 아래에 적혀 있다
+    if (mode === "register" && (nicknameIssue || nicknameTaken)) {
+      setError(null)
       return
     }
     setBusy(true)
@@ -69,7 +96,13 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
       if (mode === "login") {
         await authApi.login({ email: email.trim(), password })
       } else {
-        await authApi.register({ email: email.trim(), password, nickname: nickname.trim() })
+        const name = cleanNickname(nickname)
+        // 회원가입의 409는 이메일과 닉네임 두 가지라서 닉네임은 먼저 물어 가린다
+        if (!(await membersApi.isNicknameAvailable(name))) {
+          setError(NICKNAME_TAKEN_TEXT)
+          return
+        }
+        await authApi.register({ email: email.trim(), password, nickname: name })
       }
       await membersApi.getMe()
       onDone()
@@ -124,15 +157,24 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
             onChange={(event) => setPassword(event.target.value)}
           />
           {mode === "register" ? (
-            <input
-              className="text-input"
-              autoComplete="nickname"
-              placeholder="닉네임"
-              aria-label="닉네임"
-              maxLength={20}
-              value={nickname}
-              onChange={(event) => setNickname(event.target.value)}
-            />
+            <>
+              <input
+                className="text-input"
+                autoComplete="nickname"
+                placeholder="닉네임"
+                aria-label="닉네임"
+                maxLength={NICKNAME_MAX + 8}
+                aria-invalid={nicknameError ? true : undefined}
+                value={nickname}
+                onChange={(event) => setNickname(event.target.value)}
+              />
+              {nicknameError ? (
+                <p className="field-error register-nickname-error" role="alert">
+                  {nicknameError}
+                </p>
+              ) : null}
+              <p className="field-note">{NICKNAME_POLICY_NOTE}</p>
+            </>
           ) : null}
           {error ? (
             <p className="login-error" role="alert">
