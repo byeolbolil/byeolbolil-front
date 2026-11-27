@@ -3168,6 +3168,19 @@
   justify-content: center;
   width: 100%;
 }
+.login-form .code-row {
+  display: flex;
+  gap: 8px;
+}
+.login-form .code-row .text-input {
+  flex: 1;
+  min-width: 0;
+}
+.login-form .code-row .btn {
+  width: auto;
+  flex: 1;
+  white-space: nowrap;
+}
 .login-error {
   margin: 0;
   font-size: 13px;
