@@ -564,6 +564,7 @@ export function TonightApp() {
         selectedKey={peekKey}
         topKey={topKey}
         nightDate={data?.date ?? null}
+        nightLabel={shownNightName}
         onSelect={peekOnMap}
         pick={pick}
         onPick={pickOnMap}
@@ -727,6 +728,7 @@ export function TonightApp() {
               selectedKey={shownKey}
               topKey={topKey}
               nightDate={data?.date ?? null}
+              nightLabel={shownNightName}
               onSelect={openFromMap}
               pick={pick}
               onPick={pickOnMap}

@@ -19,6 +19,7 @@ import {
   type FieldSampler,
 } from "@/lib/tonight/cloud-field"
 import { hourAt } from "@/lib/tonight/hours"
+import { createLongPress } from "@/lib/tonight/long-press"
 import {
   KOREA_BOUNDS,
   LIGHT_MAP,
@@ -398,13 +399,65 @@ export default function NightMap({
       styleReadyRef.current = true
       restoreCloudRef.current()
     })
-    map.on("click", (event) => onPickRef.current?.({ lat: event.lngLat.lat, lon: event.lngLat.lng }))
+    // 위치 고르기. 마우스는 누르면 고르고, 손가락은 꾹 눌러야 고른다. 손가락으로 한 번 누르는 것은 두 번 눌러 확대하기나
+    // 지도 옮기기의 시작이기도 해서, 누르자마자 고르면 확대하려다 엉뚱한 곳을 고르게 된다
+    let lastTouch = 0
+    const longPress = createLongPress((point: { x: number; y: number }) => {
+      const lngLat = map.unproject([point.x, point.y])
+      navigator.vibrate?.(15)
+      onPickRef.current?.({ lat: lngLat.lat, lon: lngLat.lng })
+    })
+    const canvas = map.getCanvas()
+    const onTouchStart = (event: TouchEvent) => {
+      lastTouch = Date.now()
+      const touch = event.touches[0]
+      // 지도 위의 표식, 검색창, 카드를 누른 것은 세지 않는다
+      if (!touch || event.target !== canvas) {
+        longPress.cancel()
+        return
+      }
+      const rect = canvas.getBoundingClientRect()
+      longPress.start(touch.clientX, touch.clientY, event.touches.length, {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top,
+      })
+    }
+    const onTouchMove = (event: TouchEvent) => {
+      lastTouch = Date.now()
+      const touch = event.touches[0]
+      if (touch) longPress.move(touch.clientX, touch.clientY)
+    }
+    const onTouchEnd = () => {
+      lastTouch = Date.now()
+      longPress.cancel()
+    }
+    // Android는 길게 누르면 브라우저 메뉴를 띄우려 한다
+    const onContextMenu = (event: Event) => {
+      if (event.target === canvas) event.preventDefault()
+    }
+    container.addEventListener("touchstart", onTouchStart, { passive: true })
+    container.addEventListener("touchmove", onTouchMove, { passive: true })
+    container.addEventListener("touchend", onTouchEnd)
+    container.addEventListener("touchcancel", onTouchEnd)
+    container.addEventListener("contextmenu", onContextMenu)
+    map.on("movestart", () => longPress.cancel())
+    map.on("click", (event) => {
+      // 손가락이 만든 누르기는 꾹 누르기가 맡는다
+      if (Date.now() - lastTouch < 800) return
+      onPickRef.current?.({ lat: event.lngLat.lat, lon: event.lngLat.lng })
+    })
     const onZoom = () => container.classList.toggle("near", map.getZoom() >= LABEL_ZOOM)
     map.on("zoom", onZoom)
     mapRef.current = map
     const markers = markersRef.current
 
     return () => {
+      longPress.cancel()
+      container.removeEventListener("touchstart", onTouchStart)
+      container.removeEventListener("touchmove", onTouchMove)
+      container.removeEventListener("touchend", onTouchEnd)
+      container.removeEventListener("touchcancel", onTouchEnd)
+      container.removeEventListener("contextmenu", onContextMenu)
       for (const entry of markers.values()) entry.marker.remove()
       markers.clear()
       pickMarkerRef.current = null
