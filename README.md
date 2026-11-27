@@ -43,7 +43,7 @@ pnpm install
 # 로컬 백엔드 (기본값)
 NEXT_PUBLIC_API_URL=http://localhost:8080
 # 운영 백엔드로 볼 때
-# NEXT_PUBLIC_API_URL=https://api.byeolbolil.xyz
+# NEXT_PUBLIC_API_URL=https://api.byeolbolil.com
 ```
 
 ```bash
