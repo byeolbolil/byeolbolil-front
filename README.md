@@ -61,13 +61,25 @@ pnpm start        # 빌드한 것을 실행. 서비스 워커는 여기서만 �
 pnpm test         # 단위 테스트 (vitest)
 pnpm typecheck    # tsc --noEmit
 pnpm walkthrough  # 브라우저로 화면 흐름을 따라가며 점검 (개발 서버가 떠 있어야 한다)
+pnpm scenarios    # 쓰는 흐름을 따라 하며 화면끼리 어긋나지 않는지 점검 (개발 서버가 떠 있어야 한다)
 ```
 
-`pnpm walkthrough`는 Playwright의 Chromium을 쓴다. 처음 한 번 `npx playwright install chromium`으로 받는다.
-모바일(390x844)과 PC(1440x900)에서 오늘 밤 추천, 후보 고르기, 밤 띠 훑기, 자세히 보기, 지도의 세 레이어와 표식,
-설정 바꾸기, 추천 기준과 출처, 별 사진 찍기를 차례로 열어 `walkthrough-shots/`에 화면을 찍는다. 설정을 바꾼 뒤 요청 쿼리가
-바뀌었는지, 지도 표식과 목록의 선택이 맞는지, 콘솔 오류가 없는지도 확인한다. 추천은 실제 백엔드에서 받고,
+`pnpm walkthrough`와 `pnpm scenarios`는 Playwright의 Chromium을 쓴다. 처음 한 번 `npx playwright install chromium`으로 받는다.
+둘 다 `--base http://localhost:3000`으로 개발 서버의 주소를 바꿀 수 있다.
+
+`pnpm walkthrough`는 모바일(390x844)과 PC(1440x900)에서 오늘 밤 추천, 후보 고르기, 밤 띠 훑기, 자세히 보기, 별 사진 찍기,
+지도의 세 레이어와 표식, 설정 바꾸기, 추천 기준과 출처를 차례로 열어 `walkthrough-shots/`에 화면을 찍는다. 설정을 바꾼 뒤
+요청 쿼리가 바뀌었는지, 지도 표식과 목록의 선택이 맞는지, 콘솔 오류가 없는지도 확인한다. 추천은 실제 백엔드에서 받고,
 인증 API 호출은 브라우저 안에서 막는다.
+
+`pnpm scenarios`는 여러 화면을 오가는 흐름을 따라 한다. 시트와 뒤로 가기, 장소 화면과 후보 목록과 지도가 같은 밤을
+말하는지, 좁은 화면의 지도 탭, 지도를 꾹 눌러 고르기, 구름 시간 막대의 날짜 순서, 달 없는 밤 달력의 입구를 본다.
+`--only 이름`(back, nights, mapTab, longPress, cloudTimes, moon)으로 하나만 돌릴 수 있다. 그날의 실제 예보로 돌기 때문에
+값 자체가 아니라 화면끼리 같은 것을 말하는지를 본다.
+
+화면을 바꾸면 커밋하기 전에 `pnpm test`, `pnpm typecheck`, `pnpm walkthrough`, `pnpm scenarios`를 모두 통과시킨다.
+새 상호작용을 만들거나 화면 사이의 버그를 고치면, 그 흐름을 따라 하는 시나리오를 `scripts/scenarios.mjs`에 더한다.
+고친 버그의 시나리오는 고치기 전의 코드에서 실패하는지 한 번 확인한다.
 
 ## 구조
 
@@ -108,6 +120,7 @@ scripts/
   render_light_layers.py    광해 지도 자료 만들기
   render_icons.py           아이콘 만들기
   walkthrough.mjs           브라우저 점검
+  scenarios.mjs             쓰는 흐름 시나리오 점검
 ```
 
 ## API
