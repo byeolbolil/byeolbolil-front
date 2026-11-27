@@ -73,8 +73,8 @@ pnpm scenarios    # 쓰는 흐름을 따라 하며 화면끼리 어긋나지 않
 인증 API 호출은 브라우저 안에서 막는다.
 
 `pnpm scenarios`는 여러 화면을 오가는 흐름을 따라 한다. 시트와 뒤로 가기, 장소 화면과 후보 목록과 지도가 같은 밤을
-말하는지, 좁은 화면의 지도 탭, 지도를 꾹 눌러 고르기, 구름 시간 막대의 날짜 순서, 달 없는 밤 달력의 입구를 본다.
-`--only 이름`(back, nights, mapTab, longPress, cloudTimes, moon)으로 하나만 돌릴 수 있다. 그날의 실제 예보로 돌기 때문에
+말하는지, 좁은 화면의 지도 탭, 지도를 꾹 눌러 고르기, 구름 시간 막대의 날짜 순서, 월령 달력과 촬영 안내의 입구(가볼 만한 곳이 없는 밤 포함)를 본다.
+`--only 이름`(back, nights, mapTab, longPress, cloudTimes, moon, emptyNight)으로 하나만 돌릴 수 있다. 그날의 실제 예보로 돌기 때문에
 값 자체가 아니라 화면끼리 같은 것을 말하는지를 본다.
 
 화면을 바꾸면 커밋하기 전에 `pnpm test`, `pnpm typecheck`, `pnpm walkthrough`, `pnpm scenarios`를 모두 통과시킨다.
