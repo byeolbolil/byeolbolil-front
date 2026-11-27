@@ -7,7 +7,7 @@ import { bookmarksApi } from "@/lib/api/bookmarks"
 import { authStore } from "@/lib/store/authStore"
 import { buildNightView, nightLevels } from "@/lib/tonight/facts"
 import type { PickedPlace } from "@/lib/tonight/geocode"
-import { joinParts, placeKey, travelText } from "@/lib/tonight/place"
+import { isUnsavedCustom, joinParts, placeKey, samePosition, travelText, unsavedPlace } from "@/lib/tonight/place"
 import { ORIGIN_NAME_MAX, originLabel, resolveOrigin, roundCoordinate, toNightQuery, type Coordinates } from "@/lib/tonight/settings"
 import { settingsOf, useSettings } from "@/lib/tonight/settings-store"
 import { nightDates, nightName, windowText } from "@/lib/tonight/time"
@@ -38,7 +38,7 @@ import { OriginSheet } from "./origin-sheet"
 import { NightError, NightSkeleton } from "./night-status"
 import { GuideSheet } from "./guide-sheet"
 import { LoginSheet } from "./login-sheet"
-import { PickSky } from "./pick-sky"
+import { PickSky, placeSkyState } from "./pick-sky"
 import { PlaceView } from "./place-view"
 import { PlaceRow } from "./place-row"
 import { Rating } from "./rating"
@@ -195,8 +195,14 @@ export function TonightApp() {
   const detailPlace =
     findPlace(detailKey) ??
     (detailKey !== null && detailSpotId !== null ? (places.find((place) => place.spotId === detailSpotId) ?? null) : null) ??
-    (detailKey !== null && detailSnapshot && placeKey(detailSnapshot) === detailKey ? detailSnapshot : null)
+    (detailKey !== null && detailSnapshot && placeKey(detailSnapshot) === detailKey
+      ? // 북마크를 빼거나 다시 하면 ID가 바뀐다. 같은 자리의 장소가 추천에 있으면 그것을, 없으면 들고 있던 모습을 보여 준다
+        (places.find((place) => samePosition(place, detailSnapshot)) ?? detailSnapshot)
+      : null)
   const peekPlace = findPlace(peekKey)
+  // 지도에서 누른 장소도 빈 곳을 눌렀을 때처럼 하늘 밝기를 보여 준다
+  const peekSkyAt = useSkyAt(peekPlace ? { lat: peekPlace.latitude, lon: peekPlace.longitude } : null)
+  const peekSky = peekPlace ? placeSkyState(peekPlace, peekSkyAt) : null
   // 추천을 다시 받았으면 저장 버튼을 푼다
   useEffect(() => {
     setSavingKey(null)
@@ -239,6 +245,12 @@ export function TonightApp() {
     setDetailKey(key)
     setDetailSpotId(findPlace(key)?.spotId ?? null)
   }
+  /** 보고 있는 장소를 바뀐 모습으로 계속 띄운다. 이미 보던 곳이라 브라우저 기록은 쌓지 않는다 */
+  const keepShowing = (place: NightPlace) => {
+    setDetailKey(placeKey(place))
+    setDetailSpotId(place.spotId ?? null)
+    setDetailSnapshot(place)
+  }
   /** 고른 장소를 풀고 가장 좋은 곳으로 돌아간다. `restore`면 고르기 전에 보던 탭과 자리로 돌아간다 */
   const leaveDetail = useCallback((restore: boolean) => {
     scrollToRestore.current = restore ? listScroll.current : null
@@ -280,6 +292,8 @@ export function TonightApp() {
   const selectDate = (date: string) => {
     setSelectedDate(date === tonightDate ? null : date)
     closeDetail()
+    // 밤을 바꾸면 오른쪽이 그 밤의 1위로 돌아가므로, 지도 위에 띄운 다른 장소의 카드도 닫는다
+    setPeekKey(null)
   }
   /** 장소 화면에 그 장소를 띄운다. 그 밤의 1위를 다시 누르면 고르기 전으로 돌아간다. 뒤로 가면 보던 자리로 돌아온다 */
   const selectPlace = (key: string) => {
@@ -296,9 +310,10 @@ export function TonightApp() {
     // 다른 지역을 보고 있었어도 지도가 그 장소로 옮겨 간다
     setMapFocus({ lat: place.latitude, lon: place.longitude, at: Date.now() })
   }
-  /** PC의 지도에서 표식을 누르면 오른쪽의 카드에 그 장소를 띄운다 */
+  /** PC의 지도에서 표식을 누르면 오른쪽의 카드에 그 장소를 띄우고, 지도 위에는 그 자리의 하늘 밝기를 띄운다 */
   const openFromMap = (key: string) => {
     selectPlace(key)
+    setPeekKey(key)
     setPick(null)
   }
   const peekOnMap = (key: string) => {
@@ -334,8 +349,17 @@ export function TonightApp() {
       if (place.type === "BOOKMARK") {
         await bookmarksApi.deleteBookmark(place.id)
         toast({ title: "북마크에서 뺐어요", description: place.name })
-        // 직접 고른 위치는 빼면 추천에서 사라진다. 카드를 가장 좋은 곳으로 돌린다
-        if (place.spotId === undefined) closeDetail()
+        // 잘못 눌렀을 수도 있으니 다른 곳으로 넘어가지 않고 이 장소를 계속 보여 준다. 버튼만 풀려서 바로 다시 누를 수 있다
+        keepShowing(unsavedPlace(place))
+      } else if (isUnsavedCustom(place)) {
+        await bookmarksApi.addBookmark({
+          type: "CUSTOM",
+          name: place.name,
+          address: place.address || `${place.latitude.toFixed(4)}, ${place.longitude.toFixed(4)}`,
+          latitude: place.latitude,
+          longitude: place.longitude,
+        })
+        toast({ title: "북마크했어요", description: place.name })
       } else {
         await bookmarksApi.addBookmark({ type: "SPOT", spotId: place.spotId, name: place.name })
         toast({ title: "북마크했어요", description: place.name })
@@ -437,7 +461,8 @@ export function TonightApp() {
   const heroExtras = (place: NightPlace): CardExtras => {
     const saved = place.type === "BOOKMARK"
     const busy = savingKey === placeKey(place)
-    const canSave = saved || place.spotId !== undefined
+    // 북마크를 뺀 직접 고른 위치도 버튼을 남겨, 잘못 뺐으면 그 자리에서 다시 북마크한다
+    const canSave = saved || place.spotId !== undefined || isUnsavedCustom(place)
     return {
       // 저장 버튼은 하나만 둔다. 사진 바로 아래라 스크롤하지 않고 누를 수 있고 사진을 가리지 않는다
       save: canSave ? (
@@ -518,6 +543,7 @@ export function TonightApp() {
             <button type="button" className="btn primary" onClick={() => openPlace(peekPlace)}>
               자세히
             </button>
+            <PickSky state={peekSky} />
           </div>
         ) : null}
       </MapPanel>
@@ -566,7 +592,8 @@ export function TonightApp() {
           mapTab
         ) : shownPlace ? (
           <PlaceView
-            key={`${placeKey(shownPlace)}/${data.date}`}
+            // 북마크를 빼고 넣으면 키가 바뀌므로 좌표로 묶는다. 같은 장소면 장소 화면에서 고른 밤이 그대로 남는다
+            key={`${shownPlace.latitude},${shownPlace.longitude}/${data.date}`}
             place={shownPlace}
             placeDate={data.date}
             dates={dates}
@@ -665,6 +692,17 @@ export function TonightApp() {
               focusTo={mapFocus}
             >
               {pickCard}
+              {/* 그 밤의 예보는 오른쪽 장소 화면에 있으므로, 지도 위에는 이름과 하늘 밝기만 둔다 */}
+              {peekPlace && !pick ? (
+                <div className="peek pickcard">
+                  <div className="nm">{peekPlace.name}</div>
+                  {peekPlace.viewpoint ? <div className="sb">{peekPlace.viewpoint}</div> : null}
+                  <PickSky state={peekSky} />
+                  <button type="button" className="x-btn" aria-label="닫기" onClick={() => setPeekKey(null)}>
+                    <CloseIcon />
+                  </button>
+                </div>
+              ) : null}
             </MapPanel>
           ) : null}
         </section>

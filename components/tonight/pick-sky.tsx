@@ -1,6 +1,7 @@
 "use client"
 
 import { skyBrightnessText, skyHint, skyName, skyRankText } from "@/lib/tonight/sky"
+import type { SkyAt } from "@/lib/tonight/api"
 import type { SkyAtState } from "@/lib/tonight/use-sky-at"
 import { DarknessScale } from "./gauges"
 
@@ -28,4 +29,19 @@ export function PickSky({ state }: { state: SkyAtState | null }) {
       {litSurroundings ? <p className="warn">둘레에 가로등이나 건물 불빛이 많은 곳이에요</p> : null}
     </div>
   )
+}
+
+/**
+ * 지도에서 누른 장소의 하늘 밝기. 추천 응답에 든 값으로 바로 그리고, 둘레 불빛 여부는 빈 곳을 눌렀을 때와 같은
+ * 요청으로 받아 채운다. 그래서 같은 자리면 표식을 눌렀을 때와 빈 곳을 눌렀을 때 같은 내용이 나온다.
+ */
+export function placeSkyState(
+  place: { skyBrightness?: number; skyClass?: SkyAt["skyClass"]; skyRank?: number },
+  fetched: SkyAtState | null,
+): SkyAtState | null {
+  if (fetched?.status === "ready" || place.skyBrightness === undefined) return fetched
+  return {
+    status: "ready",
+    sky: { skyBrightness: place.skyBrightness, skyClass: place.skyClass, skyRank: place.skyRank },
+  }
 }

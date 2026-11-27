@@ -26,6 +26,25 @@ const PROVINCE_SHORT: Record<string, string> = {
   제주특별자치도: "제주",
 }
 
+/**
+ * 북마크를 뺀 뒤에도 장소 화면에 남겨 두는 모습. 명소를 저장한 것이면 그 명소로 돌아가고(명소의 `id`는 명소 ID다),
+ * 직접 고른 위치면 저장하지 않은 곳으로 남는다. 그런 곳은 명소 ID와 겹치지 않게 북마크 ID에 음수를 붙인다.
+ */
+export function unsavedPlace(place: NightPlace): NightPlace {
+  if (place.spotId !== undefined) return { ...place, type: "SPOT", id: place.spotId }
+  return { ...place, type: "SPOT", id: -Math.abs(place.id) }
+}
+
+/** 명소가 아닌데 저장되지 않은 곳. 북마크를 뺀 직접 고른 위치다 */
+export function isUnsavedCustom(place: Pick<NightPlace, "type" | "spotId">): boolean {
+  return place.type === "SPOT" && place.spotId === undefined
+}
+
+/** 두 장소가 같은 자리인지. 같은 곳을 다시 북마크하면 ID가 바뀌므로 좌표로 찾는다 */
+export function samePosition(a: Pick<NightPlace, "latitude" | "longitude">, b: Pick<NightPlace, "latitude" | "longitude">): boolean {
+  return Math.abs(a.latitude - b.latitude) < 1e-6 && Math.abs(a.longitude - b.longitude) < 1e-6
+}
+
 /** 장소를 가리키는 키. 명소와 북마크의 ID가 겹칠 수 있어서 종류를 함께 쓴다. */
 export function placeKey(place: Pick<NightPlace, "type" | "id">): string {
   return `${place.type}-${place.id}`
