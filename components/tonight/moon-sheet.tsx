@@ -54,7 +54,7 @@ export function MoonSheet({ position, placeName, forecastDates, onOpenNight, onC
   }, [lat, lon])
 
   return (
-    <Sheet title="달 없는 밤" onClose={onClose} wide>
+    <Sheet title="월령 달력" onClose={onClose} wide>
       {state.status === "ready" && state.calendar.nights.length > 0 ? (
         <Calendar
           calendar={state.calendar}

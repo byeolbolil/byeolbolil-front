@@ -59,7 +59,7 @@ export function PlaceView({ place, placeDate, date, dates, criteria, save, onOpe
         {onOpenMoon ? (
           <button type="button" className="sec-link" onClick={onOpenMoon}>
             <MoonIcon />
-            달 없는 밤
+            월령 달력
           </button>
         ) : null}
       </div>

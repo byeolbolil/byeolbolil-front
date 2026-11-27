@@ -33,7 +33,7 @@ const check = (condition, message) => {
 }
 
 /** 새 창에서 첫 화면을 연다. 뒤로 가기로 사이트를 떠나는지 알 수 있게 빈 페이지를 먼저 연다 */
-async function open(browser, kind) {
+async function open(browser, kind, { setup = null, ready = ".bb .tonight .sky-text h1" } = {}) {
   const context = await browser.newContext({
     ...VIEWPORTS[kind],
     locale: "ko-KR",
@@ -49,6 +49,8 @@ async function open(browser, kind) {
       body: JSON.stringify({ success: false, status: 401, message: "scenarios" }),
     }),
   )
+  // 그날의 예보에 없는 상황(가볼 만한 곳이 없는 밤 같은)은 응답을 고쳐서 만든다
+  if (setup) await setup(context)
   const page = await context.newPage()
   const errors = []
   page.on("console", (message) => {
@@ -59,7 +61,7 @@ async function open(browser, kind) {
   page.on("pageerror", (error) => errors.push(String(error)))
   await page.goto("about:blank")
   await page.goto(BASE, { waitUntil: "domcontentloaded" })
-  await page.waitForSelector(".bb .tonight .sky-text h1", { timeout: 90_000 })
+  await page.waitForSelector(ready, { timeout: 90_000 })
   // 장소 화면의 일곱 밤 등급이 올 때까지 기다린다
   await page
     .waitForFunction(() => document.querySelectorAll('.bb .place-view .nights button:not([data-level="NONE"])').length > 2, null, { timeout: 30_000 })
@@ -276,7 +278,7 @@ const scenarios = {
     await context.close()
   },
 
-  /** 달 없는 밤 달력은 장소 화면의 제목 옆과 카드의 달 칸에서 열린다 */
+  /** 월령 달력은 장소 화면의 제목 옆과 카드의 달 칸에서, 장소가 없는 밤에는 그 밤의 안내 아래에서 열린다 */
   async moon(browser, kind) {
     const { context, page, errors } = await open(browser, kind)
     await page.locator(".bb .sec-link").click()
@@ -291,6 +293,33 @@ const scenarios = {
       check(true, "카드의 달 칸으로도 달력이 열린다")
       await page.keyboard.press("Escape")
     }
+    check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
+    await context.close()
+  },
+
+  /** 가볼 만한 곳이 없는 밤(장소 화면이 없다)에도 월령 달력과 촬영 안내를 열 수 있다 */
+  async emptyNight(browser, kind) {
+    const setup = (context) =>
+      context.route("**/api/v1/recommendations/tonight**", async (route) => {
+        const response = await route.fetch()
+        const body = await response.json()
+        body.data.places = []
+        await route.fulfill({ response, json: body })
+      })
+    const { context, page, errors } = await open(browser, kind, { setup, ready: ".bb main .tonight" })
+    check((await page.locator(".bb .place-view").count()) === 0, "장소 화면이 없는 밤이다")
+    await page.getByRole("button", { name: "월령 달력" }).first().click()
+    await page.waitForSelector(".bb .mc-grid")
+    const basis = await page.locator(".bb .mc-basis").innerText()
+    check((await page.locator(".bb .mc-grid .mc-strip").count()) >= 42, `장소가 없어도 월령 달력이 열린다 (${basis})`)
+    await page.keyboard.press("Escape")
+    await settle(page, 400)
+    await page.getByRole("button", { name: "별 사진 찍는 법" }).first().click()
+    await page.waitForSelector(".bb .guide")
+    check(true, "장소가 없어도 촬영 안내가 열린다")
+    await page.goBack()
+    await settle(page, 600)
+    check((await sheetCount(page)) === 0, "뒤로 가기로 닫힌다")
     check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
     await context.close()
   },

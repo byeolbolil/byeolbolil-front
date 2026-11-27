@@ -23,7 +23,7 @@ interface HeroCardProps {
   save?: ReactNode
   /** 첫 탭의 이름. 보고 있는 밤의 이름("오늘 밤", "내일 밤")이다 */
   nightLabel?: string
-  /** 달 칸을 누르면 연다. 달이 걸리는 밤에 달 없는 밤이 언제인지 찾아가게 한다 */
+  /** 달 칸을 누르면 월령 달력을 연다. 달이 걸리는 밤에 달 없는 밤이 언제인지 찾아가게 한다 */
   onOpenMoon?: () => void
   /** 길찾기 옆의 별 사진 찍는 법. 갈 곳을 정한 뒤에 필요한 것이라 여기에 둔다 */
   onOpenGuide?: () => void
@@ -148,7 +148,7 @@ export function HeroCard({ place, eyebrow, save, nightLabel = "오늘 밤", onOp
               {moon ? (
                 <li className={onOpenMoon ? "tap" : undefined}>
                   {onOpenMoon ? (
-                    <button type="button" aria-label={`${moon.title}. 달 없는 밤 보기`} onClick={onOpenMoon}>
+                    <button type="button" aria-label={`${moon.title}. 월령 달력 보기`} onClick={onOpenMoon}>
                       <MoonFactBody place={place} moonUp={moonUp} title={moon.title} detail={moon.detail} link />
                     </button>
                   ) : (

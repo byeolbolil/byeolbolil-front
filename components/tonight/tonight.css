@@ -3334,7 +3334,7 @@
   color: var(--ink-3);
 }
 
-/* 달 없는 밤 시트. 칸마다 달 모양과, 달 없이 어두운 때를 금빛으로 칠한 띠 */
+/* 월령 달력 시트. 칸마다 달 모양과, 달 없이 어두운 때를 푸른빛으로 칠한 띠 */
 .bb .moon-cal {
   display: flex;
   flex-direction: column;
