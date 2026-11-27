@@ -166,14 +166,14 @@ if (serverMessage.includes('비밀번호') || serverMessage.includes('password')
 
 ### API 베이스 URL
 - **개발 환경**: `http://localhost:8080`
-- **프로덕션 환경**: `https://api.byeolbolil.xyz`
+- **프로덕션 환경**: `https://api.byeolbolil.com`
 
 환경 변수: `NEXT_PUBLIC_API_URL`
 
 ### CORS 설정
 백엔드에서 다음 Origin을 허용:
 - `http://localhost:3000`
-- `https://www.byeolbolil.xyz`
+- `https://www.byeolbolil.com`
 
 ## 사용 방법
 

@@ -3177,6 +3177,13 @@
   align-self: center;
   font-size: 13px;
 }
+.login-privacy {
+  align-self: center;
+  font-size: 12px;
+  color: var(--ink-3);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 
 /* 장소 화면. 위의 날짜 줄은 이 장소의 일곱 밤이다 */
 .bb .place-view {

@@ -26,7 +26,7 @@ import urllib.parse
 import urllib.request
 
 API = "https://commons.wikimedia.org/w/api.php"
-USER_AGENT = "byeolbolil/1.0 (https://www.byeolbolil.xyz)"
+USER_AGENT = "byeolbolil/1.0 (https://www.byeolbolil.com)"
 WIDTH = 1280
 ALLOWED = re.compile(r"^(cc0|public domain|pd|cc by(-sa)? [0-9.]+( [a-z]+)?|kogl type 1)$", re.I)
 
