@@ -4,7 +4,7 @@ import { useMemo, useState, type ReactNode } from "react"
 import { nightName } from "@/lib/tonight/time"
 import type { NightPlace, NightQuery, RecommendationLevel } from "@/lib/tonight/types"
 import { useWeek } from "@/lib/tonight/use-week"
-import type { WeekNight, WeekPlace } from "@/lib/tonight/week"
+import { placeOnNight } from "@/lib/tonight/week"
 import { HeroCard } from "./hero-card"
 import { NightPicker } from "./night-picker"
 
@@ -39,7 +39,7 @@ export function PlaceView({ place, placeDate, dates, criteria, save }: PlaceView
   }, [weekPlace, placeDate, place.level])
   const tonight = dates[0] ?? placeDate
   const night = date === placeDate ? null : weekPlace?.nights.find((item) => item.date === date)
-  const shown = date === placeDate ? place : night && weekPlace ? onNight(place, weekPlace, night) : null
+  const shown = date === placeDate ? place : night && weekPlace ? placeOnNight(place, weekPlace, night) : null
 
   return (
     <div className="place-view">
@@ -69,20 +69,4 @@ export function PlaceView({ place, placeDate, dates, criteria, save }: PlaceView
       )}
     </div>
   )
-}
-
-/** 장소의 고정된 값(이름, 사진, 소개, 이동 시간)에 다른 밤의 값을 얹는다 */
-function onNight(place: NightPlace, weekPlace: WeekPlace, night: WeekNight): NightPlace {
-  return {
-    ...place,
-    level: night.level,
-    pattern: night.pattern,
-    notes: night.notes,
-    bestWindow: night.bestWindow,
-    moonBrightness: night.moonBrightness,
-    moon: night.moon,
-    hours: night.hours,
-    forecastSource: weekPlace.forecastSource ?? place.forecastSource,
-    forecastIssuedAt: weekPlace.forecastIssuedAt,
-  }
 }

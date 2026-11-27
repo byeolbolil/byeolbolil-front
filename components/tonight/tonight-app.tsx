@@ -17,6 +17,7 @@ import { useSkyAt } from "@/lib/tonight/use-sky-at"
 import { useGeoPosition } from "@/lib/tonight/use-geo-position"
 import { useIsDesktop, useIsWide } from "@/lib/tonight/use-is-desktop"
 import { useNight, useNightSummary } from "@/lib/tonight/use-night"
+import { fetchWeek, placeOnNight, type WeekPlace } from "@/lib/tonight/week"
 import { patternText } from "@/lib/tonight/wording"
 import { AccountButton } from "./account-button"
 import {
@@ -141,6 +142,11 @@ export function TonightApp() {
   const [myRevision, setMyRevision] = useState(0)
   /** 저장하거나 빼는 중인 장소의 키. 추천을 다시 받을 때까지 버튼을 잠근다 */
   const [savingKey, setSavingKey] = useState<string | null>(null)
+  /**
+   * 이번에 북마크를 뺀 곳. 추천에 들지 않는 곳(직접 고른 위치, 이동 시간 한도 밖의 명소)도 지도에 표식을 남겨 둔다.
+   * `date`의 밤 값은 뺄 때의 것이고, 다른 밤은 그곳의 이번 주(`week`)로 채운다. 새로 고치면 사라진다.
+   */
+  const [released, setReleased] = useState<Array<{ place: NightPlace; date: string; week: WeekPlace | null }>>([])
   const [sheet, setSheet] = useState<SheetKind | null>(null)
   /** 로그인 창을 열면서 미뤄 둔 일 */
   const [afterLogin, setAfterLogin] = useState<AfterLogin | null>(null)
@@ -190,7 +196,19 @@ export function TonightApp() {
   const dates = useMemo(() => (tonightDate ? nightDates(tonightDate) : []), [tonightDate])
   const shownDate = selectedDate ?? tonightDate
   const laterDates = data ? dates.filter((date) => date > data.date) : []
-  const places = data?.places ?? []
+  const listed = data?.places ?? []
+  // 북마크를 뺀 곳 가운데 그 밤의 추천에 없는 곳을 그 밤의 값으로 더한다. 그 밤 값을 모르면 아직 그리지 않는다
+  const places = data
+    ? [
+        ...listed,
+        ...released.flatMap(({ place, date, week }) => {
+          if (listed.some((item) => samePosition(item, place))) return []
+          if (date === data.date) return [place]
+          const night = week?.nights.find((item) => item.date === data.date)
+          return week && night ? [placeOnNight(place, week, night)] : []
+        }),
+      ]
+    : listed
   const findPlace = (key: string | null) => (key ? (places.find((place) => placeKey(place) === key) ?? null) : null)
   const detailPlace =
     findPlace(detailKey) ??
@@ -242,8 +260,11 @@ export function TonightApp() {
       cameFrom.current = tab
       window.history.pushState({ ...window.history.state, bbDetail: true }, "")
     }
+    const found = findPlace(key)
     setDetailKey(key)
-    setDetailSpotId(findPlace(key)?.spotId ?? null)
+    setDetailSpotId(found?.spotId ?? null)
+    // 북마크를 하거나 빼면 키가 바뀐다. 들고 있으면 그때 같은 자리로 다시 찾는다
+    if (found) setDetailSnapshot(found)
   }
   /** 보고 있는 장소를 바뀐 모습으로 계속 띄운다. 이미 보던 곳이라 브라우저 기록은 쌓지 않는다 */
   const keepShowing = (place: NightPlace) => {
@@ -350,7 +371,9 @@ export function TonightApp() {
         await bookmarksApi.deleteBookmark(place.id)
         toast({ title: "북마크에서 뺐어요", description: place.name })
         // 잘못 눌렀을 수도 있으니 다른 곳으로 넘어가지 않고 이 장소를 계속 보여 준다. 버튼만 풀려서 바로 다시 누를 수 있다
-        keepShowing(unsavedPlace(place))
+        const kept = unsavedPlace(place)
+        keepShowing(kept)
+        rememberReleased(kept)
       } else if (isUnsavedCustom(place)) {
         await bookmarksApi.addBookmark({
           type: "CUSTOM",
@@ -369,6 +392,20 @@ export function TonightApp() {
       setSavingKey(null)
       toast({ title: "저장하지 못했어요", description: "잠시 뒤에 다시 시도해 주세요.", variant: "destructive" })
     }
+  }
+  /** 북마크를 뺀 곳을 지도에 남기고, 다른 밤에도 그릴 수 있게 그곳의 이번 주를 받아 둔다 */
+  const rememberReleased = (place: NightPlace) => {
+    if (!data) return
+    const date = data.date
+    setReleased((current) => [...current.filter((item) => !samePosition(item.place, place)), { place, date, week: null }])
+    fetchWeek({ lat: place.latitude, lon: place.longitude }, query)
+      .then((outlook) => {
+        const week = outlook.places[0] ?? null
+        setReleased((current) => current.map((item) => (samePosition(item.place, place) ? { ...item, week } : item)))
+      })
+      .catch(() => {
+        // 이번 주를 받지 못하면 뺀 밤에만 표식이 남는다
+      })
   }
   /** 다른 페이지로 옮기지 않고 로그인 창을 띄운다. 로그인하면 `after`를 이어서 한다 */
   const askLogin = (after: AfterLogin) => {

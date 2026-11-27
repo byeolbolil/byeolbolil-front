@@ -249,3 +249,22 @@ export function nightPlaceOf(place: WeekPlace, night: NightRecommendation): Nigh
     forecastIssuedAt: place.forecastIssuedAt,
   }
 }
+
+/**
+ * 장소의 고정된 값(이름, 사진, 소개, 이동 시간)에 이번 주 응답의 다른 밤 값을 얹는다.
+ * 장소 화면이 다른 밤을 보여 줄 때와, 북마크를 뺀 곳을 다른 밤의 지도에 그릴 때 쓴다.
+ */
+export function placeOnNight(place: NightPlace, weekPlace: WeekPlace, night: WeekNight): NightPlace {
+  return {
+    ...place,
+    level: night.level,
+    pattern: night.pattern,
+    notes: night.notes,
+    bestWindow: night.bestWindow,
+    moonBrightness: night.moonBrightness,
+    moon: night.moon,
+    hours: night.hours,
+    forecastSource: weekPlace.forecastSource ?? place.forecastSource,
+    forecastIssuedAt: weekPlace.forecastIssuedAt,
+  }
+}
