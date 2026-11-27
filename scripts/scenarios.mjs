@@ -102,7 +102,7 @@ async function cloudLayer(page) {
  * `loggedIn`이면 저장된 로그인이 있는 사람으로 시작한다.
  */
 function fakeMembers({ nickname, taken = [], loggedIn = true }) {
-  const server = { nickname, loggedIn, patches: [], registers: [] }
+  const server = { nickname, loggedIn, patches: [], registers: [], codes: [] }
   const cors = {
     "access-control-allow-origin": BASE,
     "access-control-allow-credentials": "true",
@@ -117,9 +117,16 @@ function fakeMembers({ nickname, taken = [], loggedIn = true }) {
     await context.route("**/api/v1/auth/reissue", (route) =>
       server.loggedIn ? json(route, { accessToken: "scenarios-token" }) : reply(route, 401, { success: false, status: 401, message: "scenarios" }),
     )
+    // 인증 메일은 늘 123456을 보낸 것으로 친다
+    await context.route("**/api/v1/auth/email-code", (route) => {
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
+      server.codes.push(route.request().postDataJSON().email)
+      return reply(route, 200, { success: true, status: 200, message: "scenarios" })
+    })
     await context.route("**/api/v1/auth/register", (route) => {
       if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
       const body = route.request().postDataJSON()
+      if (body.emailCode !== "123456") return reply(route, 400, { success: false, status: 400, message: "인증 코드가 맞지 않습니다." })
       server.registers.push(body)
       server.nickname = body.nickname
       server.loggedIn = true
@@ -465,7 +472,7 @@ const scenarios = {
     await context.close()
   },
 
-  /** 이메일 가입은 닉네임 수정과 같은 규칙을 보고, 남이 쓰는 닉네임이면 가입을 보내지 않는다 */
+  /** 이메일 가입은 인증 코드를 받아야 하고, 닉네임 수정과 같은 규칙을 보며, 남이 쓰는 닉네임이면 가입을 보내지 않는다 */
   async register(browser, kind) {
     const { server, setup } = fakeMembers({ nickname: "", taken: ["은하수"], loggedIn: false })
     const { context, page, errors } = await open(browser, kind, { setup })
@@ -475,6 +482,25 @@ const scenarios = {
     await page.getByLabel("비밀번호").fill("password1!")
     const nickname = page.getByLabel("닉네임")
     const submit = page.locator(".bb .sheet form").getByRole("button", { name: "가입하기" })
+    const loginError = () => page.locator(".bb .sheet .login-error").innerText().catch(() => "")
+
+    await nickname.fill("밤하늘 산책")
+    await submit.click()
+    await settle(page, 300)
+    check((await loginError()).includes("인증 코드를 받아"), "인증 코드를 받기 전에는 가입을 보내지 않는다")
+    await page.getByRole("button", { name: "인증 코드 받기" }).click()
+    const codeInput = page.getByLabel("인증 코드")
+    await codeInput.waitFor({ timeout: 5_000 })
+    check(server.codes.join() === "new@example.com", "적은 이메일로 인증 코드를 보낸다")
+    check(/다시 받기 \d+초/.test(await page.locator(".bb .sheet .code-row .btn").innerText()), "다시 받기는 1분을 기다리게 한다")
+    await codeInput.fill("000000")
+    await submit.click()
+    await settle(page, 600)
+    check((await loginError()).includes("인증 코드가 맞지 않거나"), "코드가 틀리면 그렇다고 알린다")
+    check(server.registers.length === 0, "틀린 코드로는 가입되지 않는다")
+    // 틀린 코드에 서버가 답한 400은 일부러 낸 것이라 콘솔 오류에서 뺀다
+    errors.length = 0
+    await codeInput.fill("123456")
     check((await page.locator(".bb .sheet .field-note").innerText()).includes("바뀔 수 있어요"), "가입할 때도 부적절한 닉네임은 바뀔 수 있다고 알린다")
 
     await nickname.fill("별지기⭐")
@@ -494,6 +520,7 @@ const scenarios = {
     await submit.click()
     await page.waitForFunction(() => document.querySelectorAll(".bb .sheet").length === 0, null, { timeout: 10_000 })
     check(server.registers.map((body) => body.nickname).join() === "밤하늘 산책", "앞뒤 공백을 뗀 닉네임으로 가입한다")
+    check(server.registers[0]?.emailCode === "123456", "받은 인증 코드를 함께 보낸다")
     check((await page.locator(".bb .acct.on").innerText()).includes("밤하늘 산책님"), "가입하면 그 닉네임으로 로그인된다")
     check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
     await context.close()

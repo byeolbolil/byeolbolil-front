@@ -11,7 +11,8 @@ import type { AxiosError } from 'axios';
 
 // 타입 별칭
 type LoginRequest = components['schemas']['LoginRequest'];
-type RegisterRequest = components['schemas']['RegisterRequest'];
+// emailCode는 이메일 인증(백엔드 저장소 docs/API.md '가입 인증 코드 받기')과 함께 생겼다. 생성된 타입을 다시 만들기 전까지 여기서 더한다
+type RegisterRequest = components['schemas']['RegisterRequest'] & { emailCode: string };
 type AuthTokenResponse = components['schemas']['AuthTokenResponse'];
 
 /**
@@ -77,6 +78,16 @@ export const authApi = {
    * @param data 회원가입 정보 (이메일, 비밀번호, 닉네임)
    * @returns Access Token
    */
+  /**
+   * 가입할 이메일로 여섯 자리 인증 코드를 보낸다 (POST /api/v1/auth/email-code).
+   * 이미 가입된 이메일이면 409, 너무 자주 받으면 429, 메일을 보내지 못하면 503으로 실패한다.
+   */
+  async sendEmailCode(email: string): Promise<void> {
+    const response = await api.post('/api/v1/auth/email-code' as keyof paths, { email });
+    const rejected = rejectedOf(response);
+    if (rejected) throw rejected;
+  },
+
   async register(data: RegisterRequest): Promise<string> {
     try {
       const response = await api.post(

@@ -18,7 +18,7 @@ import { membersApi } from '@/lib/api/members'
 import { Header } from '@/components/header'
 import { useToast } from '@/hooks/use-toast'
 import { useAuthInit } from '@/components/auth/AuthProvider'
-import { Mail, Lock, User, Loader2, CheckCircle2 } from 'lucide-react'
+import { Mail, Lock, Loader2, CheckCircle2 } from 'lucide-react'
 import type { AxiosError } from 'axios'
 
 // 로그인 폼 스키마
@@ -27,24 +27,7 @@ const loginSchema = z.object({
   password: z.string().min(1, '비밀번호를 입력해주세요'),
 })
 
-// 비밀번호 패턴: 8자 이상, 영문자/숫자/특수문자(!@#$%^&*) 각각 최소 1개 이상
-const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/
-
-// 회원가입 폼 스키마
-const registerSchema = z.object({
-  email: z.string().email('올바른 이메일 주소를 입력해주세요'),
-  password: z
-    .string()
-    .min(8, '비밀번호는 최소 8자 이상이어야 합니다')
-    .regex(
-      passwordPattern,
-      '비밀번호는 8자 이상, 영문자/숫자/특수문자(!@#$%^&*)를 각각 최소 1개 이상 포함해야 합니다'
-    ),
-  nickname: z.string().min(2, '닉네임은 최소 2자 이상이어야 합니다').max(20, '닉네임은 최대 20자까지 가능합니다'),
-})
-
 type LoginFormData = z.infer<typeof loginSchema>
-type RegisterFormData = z.infer<typeof registerSchema>
 
 export default function LoginPage() {
   const router = useRouter()
@@ -53,7 +36,6 @@ export default function LoginPage() {
   const isAuthenticated = authStore((state) => state.isAuthenticated)
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login')
   const [isLoading, setIsLoading] = useState(false)
-  const [isCheckingEmail, setIsCheckingEmail] = useState(false)
 
   // 로그인 폼
   const loginForm = useForm<LoginFormData>({
@@ -61,16 +43,6 @@ export default function LoginPage() {
     defaultValues: {
       email: '',
       password: '',
-    },
-  })
-
-  // 회원가입 폼
-  const registerForm = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-      nickname: '',
     },
   })
 
@@ -122,107 +94,6 @@ export default function LoginPage() {
       
       toast({
         title: '로그인 실패',
-        description: errorMessage,
-        variant: 'destructive',
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // 이메일 중복 검증
-  const checkEmailAvailability = async (email: string) => {
-    // 이메일이 비어있거나 유효하지 않으면 검증하지 않음
-    if (!email || !z.string().email().safeParse(email).success) {
-      // 이메일이 비어있거나 유효하지 않으면 에러 클리어
-      registerForm.clearErrors('email')
-      return
-    }
-
-    setIsCheckingEmail(true)
-    try {
-      const isAvailable = await membersApi.validateEmailDuplicated(email)
-      if (!isAvailable) {
-        registerForm.setError('email', {
-          type: 'manual',
-          message: '이미 사용 중인 이메일입니다.',
-        })
-      } else {
-        registerForm.clearErrors('email')
-      }
-    } catch (error) {
-      console.error('이메일 중복 검증 실패:', error)
-      // 에러 발생 시에도 에러 클리어 (네트워크 에러 등)
-      registerForm.clearErrors('email')
-    } finally {
-      setIsCheckingEmail(false)
-    }
-  }
-
-  // 회원가입 처리
-  const onRegisterSubmit = async (data: RegisterFormData) => {
-    setIsLoading(true)
-    try {
-      await authApi.register(data)
-      
-      // 유저 정보 가져오기
-      await membersApi.getMe()
-      
-      toast({
-        title: '회원가입 성공',
-        description: '환영합니다!',
-        icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-      })
-      
-      router.push('/')
-    } catch (error) {
-      let errorMessage = '회원가입에 실패했습니다.'
-      let shouldSetFieldError = false
-      let fieldName: 'email' | 'password' | 'nickname' | null = null
-      
-      if ((error as AxiosError).response) {
-        const axiosError = error as AxiosError
-        const errorData = axiosError.response?.data as any
-        
-        const status = axiosError.response?.status
-
-        if (status === 409) {
-          // 이미 가입된 이메일 (백엔드 docs/API.md 10장)
-          errorMessage = '이미 사용 중인 이메일입니다.'
-          shouldSetFieldError = true
-          fieldName = 'email'
-        } else if (status === 400) {
-          // 검증 실패는 data에 필드별 사유가 담겨 온다. message는 늘 같은 문구라 분기에 쓰지 않는다.
-          const reasons = (errorData?.data ?? {}) as Record<string, string>
-
-          if (reasons.password) {
-            errorMessage = '비밀번호는 8자 이상, 영문자/숫자/특수문자(!@#$%^&*)를 각각 최소 1개 이상 포함해야 합니다.'
-            shouldSetFieldError = true
-            fieldName = 'password'
-          } else if (reasons.email) {
-            errorMessage = '이메일 형식을 확인해주세요.'
-            shouldSetFieldError = true
-            fieldName = 'email'
-          } else if (reasons.nickname) {
-            errorMessage = '닉네임을 입력해주세요.'
-            shouldSetFieldError = true
-            fieldName = 'nickname'
-          } else {
-            errorMessage = '입력한 정보를 확인해주세요.'
-          }
-        }
-      }
-      
-      // 필드 에러 설정
-      if (shouldSetFieldError && fieldName) {
-        registerForm.setError(fieldName, {
-          type: 'manual',
-          message: errorMessage,
-        })
-      }
-      
-      toast({
-        title: '회원가입 실패',
         description: errorMessage,
         variant: 'destructive',
       })
@@ -382,103 +253,13 @@ export default function LoginPage() {
 
               {/* 회원가입 탭 */}
               <TabsContent value="register" className="space-y-4 mt-4">
-                <form 
-                  onSubmit={registerForm.handleSubmit(onRegisterSubmit)} 
-                  className="space-y-4"
-                  autoComplete="on"
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="register-email">이메일</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="register-email"
-                        type="email"
-                        autoComplete="email"
-                        placeholder="example@email.com"
-                        className="pl-9"
-                        {...registerForm.register('email', {
-                          onChange: (e) => {
-                            // 이메일이 변경될 때마다 이전 에러 클리어
-                            if (registerForm.formState.errors.email?.type === 'manual') {
-                              registerForm.clearErrors('email')
-                            }
-                          },
-                          onBlur: (e) => {
-                            if (e.target.value) {
-                              checkEmailAvailability(e.target.value)
-                            }
-                          },
-                        })}
-                      />
-                      {isCheckingEmail && (
-                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-                      )}
-                    </div>
-                    {registerForm.formState.errors.email && (
-                      <p className="text-sm text-destructive">
-                        {registerForm.formState.errors.email.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="register-password">비밀번호</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="register-password"
-                        type="password"
-                        autoComplete="new-password"
-                        pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$"
-                        placeholder="영문자, 숫자, 특수문자(!@#$%^&*) 포함 8자 이상"
-                        className="pl-9"
-                        {...registerForm.register('password')}
-                      />
-                    </div>
-                    {registerForm.formState.errors.password && (
-                      <p className="text-sm text-destructive">
-                        {registerForm.formState.errors.password.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="register-nickname">닉네임</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="register-nickname"
-                        type="text"
-                        autoComplete="nickname"
-                        placeholder="별지기"
-                        className="pl-9"
-                        {...registerForm.register('nickname')}
-                      />
-                    </div>
-                    {registerForm.formState.errors.nickname && (
-                      <p className="text-sm text-destructive">
-                        {registerForm.formState.errors.nickname.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    size="lg"
-                    disabled={isLoading || isCheckingEmail}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        회원가입 중...
-                      </>
-                    ) : (
-                      '회원가입'
-                    )}
+                {/* 이메일 가입은 인증 코드까지 받는 첫 화면의 가입 창 하나로 모았다(components/tonight/login-sheet.tsx) */}
+                <div className="space-y-3 text-center">
+                  <p className="text-sm text-muted-foreground">이메일 가입은 첫 화면의 로그인 창에서 할 수 있어요.</p>
+                  <Button className="w-full" size="lg" onClick={() => router.push('/')}>
+                    첫 화면으로 가기
                   </Button>
-                </form>
+                </div>
 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
