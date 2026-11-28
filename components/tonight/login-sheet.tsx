@@ -50,6 +50,8 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [tried, setTried] = useState(false)
+  // 가입할 때 직접 체크해야 하는 약관 동의(백엔드 저장소 docs/API.md "회원가입"). 미리 체크해 두지 않는다
+  const [agreed, setAgreed] = useState(false)
   // 이메일 인증(백엔드 저장소 docs/API.md "가입 인증 코드 받기"). 코드를 보낸 주소와 다시 받을 수 있는 시각을 둔다
   const [codeSentTo, setCodeSentTo] = useState<string | null>(null)
   const [code, setCode] = useState("")
@@ -134,6 +136,10 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
       setError(null)
       return
     }
+    if (mode === "register" && !agreed) {
+      setError("만 14세 이상이고 약관에 동의해 주세요.")
+      return
+    }
     setBusy(true)
     setError(null)
     try {
@@ -150,7 +156,13 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
           setError(NICKNAME_TAKEN_TEXT)
           return
         }
-        await authApi.register({ email: email.trim(), password, nickname: name, emailCode: code.trim() })
+        await authApi.register({
+          email: email.trim(),
+          password,
+          nickname: name,
+          emailCode: code.trim(),
+          agreedToTerms: true,
+        })
       }
       await membersApi.getMe()
       onDone()
@@ -184,6 +196,11 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
             </button>
           ))}
         </div>
+        {/* 소셜 로그인은 처음 누르면 곧 가입이라 체크 칸 대신 고지로 동의를 받는다(백엔드 저장소 docs/decisions.md 2026-11-28) */}
+        <p className="login-terms">
+          소셜 계정으로 처음 계속하면 만 14세 이상이고 <a href="/terms">이용약관</a>과{" "}
+          <a href="/privacy">개인정보처리방침</a>에 동의하는 것으로 봐요.
+        </p>
         <div className="login-or">또는 이메일</div>
         <form className="login-form" onSubmit={submit} noValidate>
           <input
@@ -250,6 +267,10 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
                 </p>
               ) : null}
               <p className="field-note">{NICKNAME_POLICY_NOTE}</p>
+              <label className="login-agree">
+                <input type="checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} />
+                만 14세 이상이고 이용약관과 개인정보처리방침에 동의해요
+              </label>
             </>
           ) : null}
           {error ? (
@@ -269,9 +290,6 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
             비밀번호를 잊었어요
           </button>
         ) : null}
-        <a className="login-privacy" href="/privacy">
-          개인정보처리방침
-        </a>
       </div>
     </Sheet>
   )

@@ -172,6 +172,14 @@ function fakeMembers({ nickname, taken = [], loggedIn = true, provider = "KAKAO"
       if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
       const body = route.request().postDataJSON()
       if (body.emailCode !== "123456") return reply(route, 400, { success: false, status: 400, message: "인증 코드가 맞지 않습니다." })
+      if (body.agreedToTerms !== true) {
+        return reply(route, 400, {
+          success: false,
+          status: 400,
+          message: "유효성 검사에 실패하였습니다.",
+          data: { agreedToTerms: "만 14세 이상이고 약관에 동의해야 가입할 수 있습니다." },
+        })
+      }
       server.registers.push(body)
       server.nickname = body.nickname
       server.loggedIn = true
@@ -753,6 +761,9 @@ const scenarios = {
     await codeInput.waitFor({ timeout: 5_000 })
     check(server.codes.join() === "new@example.com", "적은 이메일로 인증 코드를 보낸다")
     check(/다시 받기 \d+초/.test(await page.locator(".bb .sheet .code-row .btn").innerText()), "다시 받기는 1분을 기다리게 한다")
+    const agree = page.getByLabel("만 14세 이상이고 이용약관과 개인정보처리방침에 동의해요")
+    check(!(await agree.isChecked()), "약관 동의 칸은 비어 있다")
+    await agree.check()
     await codeInput.fill("000000")
     await submit.click()
     await settle(page, 600)
@@ -777,11 +788,40 @@ const scenarios = {
     check(server.registers.length === 0, "규칙에 어긋나거나 남이 쓰는 닉네임으로는 가입을 보내지 않는다")
 
     await nickname.fill(" 밤하늘 산책 ")
+    await agree.uncheck()
+    await submit.click()
+    await settle(page, 300)
+    check((await loginError()).includes("약관에 동의해"), "약관에 동의하지 않으면 그렇다고 알린다")
+    check(server.registers.length === 0, "약관에 동의하지 않으면 가입을 보내지 않는다")
+    await agree.check()
     await submit.click()
     await page.waitForFunction(() => document.querySelectorAll(".bb .sheet").length === 0, null, { timeout: 10_000 })
     check(server.registers.map((body) => body.nickname).join() === "밤하늘 산책", "앞뒤 공백을 뗀 닉네임으로 가입한다")
     check(server.registers[0]?.emailCode === "123456", "받은 인증 코드를 함께 보낸다")
+    check(server.registers[0]?.agreedToTerms === true, "약관에 동의했다고 함께 보낸다")
     check((await page.locator(".bb .acct.on").innerText()).includes("밤하늘 산책님"), "가입하면 그 닉네임으로 로그인된다")
+    check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
+    await context.close()
+  },
+
+  /** 로그인 창의 소셜 로그인 고지에서 이용약관을 열고, 돌아가기로 첫 화면에 온다 */
+  async terms(browser, kind) {
+    const { setup } = fakeMembers({ nickname: "", loggedIn: false })
+    const { context, page, errors } = await open(browser, kind, { setup })
+    await page.locator(".bb .acct").first().click()
+    await page.locator(".bb .sheet .login-terms").getByRole("link", { name: "이용약관" }).click()
+    await page.waitForURL("**/terms")
+    check(await page.getByRole("heading", { name: "이용약관" }).isVisible(), "로그인 창에서 이용약관이 열린다")
+    const text = await page.locator("main").innerText()
+    check(text.includes("시행일") && text.includes("contact@byeolbolil.com"), "시행일과 문의 메일 주소가 보인다")
+    await page.getByRole("link", { name: "개인정보처리방침" }).first().click()
+    await page.waitForURL("**/privacy")
+    check(await page.getByRole("heading", { name: "개인정보처리방침" }).isVisible(), "약관에서 개인정보처리방침으로 넘어간다")
+    await page.goBack()
+    await page.waitForURL("**/terms")
+    await page.getByRole("link", { name: "별볼일로 돌아가기" }).click()
+    await page.waitForSelector(".bb .tonight .sky-text h1")
+    check(true, "돌아가기를 누르면 첫 화면이 열린다")
     check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
     await context.close()
   },
