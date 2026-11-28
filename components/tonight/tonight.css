@@ -3196,12 +3196,30 @@
   align-self: center;
   font-size: 13px;
 }
-.login-privacy {
-  align-self: center;
+.login-terms {
+  margin: 0;
   font-size: 12px;
+  line-height: 1.5;
   color: var(--ink-3);
+}
+
+.login-terms a {
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.login-agree {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.login-agree input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--star);
 }
 
 /* 장소 화면. 위의 날짜 줄은 이 장소의 일곱 밤이다 */

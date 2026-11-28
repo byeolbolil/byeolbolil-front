@@ -13,7 +13,7 @@ import { requestReissue } from './reissue';
 // 타입 별칭
 type LoginRequest = components['schemas']['LoginRequest'];
 // emailCode는 이메일 인증(백엔드 저장소 docs/API.md '가입 인증 코드 받기')과 함께 생겼다. 생성된 타입을 다시 만들기 전까지 여기서 더한다
-type RegisterRequest = components['schemas']['RegisterRequest'] & { emailCode: string };
+type RegisterRequest = components['schemas']['RegisterRequest'] & { emailCode: string; agreedToTerms: boolean };
 type AuthTokenResponse = components['schemas']['AuthTokenResponse'];
 
 /**

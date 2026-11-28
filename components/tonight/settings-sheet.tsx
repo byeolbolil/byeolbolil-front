@@ -102,6 +102,9 @@ export function SettingsSheet({
       <button type="button" className="linkish" style={{ alignSelf: "flex-start" }} onClick={onOpenSources}>
         추천 기준과 출처 보기
       </button>
+      <a className="linkish" style={{ alignSelf: "flex-start" }} href="/terms">
+        이용약관
+      </a>
       <a className="linkish" style={{ alignSelf: "flex-start" }} href="/privacy">
         개인정보처리방침
       </a>
