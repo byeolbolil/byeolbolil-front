@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { authStore } from '@/lib/store/authStore';
+import { requestReissue } from './reissue';
 
 /**
  * ⚠️ 중요: 백엔드 API 응답 구조
@@ -142,21 +143,8 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // /reissue API 호출하여 새 Access Token 발급
-        // 순환 참조 방지를 위해 직접 axios 호출
-        const reissueUrl = `${baseURL}/api/v1/auth/reissue`;
-        
-        const refreshResponse = await axios.post<{ success: boolean; data: { accessToken: string } }>(
-          reissueUrl,
-          {},
-          { withCredentials: true }
-        );
-        // CommonResponse 래퍼에서 data 추출
-        const newAccessToken = refreshResponse.data.data?.accessToken;
-        
-        if (!newAccessToken) {
-          throw new Error('Access Token이 응답에 포함되지 않았습니다.');
-        }
+        // /reissue로 새 Access Token을 받는다. 다른 곳의 재발급과 겹치면 한 번으로 모은다(reissue.ts)
+        const newAccessToken = await requestReissue(baseURL);
 
         // 새 토큰을 Store에 저장
         authStore.getState().setAccessToken(newAccessToken);

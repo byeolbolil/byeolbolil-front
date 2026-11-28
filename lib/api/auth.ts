@@ -8,6 +8,7 @@ import { api } from './client';
 import { authStore } from '@/lib/store/authStore';
 import type { components, paths } from '@/types/openapi';
 import type { AxiosError } from 'axios';
+import { requestReissue } from './reissue';
 
 // 타입 별칭
 type LoginRequest = components['schemas']['LoginRequest'];
@@ -127,24 +128,9 @@ export const authApi = {
    */
   async reissue(): Promise<string> {
     try {
-      // reissue는 Authorization 헤더가 필요 없음 (Refresh Token이 쿠키에 있음)
-      // 순환 참조 방지를 위해 직접 axios 호출
+      // Refresh Token은 쿠키로 간다. 겹친 재발급은 한 번으로 모은다(reissue.ts)
       const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const axios = (await import('axios')).default;
-      
-      const response = await axios.post<{ data?: AuthTokenResponse }>(
-        `${baseURL}/api/v1/auth/reissue`,
-        {},
-        { withCredentials: true }
-      );
-
-      // CommonResponse 래퍼에서 data 추출
-      const accessToken = response.data.data?.accessToken ?? (response.data as any).accessToken;
-
-      if (!accessToken) {
-        console.error('[reissue] 응답 데이터:', response.data);
-        throw new Error('Access Token이 응답에 포함되지 않았습니다.');
-      }
+      const accessToken = await requestReissue(baseURL);
 
       // 새 Access Token을 Store에 저장
       authStore.getState().setAccessToken(accessToken);
