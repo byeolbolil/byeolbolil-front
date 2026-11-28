@@ -13,6 +13,8 @@ interface AccountButtonProps {
   onLogin: () => void
   /** 닉네임 바꾸는 시트를 연다 */
   onEditNickname: () => void
+  /** 비밀번호 바꾸는 시트를 연다. 이메일 회원에게만 메뉴가 보인다 */
+  onChangePassword: () => void
   /** 탈퇴 확인 시트를 연다 */
   onWithdraw: () => void
 }
@@ -22,9 +24,10 @@ interface AccountButtonProps {
  * 계정 정보가 닉네임뿐이라 회원 페이지를 따로 두지 않고 이 메뉴에 모은다.
  * 지금 로그인돼 있는지를 어느 화면에서나 알 수 있게 하는 자리다.
  */
-export function AccountButton({ pending, onLogin, onEditNickname, onWithdraw }: AccountButtonProps) {
+export function AccountButton({ pending, onLogin, onEditNickname, onChangePassword, onWithdraw }: AccountButtonProps) {
   const isAuthenticated = authStore((state) => state.isAuthenticated)
   const nickname = authStore((state) => state.user?.nickname)
+  const isLocal = authStore((state) => state.user?.authProvider === "LOCAL")
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -87,6 +90,18 @@ export function AccountButton({ pending, onLogin, onEditNickname, onWithdraw }: 
           >
             닉네임 바꾸기
           </button>
+          {isLocal ? (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false)
+                onChangePassword()
+              }}
+            >
+              비밀번호 바꾸기
+            </button>
+          ) : null}
           <button type="button" role="menuitem" onClick={() => void logout()}>
             로그아웃
           </button>

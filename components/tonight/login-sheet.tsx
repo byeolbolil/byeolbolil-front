@@ -15,7 +15,7 @@ import {
 import { useNicknameTaken } from "@/lib/tonight/use-nickname-taken"
 import { Sheet } from "./sheet"
 
-type Mode = "login" | "register"
+type Mode = "login" | "register" | "reset"
 type Provider = "kakao" | "naver" | "google"
 
 const PROVIDERS: ReadonlyArray<{ value: Provider; label: string }> = [
@@ -82,12 +82,16 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
     setMode(next)
     setError(null)
     setTried(false)
+    // 가입 코드와 재설정 코드는 서버에서 따로 다룬다. 받은 코드를 다른 쪽으로 들고 가지 않는다
+    setCodeSentTo(null)
+    setCode("")
+    setResendAt(0)
   }
 
   const validate = (): string | null => {
     if (!EMAIL.test(email.trim())) return "이메일 주소를 확인해 주세요."
     if (mode === "login") return password ? null : "비밀번호를 입력해 주세요."
-    if (!codeSent) return "이메일로 인증 코드를 받아 주세요."
+    if (!codeSent) return mode === "reset" ? "이메일로 재설정 코드를 받아 주세요." : "이메일로 인증 코드를 받아 주세요."
     if (!/^\d{6}$/.test(code.trim())) return "메일로 받은 인증 코드 여섯 자리를 적어 주세요."
     if (!PASSWORD.test(password)) return "비밀번호는 8자 이상, 영문자와 숫자, 특수문자(!@#$%^&*)를 섞어 주세요."
     return null
@@ -102,7 +106,8 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
     setSending(true)
     setError(null)
     try {
-      await authApi.sendEmailCode(email.trim())
+      if (mode === "reset") await authApi.sendPasswordResetCode(email.trim())
+      else await authApi.sendEmailCode(email.trim())
       setCodeSentTo(emailKey)
       setCode("")
       // 서버는 같은 이메일로 1분에 한 번만 보낸다
@@ -134,6 +139,10 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
     try {
       if (mode === "login") {
         await authApi.login({ email: email.trim(), password })
+      } else if (mode === "reset") {
+        await authApi.resetPassword(email.trim(), code.trim(), password)
+        // 바꾼 비밀번호로 바로 로그인한다
+        await authApi.login({ email: email.trim(), password })
       } else {
         const name = cleanNickname(nickname)
         // 회원가입의 409는 이메일과 닉네임 두 가지라서 닉네임은 먼저 물어 가린다
@@ -159,7 +168,7 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
   }
 
   return (
-    <Sheet title={mode === "login" ? "로그인" : "가입하기"} onClose={onClose}>
+    <Sheet title={mode === "login" ? "로그인" : mode === "reset" ? "비밀번호 찾기" : "가입하기"} onClose={onClose}>
       <div className="login">
         {reason === "save" ? <p className="login-why">로그인하면 바로 북마크돼요</p> : null}
         <div className="login-social">
@@ -186,7 +195,7 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
-          {mode === "register" ? (
+          {mode !== "login" ? (
             <div className="code-row">
               {codeSent ? (
                 <input
@@ -201,16 +210,25 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
                 />
               ) : null}
               <button type="button" className="btn" disabled={sending || waitSeconds > 0} onClick={() => void sendCode()}>
-                {sending ? "보내는 중" : waitSeconds > 0 ? `다시 받기 ${waitSeconds}초` : codeSent ? "다시 받기" : "인증 코드 받기"}
+                {sending
+                  ? "보내는 중"
+                  : waitSeconds > 0
+                    ? `다시 받기 ${waitSeconds}초`
+                    : codeSent
+                      ? "다시 받기"
+                      : mode === "reset"
+                        ? "재설정 코드 받기"
+                        : "인증 코드 받기"}
               </button>
             </div>
           ) : null}
+          {mode === "reset" && codeSent ? <p className="field-note">가입한 이메일이면 코드가 가요. 메일함을 확인해 주세요.</p> : null}
           <input
             className="text-input"
             type="password"
             autoComplete={mode === "login" ? "current-password" : "new-password"}
-            placeholder="비밀번호"
-            aria-label="비밀번호"
+            placeholder={mode === "reset" ? "새 비밀번호" : "비밀번호"}
+            aria-label={mode === "reset" ? "새 비밀번호" : "비밀번호"}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
@@ -240,12 +258,17 @@ export function LoginSheet({ reason, onClose, onDone, onLeave }: LoginSheetProps
             </p>
           ) : null}
           <button type="submit" className="btn primary" disabled={busy}>
-            {busy ? "잠시만요" : mode === "login" ? "로그인" : "가입하기"}
+            {busy ? "잠시만요" : mode === "login" ? "로그인" : mode === "reset" ? "비밀번호 바꾸기" : "가입하기"}
           </button>
         </form>
         <button type="button" className="linkish" onClick={() => switchMode(mode === "login" ? "register" : "login")}>
           {mode === "login" ? "처음이면 가입하기" : "이미 계정이 있으면 로그인"}
         </button>
+        {mode === "login" ? (
+          <button type="button" className="linkish" onClick={() => switchMode("reset")}>
+            비밀번호를 잊었어요
+          </button>
+        ) : null}
         <a className="login-privacy" href="/privacy">
           개인정보처리방침
         </a>
@@ -259,6 +282,8 @@ function messageOf(error: unknown, mode: Mode): string {
   const status = error instanceof AuthRejected ? error.status : (error as AxiosError).response?.status
   if (status === undefined) return "서버에 연결하지 못했어요. 잠시 뒤에 다시 해 주세요."
   if (mode === "login" && status === 401) return "이메일이나 비밀번호가 맞지 않아요."
+  if (mode === "login" && status === 429) return "여러 번 틀려서 15분 동안 로그인할 수 없어요. 비밀번호를 잊었다면 찾아 주세요."
+  if (mode === "reset" && status === 400) return "재설정 코드가 맞지 않거나 시간이 지났어요. 다시 확인하거나 새로 받아 주세요."
   if (mode === "register" && status === 409) return "이미 가입한 이메일이에요."
   // 닉네임과 비밀번호는 보내기 전에 걸러 두므로 가입의 400은 대개 인증 코드다
   if (mode === "register" && status === 400) return "인증 코드가 맞지 않거나 시간이 지났어요. 다시 확인하거나 새로 받아 주세요."
