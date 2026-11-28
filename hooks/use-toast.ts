@@ -174,6 +174,8 @@ function useToast() {
 
   React.useEffect(() => {
     listeners.push(setState)
+    // 페이지의 첫 effect가 띄운 토스트는 이 구독보다 먼저 온다(자식의 effect가 먼저 돈다). 놓치지 않게 구독하자마자 맞춘다
+    setState(memoryState)
     return () => {
       const index = listeners.indexOf(setState)
       if (index > -1) {
