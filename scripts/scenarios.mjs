@@ -99,10 +99,12 @@ async function cloudLayer(page) {
 }
 /**
  * 로그인과 회원 API를 브라우저 안에서 흉내 낸다. 닉네임 겹침은 서버처럼 대소문자를 가리지 않고 본다.
- * `loggedIn`이면 저장된 로그인이 있는 사람으로 시작한다.
+ * `loggedIn`이면 저장된 로그인이 있는 사람으로 시작한다. 재발급은 서버처럼 리프레시 토큰을 한 번 쓰면 바꾸므로,
+ * 앞 재발급이 끝나기 전에 온 재발급은 옛 토큰을 들고 온 것으로 보고 401로 답한다.
  */
 function fakeMembers({ nickname, taken = [], loggedIn = true }) {
-  const server = { nickname, loggedIn, patches: [], registers: [], codes: [] }
+  const server = { nickname, loggedIn, patches: [], registers: [], codes: [], reissues: 0, rejected: 0 }
+  let rotating = false
   const cors = {
     "access-control-allow-origin": BASE,
     "access-control-allow-credentials": "true",
@@ -114,9 +116,19 @@ function fakeMembers({ nickname, taken = [], loggedIn = true }) {
   const json = (route, data) => reply(route, 200, { success: true, status: 200, message: "scenarios", data })
   const isTaken = (name) => taken.some((other) => other.toLowerCase() === name.toLowerCase())
   const setup = async (context) => {
-    await context.route("**/api/v1/auth/reissue", (route) =>
-      server.loggedIn ? json(route, { accessToken: "scenarios-token" }) : reply(route, 401, { success: false, status: 401, message: "scenarios" }),
-    )
+    await context.route("**/api/v1/auth/reissue", async (route) => {
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
+      if (!server.loggedIn) return reply(route, 401, { success: false, status: 401, message: "scenarios" })
+      server.reissues += 1
+      if (rotating) {
+        server.rejected += 1
+        return reply(route, 401, { success: false, status: 401, message: "scenarios" })
+      }
+      rotating = true
+      await new Promise((resolve) => setTimeout(resolve, 400))
+      rotating = false
+      return json(route, { accessToken: "scenarios-token" })
+    })
     // 인증 메일은 늘 123456을 보낸 것으로 친다
     await context.route("**/api/v1/auth/email-code", (route) => {
       if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
@@ -451,6 +463,8 @@ const scenarios = {
     const { server, setup } = fakeMembers({ nickname: "별지기4821" })
     const { context, page, errors } = await open(browser, kind, { setup })
     check((await sheetCount(page)) === 0, "이미 가입한 사람에게는 뜨지 않는다")
+    // 재발급은 겹치면 거절되므로 첫 화면의 로그인 확인이 끝난 뒤에 돌아온다
+    await page.waitForSelector(".bb .acct.on", { timeout: 10_000 })
 
     await page.goto(`${BASE}/oauth/callback?welcome=1`, { waitUntil: "domcontentloaded" })
     const input = page.locator(".bb .sheet #nickname")
@@ -468,6 +482,24 @@ const scenarios = {
     await page.waitForSelector(".bb .tonight .sky-text h1", { timeout: 90_000 })
     await settle(page, 1500)
     check((await sheetCount(page)) === 0, "새로 고치면 다시 뜨지 않는다")
+    check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
+    await context.close()
+  },
+
+  /** 소셜 로그인에서 돌아오면 새로 고치지 않아도 로그인한 채로 첫 화면이 열린다. 재발급이 겹쳐 풀리던 버그를 다시 밟는다 */
+  async socialReturn(browser, kind) {
+    const { server, setup } = fakeMembers({ nickname: "별지기4821" })
+    const { context, page, errors } = await open(browser, kind, { setup })
+    // 첫 화면의 재발급이 끝난 뒤에 소셜 로그인에서 돌아온 것처럼 콜백을 연다
+    await page.waitForSelector(".bb .acct.on", { timeout: 10_000 })
+    server.reissues = 0
+    server.rejected = 0
+    await page.goto(`${BASE}/oauth/callback`, { waitUntil: "domcontentloaded" })
+    await page.waitForSelector(".bb .tonight .sky-text h1", { timeout: 90_000 })
+    await page.waitForSelector(".bb .acct.on", { timeout: 10_000 }).catch(() => {})
+    check(!page.url().includes("/login"), "로그인 화면으로 튕기지 않는다")
+    check((await page.locator(".bb .acct.on").count()) > 0, "새로 고치지 않아도 로그인한 상태다")
+    check(server.rejected === 0, `겹친 재발급이 없다 (재발급 ${server.reissues}번, 거절 ${server.rejected}번)`)
     check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
     await context.close()
   },
