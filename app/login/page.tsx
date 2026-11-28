@@ -60,6 +60,16 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, isInitializing, router])
 
+  // 소셜 로그인이 서버에서 실패하면 ?error=oauth를 달고 여기로 온다. 아무 말 없이 로그인 화면만 보이지 않게 알린다
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('error') !== 'oauth') return
+    toast({
+      title: '소셜 로그인에 실패했습니다',
+      description: '잠시 뒤 다시 시도해 주세요.',
+      variant: 'destructive',
+    })
+  }, [toast])
+
   // 로그인 처리
   const onLoginSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
