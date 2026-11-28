@@ -102,14 +102,14 @@ async function cloudLayer(page) {
  * `loggedIn`이면 저장된 로그인이 있는 사람으로 시작한다. 재발급은 서버처럼 리프레시 토큰을 한 번 쓰면 바꾸므로,
  * 앞 재발급이 끝나기 전에 온 재발급은 옛 토큰을 들고 온 것으로 보고 401로 답한다.
  */
-function fakeMembers({ nickname, taken = [], loggedIn = true }) {
-  const server = { nickname, loggedIn, patches: [], registers: [], codes: [], reissues: 0, rejected: 0 }
+function fakeMembers({ nickname, taken = [], loggedIn = true, provider = "KAKAO", withdrawal = "ok" }) {
+  const server = { nickname, loggedIn, patches: [], registers: [], codes: [], reissues: 0, rejected: 0, withdrawals: [] }
   let rotating = false
   const cors = {
     "access-control-allow-origin": BASE,
     "access-control-allow-credentials": "true",
     "access-control-allow-headers": "authorization, content-type",
-    "access-control-allow-methods": "GET, POST, PATCH, OPTIONS",
+    "access-control-allow-methods": "GET, POST, PATCH, DELETE, OPTIONS",
   }
   const reply = (route, status, body) =>
     route.fulfill({ status, contentType: "application/json", headers: cors, body: JSON.stringify(body) })
@@ -149,16 +149,34 @@ function fakeMembers({ nickname, taken = [], loggedIn = true }) {
       const name = new URL(route.request().url()).searchParams.get("nickname") ?? ""
       return json(route, { validated: !isTaken(name) })
     })
+    // 소셜 회원 탈퇴: 표를 받아 제공자 로그인 주소로 가면, 서버가 탈퇴시키고 첫 화면으로 돌려보낸 것처럼 한다
+    await context.route("**/api/v1/members/me/withdrawal-ticket", (route) => {
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
+      return json(route, { authorizationUrl: `/oauth2/authorization/${provider.toLowerCase()}?withdraw=scenarios-ticket` })
+    })
+    await context.route("**/oauth2/authorization/**", (route) => {
+      server.withdrawals.push(route.request().url())
+      if (withdrawal === "ok") server.loggedIn = false
+      const back = withdrawal === "ok" ? "/?withdrawn=1" : "/?withdrawal=failed"
+      return route.fulfill({ status: 302, headers: { location: `${BASE}${back}` } })
+    })
     await context.route("**/api/v1/members/me", (route) => {
       const request = route.request()
       if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
+      if (request.method() === "DELETE") {
+        const password = request.postDataJSON()?.password
+        server.withdrawals.push(password)
+        if (password !== "password1!") return reply(route, 400, { success: false, status: 400, message: "비밀번호가 맞지 않습니다." })
+        server.loggedIn = false
+        return reply(route, 200, { success: true, status: 200, message: "scenarios" })
+      }
       if (request.method() === "PATCH") {
         const name = request.postDataJSON().nickname
         server.patches.push(name)
         if (isTaken(name)) return reply(route, 409, { success: false, status: 409, message: "이미 쓰는 닉네임입니다." })
         server.nickname = name
       }
-      return json(route, { memberId: 1, nickname: server.nickname })
+      return json(route, { memberId: 1, nickname: server.nickname, authProvider: provider })
     })
   }
   return { server, setup }
@@ -482,6 +500,91 @@ const scenarios = {
     await page.waitForSelector(".bb .tonight .sky-text h1", { timeout: 90_000 })
     await settle(page, 1500)
     check((await sheetCount(page)) === 0, "새로 고치면 다시 뜨지 않는다")
+    check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
+    await context.close()
+  },
+
+  /** 이메일 회원은 계정 메뉴에서 비밀번호를 넣어 탈퇴하고, 틀리면 까닭을 적고 그대로 남는다 */
+  async withdrawLocal(browser, kind) {
+    const { server, setup } = fakeMembers({ nickname: "별지기", provider: "LOCAL" })
+    const { context, page, errors } = await open(browser, kind, { setup })
+    const account = page.locator(".bb .acct.on")
+    await account.waitFor({ timeout: 30_000 })
+    await account.click()
+    await page.getByRole("menuitem", { name: "탈퇴하기" }).click()
+    const sheet = page.locator(".bb .sheet")
+    await sheet.waitFor()
+    check((await sheet.innerText()).includes("북마크"), "무엇이 지워지는지 먼저 보여 준다")
+    const submit = sheet.getByRole("button", { name: "탈퇴" })
+
+    await submit.click()
+    await settle(page, 300)
+    check(server.withdrawals.length === 0, "비밀번호를 넣지 않으면 보내지 않는다")
+    await page.getByLabel("비밀번호").fill("wrong")
+    await submit.click()
+    await waitFieldError(page, "맞지 않아요")
+    check((await fieldError(page)).includes("비밀번호가 맞지 않아요"), "틀린 비밀번호는 입력란 아래에 알린다")
+    check((await account.count()) > 0, "틀리면 로그인한 채로 남는다")
+
+    await page.getByLabel("비밀번호").fill("password1!")
+    await submit.click()
+    await page.waitForFunction(() => document.querySelectorAll(".bb .sheet").length === 0, null, { timeout: 10_000 })
+    await page.getByText("탈퇴했어요").first().waitFor({ timeout: 5_000 })
+    check((await page.locator(".bb .acct.on").count()) === 0, "탈퇴하면 바로 로그아웃 상태다")
+    // 틀린 비밀번호에 서버가 답한 400은 브라우저가 콘솔에 남기는 것이라 뺀다
+    const unexpected = errors.filter((error) => !/status of 400/.test(error))
+    check(unexpected.length === 0, `콘솔 오류가 없다 ${unexpected.join(" / ")}`)
+    await context.close()
+  },
+
+  /** 소셜 회원은 가입한 서비스에 한 번 더 로그인하러 가고, 돌아오면 로그아웃 상태로 탈퇴를 알린다 */
+  async withdrawSocial(browser, kind) {
+    const { server, setup } = fakeMembers({ nickname: "별지기4821", provider: "GOOGLE" })
+    const { context, page, errors } = await open(browser, kind, { setup })
+    const account = page.locator(".bb .acct.on")
+    await account.waitFor({ timeout: 30_000 })
+    await account.click()
+    await page.getByRole("menuitem", { name: "탈퇴하기" }).click()
+    const sheet = page.locator(".bb .sheet")
+    await sheet.waitFor()
+    check((await sheet.innerText()).includes("구글과 별볼일의 연결"), "가입한 서비스의 연결도 끊는다고 알린다")
+    check((await page.getByLabel("비밀번호").count()) === 0, "소셜 회원에게는 비밀번호를 묻지 않는다")
+
+    await sheet.getByRole("button", { name: "구글로 확인하고 탈퇴" }).click()
+    await page.waitForURL((url) => url.pathname === "/" && !url.search.includes("withdraw"), { timeout: 30_000 })
+    await page.waitForSelector(".bb .tonight .sky-text h1", { timeout: 90_000 })
+    await page.getByText("탈퇴했어요").first().waitFor({ timeout: 10_000 })
+    check(server.withdrawals.some((url) => url.includes("/oauth2/authorization/google?withdraw=")), "탈퇴 표를 붙여 구글 로그인으로 간다")
+    check((await page.locator(".bb .acct.on").count()) === 0, "돌아오면 로그아웃 상태다")
+    check(!page.url().includes("withdrawn"), "주소에 남은 표시는 지운다")
+    check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
+    await context.close()
+  },
+
+  /** 다른 계정으로 로그인했거나 취소해서 탈퇴하지 못하면 로그인한 채로 돌아와 알린다 */
+  async withdrawFailed(browser, kind) {
+    const { setup } = fakeMembers({ nickname: "별지기4821", provider: "KAKAO", withdrawal: "failed" })
+    const { context, page, errors } = await open(browser, kind, { setup })
+    const account = page.locator(".bb .acct.on")
+    await account.waitFor({ timeout: 30_000 })
+    await account.click()
+    await page.getByRole("menuitem", { name: "탈퇴하기" }).click()
+    await page.locator(".bb .sheet").getByRole("button", { name: "카카오로 확인하고 탈퇴" }).click()
+    await page.waitForURL((url) => url.pathname === "/" && !url.search.includes("withdraw"), { timeout: 30_000 })
+    await page.waitForSelector(".bb .tonight .sky-text h1", { timeout: 90_000 })
+    await page.getByText("탈퇴하지 못했어요").first().waitFor({ timeout: 10_000 })
+    await account.waitFor({ timeout: 10_000 }).catch(() => {})
+    check((await account.count()) > 0, "탈퇴하지 못했으면 로그인한 채로 남는다")
+    check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
+    await context.close()
+  },
+
+  /** 페이지가 열리자마자 띄우는 토스트(소셜 로그인 실패)도 보인다. 토스트 영역이 구독하기 전에 띄워 사라지던 버그를 다시 밟는다 */
+  async loginErrorToast(browser, kind) {
+    const { context, page, errors } = await open(browser, kind)
+    await page.goto(`${BASE}/login?error=oauth`, { waitUntil: "domcontentloaded" })
+    const shown = await page.getByText("소셜 로그인에 실패했습니다").first().waitFor({ timeout: 30_000 }).then(() => true, () => false)
+    check(shown, "소셜 로그인 실패를 알린다")
     check(errors.length === 0, `콘솔 오류가 없다 ${errors.join(" / ")}`)
     await context.close()
   },

@@ -41,6 +41,7 @@ import { GuideSheet } from "./guide-sheet"
 import { LoginSheet } from "./login-sheet"
 import { MoonSheet } from "./moon-sheet"
 import { NicknameSheet } from "./nickname-sheet"
+import { WithdrawSheet } from "./withdraw-sheet"
 import { PickSky, placeSkyState } from "./pick-sky"
 import { PlaceView } from "./place-view"
 import { PlaceRow } from "./place-row"
@@ -53,7 +54,7 @@ import { NightCandidates, NightCard, type CardExtras } from "./tonight-view"
 import { WeekOutlook } from "./week-outlook"
 import "./tonight.css"
 
-type SheetKind = "settings" | "origin" | "sources" | "save" | "week" | "login" | "guide" | "moon" | "nickname"
+type SheetKind = "settings" | "origin" | "sources" | "save" | "week" | "login" | "guide" | "moon" | "nickname" | "withdraw"
 
 /** 로그인 창을 열 때 하려던 일. 로그인하면 이어서 한다 */
 type AfterLogin = { kind: "saveSpot"; spotId: number; name: string } | { kind: "savePick" } | { kind: "none" }
@@ -65,6 +66,7 @@ type AfterLogin = { kind: "saveSpot"; spotId: number; name: string } | { kind: "
 const RESUME_KEY = "bb.resumeAfterLogin"
 /** 소셜로 방금 가입하고 돌아왔다는 표시. 콜백 페이지(app/oauth/callback)가 남기고, 첫 화면이 한 번 읽고 지운다 */
 const WELCOME_KEY = "bb.welcome"
+const WITHDRAWN_TOAST = { title: "탈퇴했어요", description: "계정과 북마크를 지웠어요." }
 interface Resume {
   tab: Tab
   date: string | null
@@ -87,6 +89,7 @@ export function TonightApp() {
   const settings = useMemo(() => settingsOf(settingsState), [settingsState])
   const isAuthenticated = authStore((state) => state.isAuthenticated)
   const nickname = authStore((state) => state.user?.nickname ?? "")
+  const authProvider = authStore((state) => state.user?.authProvider)
   const { isInitializing } = useAuthInit()
   const { toast } = useToast()
   // 저장된 토큰이 있으면 시작할 때의 재발급이 끝난 뒤에 추천을 받는다. 그래야 내 장소가 처음부터 들어간다.
@@ -165,6 +168,29 @@ export function TonightApp() {
   const [nicknameWelcome, setNicknameWelcome] = useState(false)
   /** 첫 닉네임 시트에 밀려 미룬, 고른 위치 저장. 시트를 닫으면 이어서 연다 */
   const afterWelcome = useRef<AfterLogin | null>(null)
+  // 소셜 회원은 제공자에 다시 로그인한 뒤 서버가 ?withdrawn=1이나 ?withdrawal=failed를 붙여 첫 화면으로 돌려보낸다
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const withdrawn = params.get("withdrawn") === "1"
+    const failed = params.get("withdrawal") === "failed"
+    if (!withdrawn && !failed) return
+    params.delete("withdrawn")
+    params.delete("withdrawal")
+    const rest = params.toString()
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${rest ? `?${rest}` : ""}${window.location.hash}`)
+    if (withdrawn) {
+      authStore.getState().logout()
+      toast(WITHDRAWN_TOAST)
+    } else {
+      toast({
+        title: "탈퇴하지 못했어요",
+        description: "가입할 때 쓴 계정으로 다시 해 주세요.",
+        variant: "destructive",
+      })
+    }
+    // 돌아온 뒤 한 번만 하면 된다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   useEffect(() => {
     try {
       if (window.sessionStorage.getItem(WELCOME_KEY) === "1") setWelcome(true)
@@ -789,6 +815,7 @@ export function TonightApp() {
             setNicknameWelcome(false)
             showSheet("nickname")
           }}
+          onWithdraw={() => showSheet("withdraw")}
         />
         {/* 달력과 사진 안내는 머리에 두지 않는다. 아이콘만으로는 무엇인지 읽히지 않아서, 필요해지는 자리(장소 화면)에 둔다 */}
         <button type="button" className="gear" aria-label="설정" title="설정" onClick={openSettings}>
@@ -912,6 +939,16 @@ export function TonightApp() {
           onDone={(name) => {
             closeNickname()
             toast({ title: "닉네임을 바꿨어요", description: `이제 ${name}님으로 보여요.` })
+          }}
+        />
+      ) : null}
+      {sheet === "withdraw" && isAuthenticated ? (
+        <WithdrawSheet
+          provider={typeof authProvider === "string" ? authProvider : undefined}
+          onClose={closeSheet}
+          onDone={() => {
+            showSheet(null)
+            toast(WITHDRAWN_TOAST)
           }}
         />
       ) : null}
