@@ -89,6 +89,26 @@ export const authApi = {
     if (rejected) throw rejected;
   },
 
+  /**
+   * 비밀번호 재설정 코드를 보낸다 (POST /api/v1/auth/password-reset/code, 백엔드 저장소 docs/API.md "비밀번호 찾기").
+   * 가입하지 않은 이메일이어도 성공으로 답한다. 너무 자주 받으면 429, 메일을 보내지 못하면 503으로 실패한다.
+   */
+  async sendPasswordResetCode(email: string): Promise<void> {
+    const response = await api.post('/api/v1/auth/password-reset/code' as keyof paths, { email });
+    const rejected = rejectedOf(response);
+    if (rejected) throw rejected;
+  },
+
+  /**
+   * 재설정 코드를 확인하고 새 비밀번호를 저장한다 (POST /api/v1/auth/password-reset).
+   * 모든 기기의 로그인이 끊기므로 새 비밀번호로 다시 로그인한다. 코드가 틀리면 400으로 실패한다.
+   */
+  async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+    const response = await api.post('/api/v1/auth/password-reset' as keyof paths, { email, code, newPassword });
+    const rejected = rejectedOf(response);
+    if (rejected) throw rejected;
+  },
+
   async register(data: RegisterRequest): Promise<string> {
     try {
       const response = await api.post(

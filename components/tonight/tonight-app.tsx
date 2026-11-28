@@ -41,6 +41,7 @@ import { GuideSheet } from "./guide-sheet"
 import { LoginSheet } from "./login-sheet"
 import { MoonSheet } from "./moon-sheet"
 import { NicknameSheet } from "./nickname-sheet"
+import { PasswordSheet } from "./password-sheet"
 import { WithdrawSheet } from "./withdraw-sheet"
 import { PickSky, placeSkyState } from "./pick-sky"
 import { PlaceView } from "./place-view"
@@ -54,7 +55,7 @@ import { NightCandidates, NightCard, type CardExtras } from "./tonight-view"
 import { WeekOutlook } from "./week-outlook"
 import "./tonight.css"
 
-type SheetKind = "settings" | "origin" | "sources" | "save" | "week" | "login" | "guide" | "moon" | "nickname" | "withdraw"
+type SheetKind = "settings" | "origin" | "sources" | "save" | "week" | "login" | "guide" | "moon" | "nickname" | "password" | "withdraw"
 
 /** 로그인 창을 열 때 하려던 일. 로그인하면 이어서 한다 */
 type AfterLogin = { kind: "saveSpot"; spotId: number; name: string } | { kind: "savePick" } | { kind: "none" }
@@ -815,6 +816,7 @@ export function TonightApp() {
             setNicknameWelcome(false)
             showSheet("nickname")
           }}
+          onChangePassword={() => showSheet("password")}
           onWithdraw={() => showSheet("withdraw")}
         />
         {/* 달력과 사진 안내는 머리에 두지 않는다. 아이콘만으로는 무엇인지 읽히지 않아서, 필요해지는 자리(장소 화면)에 둔다 */}
@@ -939,6 +941,15 @@ export function TonightApp() {
           onDone={(name) => {
             closeNickname()
             toast({ title: "닉네임을 바꿨어요", description: `이제 ${name}님으로 보여요.` })
+          }}
+        />
+      ) : null}
+      {sheet === "password" && isAuthenticated ? (
+        <PasswordSheet
+          onClose={closeSheet}
+          onDone={() => {
+            showSheet(null)
+            toast({ title: "비밀번호를 바꿨어요", description: "다른 기기에서는 로그아웃됐어요." })
           }}
         />
       ) : null}

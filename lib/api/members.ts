@@ -67,6 +67,20 @@ export const membersApi = {
   },
 
   /**
+   * 비밀번호 변경 (PATCH /api/v1/members/me/password, 백엔드 저장소 docs/API.md "비밀번호 변경").
+   * 다른 기기의 로그인은 끊기고 이 기기는 새 액세스 토큰을 받는다(리프레시 토큰은 쿠키로 바뀐다).
+   * 지금 비밀번호가 틀리면 400(AxiosError)으로 실패한다.
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    const response = await apiClient.patch('/api/v1/members/me/password', { currentPassword, newPassword });
+    const body = response.data as { success?: boolean; status?: number; message?: string; data?: { accessToken?: string } };
+    if (body?.success === false || !body?.data?.accessToken) {
+      throw new AuthRejected(body?.status ?? response.status, body?.message ?? '');
+    }
+    authStore.getState().setAccessToken(body.data.accessToken);
+  },
+
+  /**
    * 이메일 회원의 탈퇴 (DELETE /api/v1/members/me, 백엔드 저장소 docs/API.md "탈퇴").
    * 서버가 리프레시 토큰 쿠키를 비우므로 여기서는 메모리의 로그인만 지운다.
    * 비밀번호가 틀리면 400(AxiosError)으로 실패한다.

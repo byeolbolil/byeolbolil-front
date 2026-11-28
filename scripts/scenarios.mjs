@@ -103,7 +103,7 @@ async function cloudLayer(page) {
  * 앞 재발급이 끝나기 전에 온 재발급은 옛 토큰을 들고 온 것으로 보고 401로 답한다.
  */
 function fakeMembers({ nickname, taken = [], loggedIn = true, provider = "KAKAO", withdrawal = "ok" }) {
-  const server = { nickname, loggedIn, patches: [], registers: [], codes: [], reissues: 0, rejected: 0, withdrawals: [] }
+  const server = { nickname, loggedIn, patches: [], registers: [], codes: [], reissues: 0, rejected: 0, withdrawals: [], password: "password1!", failures: 0, resetCodes: [] }
   let rotating = false
   const cors = {
     "access-control-allow-origin": BASE,
@@ -134,6 +134,39 @@ function fakeMembers({ nickname, taken = [], loggedIn = true, provider = "KAKAO"
       if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
       server.codes.push(route.request().postDataJSON().email)
       return reply(route, 200, { success: true, status: 200, message: "scenarios" })
+    })
+    // 이메일 로그인. 서버처럼 다섯 번 틀리면 맞는 비밀번호도 429로 막는다
+    await context.route("**/api/v1/auth/login", (route) => {
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
+      if (server.failures >= 5) return reply(route, 429, { success: false, status: 429, message: "scenarios" })
+      if (route.request().postDataJSON().password !== server.password) {
+        server.failures += 1
+        return reply(route, 401, { success: false, status: 401, message: "이메일 또는 비밀번호가 일치하지 않습니다." })
+      }
+      server.failures = 0
+      server.loggedIn = true
+      return json(route, { accessToken: "scenarios-token" })
+    })
+    // 재설정 코드는 늘 654321을 보낸 것으로 친다
+    await context.route("**/api/v1/auth/password-reset/code", (route) => {
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
+      server.resetCodes.push(route.request().postDataJSON().email)
+      return reply(route, 200, { success: true, status: 200, message: "scenarios" })
+    })
+    await context.route("**/api/v1/auth/password-reset", (route) => {
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
+      const body = route.request().postDataJSON()
+      if (body.code !== "654321") return reply(route, 400, { success: false, status: 400, message: "인증 코드가 맞지 않습니다." })
+      server.password = body.newPassword
+      server.failures = 0
+      return reply(route, 200, { success: true, status: 200, message: "scenarios" })
+    })
+    await context.route("**/api/v1/members/me/password", (route) => {
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
+      const body = route.request().postDataJSON()
+      if (body.currentPassword !== server.password) return reply(route, 400, { success: false, status: 400, message: "비밀번호가 맞지 않습니다." })
+      server.password = body.newPassword
+      return json(route, { accessToken: "scenarios-token-2" })
     })
     await context.route("**/api/v1/auth/register", (route) => {
       if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
@@ -504,6 +537,97 @@ const scenarios = {
     await context.close()
   },
 
+  /** 비밀번호를 잊은 이메일 회원은 로그인 시트에서 코드를 받아 새 비밀번호로 바꾸고 그대로 로그인한다 */
+  async passwordReset(browser, kind) {
+    const { server, setup } = fakeMembers({ nickname: "별지기", provider: "LOCAL", loggedIn: false })
+    const { context, page, errors } = await open(browser, kind, { setup })
+    await page.locator(".bb .acct").first().click()
+    await page.getByRole("button", { name: "비밀번호를 잊었어요" }).click()
+    const sheet = page.locator(".bb .sheet")
+    await sheet.getByText("비밀번호 찾기").first().waitFor()
+    await page.getByLabel("이메일").fill("star@example.com")
+    const submit = sheet.locator("form").getByRole("button", { name: "비밀번호 바꾸기" })
+    await submit.click()
+    await settle(page, 300)
+    check((await sheet.locator(".login-error").innerText()).includes("재설정 코드를 받아"), "코드를 받기 전에는 보내지 않는다")
+
+    await page.getByRole("button", { name: "재설정 코드 받기" }).click()
+    await page.getByLabel("인증 코드").waitFor({ timeout: 5_000 })
+    check(server.resetCodes.join() === "star@example.com", "적은 이메일로 재설정 코드를 보낸다")
+    check((await sheet.innerText()).includes("가입한 이메일이면 코드가 가요"), "가입 여부는 말하지 않고 메일함을 보라고 한다")
+
+    await page.getByLabel("인증 코드").fill("000000")
+    await page.getByLabel("새 비밀번호").fill("newpass1!")
+    await submit.click()
+    await page.waitForFunction(() => document.querySelector(".bb .sheet .login-error")?.textContent?.includes("재설정 코드가"), null, { timeout: 5_000 })
+    check(server.password === "password1!", "코드가 틀리면 비밀번호는 그대로다")
+
+    await page.getByLabel("인증 코드").fill("654321")
+    await submit.click()
+    await page.waitForFunction(() => document.querySelectorAll(".bb .sheet").length === 0, null, { timeout: 10_000 })
+    check(server.password === "newpass1!", "새 비밀번호로 바꾼다")
+    check((await page.locator(".bb .acct.on").count()) > 0, "바꾼 비밀번호로 바로 로그인된다")
+    const unexpected = errors.filter((error) => !/status of 400/.test(error))
+    check(unexpected.length === 0, `콘솔 오류가 없다 ${unexpected.join(" / ")}`)
+    await context.close()
+  },
+
+  /** 이메일 회원은 계정 메뉴에서 비밀번호를 바꾸고, 소셜 회원에게는 그 메뉴가 없다 */
+  async passwordChange(browser, kind) {
+    const { server, setup } = fakeMembers({ nickname: "별지기", provider: "LOCAL" })
+    const { context, page, errors } = await open(browser, kind, { setup })
+    const account = page.locator(".bb .acct.on")
+    await account.waitFor({ timeout: 30_000 })
+    await account.click()
+    await page.getByRole("menuitem", { name: "비밀번호 바꾸기" }).click()
+    const sheet = page.locator(".bb .sheet")
+    await sheet.waitFor()
+    await page.getByLabel("지금 비밀번호").fill("wrong")
+    await page.getByLabel("새 비밀번호").fill("short")
+    await sheet.getByRole("button", { name: "바꾸기" }).click()
+    await waitFieldError(page, "8자 이상")
+    check((await fieldError(page)).includes("8자 이상"), "새 비밀번호 규칙은 보내기 전에 알린다")
+    await page.getByLabel("새 비밀번호").fill("newpass1!")
+    await sheet.getByRole("button", { name: "바꾸기" }).click()
+    await waitFieldError(page, "맞지 않아요")
+    check((await fieldError(page)).includes("지금 비밀번호가 맞지 않아요"), "지금 비밀번호가 틀리면 알린다")
+
+    await page.getByLabel("지금 비밀번호").fill("password1!")
+    await sheet.getByRole("button", { name: "바꾸기" }).click()
+    await page.waitForFunction(() => document.querySelectorAll(".bb .sheet").length === 0, null, { timeout: 10_000 })
+    await page.getByText("비밀번호를 바꿨어요").first().waitFor({ timeout: 5_000 })
+    check(server.password === "newpass1!", "새 비밀번호로 바꾼다")
+    check((await account.count()) > 0, "이 기기는 로그인이 이어진다")
+    const unexpected = errors.filter((error) => !/status of 400/.test(error))
+    check(unexpected.length === 0, `콘솔 오류가 없다 ${unexpected.join(" / ")}`)
+    await context.close()
+  },
+
+  /** 같은 이메일로 다섯 번 틀리면 15분 막는다고 알리고 비밀번호 찾기로 이끈다 */
+  async loginLimit(browser, kind) {
+    const { setup } = fakeMembers({ nickname: "별지기", provider: "LOCAL", loggedIn: false })
+    const { context, page, errors } = await open(browser, kind, { setup })
+    await page.locator(".bb .acct").first().click()
+    await page.getByLabel("이메일").fill("star@example.com")
+    const loginButton = page.locator(".bb .sheet form").getByRole("button", { name: "로그인" })
+    const loginError = () => page.locator(".bb .sheet .login-error").innerText().catch(() => "")
+    for (let i = 0; i < 5; i++) {
+      await page.getByLabel("비밀번호").fill(`wrong${i}`)
+      await loginButton.click()
+      await page.waitForFunction(() => document.querySelector(".bb .sheet .login-error"), null, { timeout: 5_000 })
+      await settle(page, 200)
+    }
+    check((await loginError()).includes("맞지 않아요"), "틀리면 이메일이나 비밀번호가 맞지 않다고 한다")
+    await page.getByLabel("비밀번호").fill("password1!")
+    await loginButton.click()
+    await page.waitForFunction(() => document.querySelector(".bb .sheet .login-error")?.textContent?.includes("15분"), null, { timeout: 5_000 }).catch(() => {})
+    check((await loginError()).includes("15분 동안 로그인할 수 없어요"), "다섯 번 틀린 뒤에는 맞는 비밀번호도 막혔다고 알린다")
+    // 틀린 비밀번호와 429는 서버가 답한 것이고, 로그인 함수는 실패를 콘솔에 남긴다
+    const unexpected = errors.filter((error) => !/status of (400|429)|\[login\] 에러/.test(error))
+    check(unexpected.length === 0, `콘솔 오류가 없다 ${unexpected.join(" / ")}`)
+    await context.close()
+  },
+
   /** 이메일 회원은 계정 메뉴에서 비밀번호를 넣어 탈퇴하고, 틀리면 까닭을 적고 그대로 남는다 */
   async withdrawLocal(browser, kind) {
     const { server, setup } = fakeMembers({ nickname: "별지기", provider: "LOCAL" })
@@ -549,6 +673,7 @@ const scenarios = {
     await sheet.waitFor()
     check((await sheet.innerText()).includes("구글과 별볼일의 연결"), "가입한 서비스의 연결도 끊는다고 알린다")
     check((await page.getByLabel("비밀번호").count()) === 0, "소셜 회원에게는 비밀번호를 묻지 않는다")
+    check((await page.getByRole("menuitem", { name: "비밀번호 바꾸기" }).count()) === 0, "소셜 회원의 계정 메뉴에는 비밀번호 바꾸기가 없다")
 
     await sheet.getByRole("button", { name: "구글로 확인하고 탈퇴" }).click()
     await page.waitForURL((url) => url.pathname === "/" && !url.search.includes("withdraw"), { timeout: 30_000 })
