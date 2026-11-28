@@ -13,13 +13,16 @@ interface AccountButtonProps {
   onLogin: () => void
   /** 닉네임 바꾸는 시트를 연다 */
   onEditNickname: () => void
+  /** 탈퇴 확인 시트를 연다 */
+  onWithdraw: () => void
 }
 
 /**
- * 머리의 로그인 상태. 로그인하지 않았으면 "로그인", 했으면 닉네임을 보여주고 누르면 닉네임 바꾸기와 로그아웃이 나온다.
+ * 머리의 로그인 상태. 로그인하지 않았으면 "로그인", 했으면 닉네임을 보여주고 누르면 닉네임 바꾸기, 로그아웃, 탈퇴가 나온다.
+ * 계정 정보가 닉네임뿐이라 회원 페이지를 따로 두지 않고 이 메뉴에 모은다.
  * 지금 로그인돼 있는지를 어느 화면에서나 알 수 있게 하는 자리다.
  */
-export function AccountButton({ pending, onLogin, onEditNickname }: AccountButtonProps) {
+export function AccountButton({ pending, onLogin, onEditNickname, onWithdraw }: AccountButtonProps) {
   const isAuthenticated = authStore((state) => state.isAuthenticated)
   const nickname = authStore((state) => state.user?.nickname)
   const { toast } = useToast()
@@ -86,6 +89,17 @@ export function AccountButton({ pending, onLogin, onEditNickname }: AccountButto
           </button>
           <button type="button" role="menuitem" onClick={() => void logout()}>
             로그아웃
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="quiet"
+            onClick={() => {
+              setOpen(false)
+              onWithdraw()
+            }}
+          >
+            탈퇴하기
           </button>
         </div>
       ) : null}

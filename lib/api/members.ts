@@ -67,6 +67,33 @@ export const membersApi = {
   },
 
   /**
+   * 이메일 회원의 탈퇴 (DELETE /api/v1/members/me, 백엔드 저장소 docs/API.md "탈퇴").
+   * 서버가 리프레시 토큰 쿠키를 비우므로 여기서는 메모리의 로그인만 지운다.
+   * 비밀번호가 틀리면 400(AxiosError)으로 실패한다.
+   */
+  async withdrawWithPassword(password: string): Promise<void> {
+    const response = await apiClient.delete('/api/v1/members/me', { data: { password } });
+    const body = response.data as { success?: boolean; status?: number; message?: string };
+    if (body?.success === false) {
+      throw new AuthRejected(body.status ?? response.status, body.message ?? '');
+    }
+    authStore.getState().logout();
+  },
+
+  /**
+   * 소셜 회원의 탈퇴 주소 (POST /api/v1/members/me/withdrawal-ticket). 5분 동안 한 번 쓸 수 있다.
+   * 브라우저를 이 주소로 보내면 가입한 제공자에 다시 로그인한 뒤 탈퇴하고 첫 화면의 ?withdrawn=1로 돌아온다.
+   */
+  async withdrawalUrl(): Promise<string> {
+    const response = await apiClient.post('/api/v1/members/me/withdrawal-ticket');
+    const body = response.data as { success?: boolean; status?: number; message?: string; data?: { authorizationUrl?: string } };
+    if (body?.success === false || !body?.data?.authorizationUrl) {
+      throw new AuthRejected(body?.status ?? response.status, body?.message ?? '');
+    }
+    return `${apiClient.defaults.baseURL ?? ''}${body.data.authorizationUrl}`;
+  },
+
+  /**
    * 닉네임을 쓸 수 있는지 (GET /api/v1/members/exists/nickname). 다른 회원이 쓰고 있으면 false.
    * 로그인한 채로 물으면 자기 닉네임은 true다. 규칙에 어긋나면 400으로 실패하므로 규칙은 먼저 걸러서 부른다.
    */
